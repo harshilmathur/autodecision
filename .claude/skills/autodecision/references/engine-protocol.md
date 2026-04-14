@@ -3,6 +3,59 @@
 This is the master protocol. Every phase references this file for the overall loop
 structure, sequencing rules, and convergence logic.
 
+## Progress Tracking (Mandatory)
+
+Use the TodoWrite tool to show the user a live progress tracker throughout the run.
+This is NOT optional — the loop has many steps and the user needs to see where things
+stand. Update the todo list at EVERY phase transition.
+
+### Full Loop Progress Template
+
+Initialize this at the start of every full loop run:
+
+```
+Phase 0: Scope — decompose decision              [pending]
+Phase 0.5: Elicit — review with user              [pending]
+Phase 1: Ground — web search for data             [pending]
+Phase 2: Hypothesize — generate competing paths   [pending]
+Phase 3: Simulate — 5 persona council (parallel)  [pending]
+Phase 3b: Synthesis — merge persona outputs       [pending]
+Phase 4+5: Critique + Adversary (parallel)        [pending]
+Phase 6: Sensitivity — find decision boundaries   [pending]
+Phase 7: Converge — judge stability               [pending]
+Iteration 2: Refine — light-mode re-simulation    [pending]
+Phase 8: Decide — generate Decision Brief         [pending]
+Persist — journal + assumption library            [pending]
+```
+
+Mark each item `in_progress` when you START it and `completed` when you FINISH it.
+Only ONE item should be `in_progress` at a time. The user sees a live checklist
+that tells them exactly where the analysis stands.
+
+### Quick Mode Progress Template
+
+```
+Phase 0: Scope — decompose decision              [pending]
+Phase 1: Ground — web search for data             [pending]
+Phase 3: Simulate — single-pass analysis          [pending]
+Phase 8: Decide — generate Quick Brief            [pending]
+```
+
+### Medium Mode Progress Template (--iterations 1)
+
+```
+Phase 0: Scope — decompose decision              [pending]
+Phase 0.5: Elicit — review with user              [pending]
+Phase 1: Ground — web search for data             [pending]
+Phase 2: Hypothesize — generate competing paths   [pending]
+Phase 3: Simulate — 5 persona council (parallel)  [pending]
+Phase 3b: Synthesis — merge persona outputs       [pending]
+Phase 4+5: Critique + Adversary (parallel)        [pending]
+Phase 6: Sensitivity — find decision boundaries   [pending]
+Phase 8: Decide — generate Decision Brief         [pending]
+Persist — journal + assumption library            [pending]
+```
+
 ## Prerequisites
 
 Before starting any decision run:
