@@ -18,6 +18,19 @@ allowed-tools:
 Run the full Auto-Decision Engine: 10 phases, 5-persona council, iterative refinement
 until convergence.
 
+## ⚠️ MUST RUN INLINE — NOT AS A SUBAGENT
+
+**This skill MUST execute in the main conversation, NOT inside a spawned agent.**
+If you are a subagent (spawned by another agent or orchestrator), you CANNOT run
+the full loop properly because the Agent tool is unavailable in nested contexts.
+The 5-persona council requires spawning parallel subagents — which only works
+from the main conversation.
+
+**Before proceeding, check:** Am I the main conversation or a subagent?
+- If main conversation: proceed normally.
+- If subagent: STOP. Read `references/engine-protocol.md` "If Agent tool is
+  unavailable" section and ask the user before continuing.
+
 ## Invocation
 
 ```
