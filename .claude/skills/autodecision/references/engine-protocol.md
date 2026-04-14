@@ -190,6 +190,15 @@ Key rules:
   block, and writes to `council/{persona}.json`.
 - Subagents have their own context windows and CANNOT see each other's outputs.
 
+**Fallback if Agent tool is unavailable** (e.g., orchestrator is itself a subagent):
+If the Agent tool is not available in the current environment, the orchestrator writes
+each persona's analysis SEQUENTIALLY using separate system prompts. Between each persona:
+1. Write the completed persona's output to `council/{persona}.json`
+2. Clear the persona context from the conversation
+3. Start the next persona with a fresh system prompt
+This creates file-boundary independence (weaker than true subagents but structurally
+correct). Note in the brief: "Personas authored sequentially (Agent tool unavailable)."
+
 ### Synthesis (Inline, Fix 2)
 
 After all 5 personas complete, the ORCHESTRATOR performs synthesis directly.

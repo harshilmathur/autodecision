@@ -25,10 +25,11 @@ friction without value:
 | Block 1: Assumptions + Data | YES — always | Never skip. Fast scan, high value. |
 | Block 2: Personas | Only for novel decisions | Skip if a template was used (templates already tune personas) |
 | Block 3: Decision Tilt | YES — always | Never skip. One question, frames the entire analysis. |
+| Block 3.5: Urgency Check | Only if urgency detected | Skip if no time-pressure signals in decision statement or ground data |
 | Block 4: Domain Knowledge | Only when data gaps exist | Skip if grounding returned substantive data for ALL sub-questions |
 
-**Result:** Minimum 2 questions (assumptions + tilt), maximum 4 for novel ungrounded
-decisions. Down from a fixed 4 every time.
+**Result:** Minimum 2 questions (assumptions + tilt), maximum 5 for novel ungrounded
+urgent decisions.
 
 ## Process
 
@@ -129,6 +130,51 @@ has an explicit strategic lens.
 | capital_efficiency | ROI, payback, burn rate | Pessimist, Regulator |
 | time_to_market | Speed, first-mover, deployment timeline | Optimist, Customer |
 | risk_minimization | Reversibility, downside protection, incremental approach | Pessimist, Regulator |
+
+### Block 3.5: Urgency Check (conditional — only if urgency detected)
+
+**Detection:** Scan the decision statement + ground-data.md for urgency signals:
+- Words/phrases: "compete with", "before they", "window", "imminent", "soon",
+  "now or never", "race", "closing", "deadline", "time-sensitive", "first mover"
+- Competitive framing: "X is about to...", "if we don't act..."
+- Temporal pressure in sub-questions: "how fast do we need..."
+
+**If NO urgency signals found:** Skip this block silently.
+
+**If urgency signals found:** Ask via AskUserQuestion:
+
+> "This decision has a time-pressure element. What's the hard evidence for the urgency?"
+>
+> A) **Hard deadline** — regulatory, contractual, or board-mandated date (specify)
+> B) **Observed action** — competitor filing, hiring, public announcement (specify)
+> C) **Market signal** — industry rumor, advisor engagement, indirect evidence
+> D) **Gut feeling** — competitive pressure, fear of missing out, no specific evidence
+
+Record the answer in `user-inputs.md` as:
+
+```
+## Urgency Assessment
+- Status: {HARD / SOFT / SPECULATIVE / NONE}
+- Evidence: {user's specific answer}
+```
+
+And in `config.json` add: `"urgency": {"grade": "HARD/SOFT/SPECULATIVE/NONE", "evidence": "..."}`
+
+**How this flows through the system:**
+
+1. `shared-context.md` includes the urgency grade and evidence.
+2. Personas see: "URGENCY: {grade}. Evidence: {evidence}. Calibrate time-pressure
+   effects accordingly — HARD urgency should be weighted at face value, SPECULATIVE
+   urgency should be treated as uncertain (wide probability range)."
+3. The Decision Brief header shows: `Urgency: {grade} ({evidence summary})`
+4. Sensitivity analysis treats urgency-coded assumptions differently based on grade:
+   - HARD: test as normal assumptions
+   - SOFT/SPECULATIVE: automatically included in sensitivity analysis as HIGH sensitivity
+
+**Why this exists:** Calibration data from 11+ decisions shows the system systematically
+over-weights urgency when not grounded in evidence. Two outcome-recorded decisions
+confirmed this bias. This question catches it at source — the user knows whether
+their urgency is real.
 
 ### Block 4: Additional Domain Knowledge (skip if grounding is strong)
 
