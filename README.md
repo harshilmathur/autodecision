@@ -70,6 +70,8 @@ Then in Claude Code:
 | `/autodecision:quick "decision"` | Single analyst, no council, no iteration | ~2-3 min |
 | `/autodecision:compare "A" vs "B"` | Side-by-side comparison of two decisions | ~5 min |
 | `/autodecision:revise {slug} "{changes}"` | Revise with changed assumptions, new data, or tilt | ~8-10 min |
+| `/autodecision:challenge "{action}"` | Stress-test a proposed action (adversary-only) | ~5 min |
+| `/autodecision:summarize {slug}` | One-page shareable summary of any decision | ~1 min |
 | `/autodecision:plan` | Interactive setup wizard (scope only) | ~2 min |
 | `/autodecision:review` | Review past decisions, compare predictions vs outcomes | ~1 min |
 | `/autodecision:export` | Bundle journal + assumptions + briefs into portable archive | ~1 min |

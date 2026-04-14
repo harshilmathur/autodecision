@@ -39,6 +39,8 @@ Restart your Claude Code session. All commands become available.
 | `/autodecision:quick` | Single-pass, no council, no iteration | ~2-3 min |
 | `/autodecision:compare` | Side-by-side comparison (fresh or post-facto) | ~5 min |
 | `/autodecision:revise` | Revise a previous run with changed assumptions/data/tilt | ~8-10 min |
+| `/autodecision:challenge` | Stress-test a proposed action (adversary-only, no full loop) | ~5 min |
+| `/autodecision:summarize` | Compress a brief into a shareable one-page summary | ~1 min |
 | `/autodecision:plan` | Interactive setup wizard (scope only) | ~2 min |
 | `/autodecision:review` | Review past decisions, compare predictions vs outcomes | ~1 min |
 | `/autodecision:export` | Bundle journal + assumptions into portable archive | ~1 min |

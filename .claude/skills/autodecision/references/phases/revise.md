@@ -232,3 +232,21 @@ Print to user: "Revision complete. Brief at {path}. Diff at {path}."
 If recommendation changed: "The revision FLIPPED the recommendation. Consider running
 a full `/autodecision` to validate the new direction."
 If recommendation held: "The original recommendation is robust to this scenario."
+
+## Step 8: OFFER EXPORT
+
+After printing, offer to export to current working directory:
+
+> "Export revision outputs to current directory?"
+> Options: A) Export brief + diff  B) Export brief only  C) Skip
+
+If A:
+```bash
+cp ~/.autodecision/runs/{slug}-revise-{N}/DECISION-BRIEF.md ./{slug}-revise-{N}-DECISION-BRIEF.md
+cp ~/.autodecision/runs/{slug}-revise-{N}/REVISION-DIFF.md ./{slug}-revise-{N}-REVISION-DIFF.md
+```
+
+If B:
+```bash
+cp ~/.autodecision/runs/{slug}-revise-{N}/DECISION-BRIEF.md ./{slug}-revise-{N}-DECISION-BRIEF.md
+```

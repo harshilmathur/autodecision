@@ -106,10 +106,43 @@ For each assumption in the final `effects-chains.json > all_assumptions`:
 - If assumption key is new: append a new assumption entry with `first_seen`, initial
   `times_referenced: 1`, and this decision's sensitivity/fragility ratings
 
+### Step 5b: Revision Chain Header
+
+Before finalizing the brief, check if revisions of this decision exist:
+
+```bash
+ls -d ~/.autodecision/runs/{slug}-revise-* 2>/dev/null
+```
+
+If revisions exist, add a revision chain line below the brief header metadata:
+
+```
+**Revision chain:** Original → [Revise 1: {change}]({path}) → [Revise 2: {change}]({path})
+```
+
+Read each revision's `config.json` or `user-inputs.md` to extract the change description.
+If this IS a revision run, also add:
+```
+**This is a revision of:** [{original slug}]({original path}) | **Change:** "{revision input}"
+```
+
 ### Step 6: Print Brief to User
 
 After persisting, print the full Decision Brief to the conversation. Then print:
 "Decision logged to journal. Run `/autodecision:review` to compare predictions vs reality later."
+
+### Step 7: Offer Export
+
+After printing, offer to export to the current working directory:
+
+> "Export brief to current directory?"
+> Options: A) Export full brief  B) Skip
+
+If A:
+```bash
+cp ~/.autodecision/runs/{slug}/DECISION-BRIEF.md ./{slug}-DECISION-BRIEF.md
+```
+Print: "Exported to ./{slug}-DECISION-BRIEF.md"
 
 ## Handling Incomplete Data
 
