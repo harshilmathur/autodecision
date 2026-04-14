@@ -9,6 +9,7 @@ triggers:
   - /autodecision
   - /autodecision:quick
   - /autodecision:compare
+  - /autodecision:revise
   - /autodecision:plan
   - /autodecision:review
   - /autodecision:export
@@ -32,6 +33,7 @@ not the answer. It is a system that refuses to accept the first answer.
 - `/autodecision --iterations N <decision>` → Full loop with N iterations. 1 = medium mode (council, no convergence). 2 = default. 3-5 = deep mode.
 - `/autodecision:quick <decision>` → Single-pass mode. SCOPE → GROUND → SIMULATE (one analyst, no council) → DECIDE. ~2 minutes.
 - `/autodecision:compare "A" vs "B"` → Compare two decisions side-by-side (fresh or post-facto from existing runs).
+- `/autodecision:revise {slug} "{what changed}"` → Revise a previous decision with changed assumptions, new hypotheses, new data, or different tilt. Produces full brief + diff.
 - `/autodecision:plan` → Interactive setup wizard. Phase 0 (SCOPE) only.
 - `/autodecision:review` → Read past decision runs, compare predictions vs outcomes.
 - `/autodecision:export` → Bundle journal + assumptions + past briefs into portable archive.
@@ -89,6 +91,7 @@ Load these on-demand as each phase begins:
 | Phase 7: Converge | `references/phases/converge.md` |
 | Phase 8: Decide | `references/phases/decide.md` |
 | Phase 1.5: Elicit | `references/phases/elicit.md` |
+| Revise protocol | `references/phases/revise.md` |
 | Decision Brief template | `references/output-format.md` |
 | Decision journal spec | `references/journal-spec.md` |
 | Assumption library spec | `references/assumption-library-spec.md` |

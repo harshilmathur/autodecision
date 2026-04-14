@@ -69,6 +69,7 @@ Then in Claude Code:
 | `/autodecision --iterations 4 "decision"` | Deep: up to 4 iterations for high-stakes | ~25-30 min |
 | `/autodecision:quick "decision"` | Single analyst, no council, no iteration | ~2-3 min |
 | `/autodecision:compare "A" vs "B"` | Side-by-side comparison of two decisions | ~5 min |
+| `/autodecision:revise {slug} "{changes}"` | Revise with changed assumptions, new data, or tilt | ~8-10 min |
 | `/autodecision:plan` | Interactive setup wizard (scope only) | ~2 min |
 | `/autodecision:review` | Review past decisions, compare predictions vs outcomes | ~1 min |
 | `/autodecision:export` | Bundle journal + assumptions + briefs into portable archive | ~1 min |

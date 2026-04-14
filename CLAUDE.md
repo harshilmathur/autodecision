@@ -38,6 +38,7 @@ Restart your Claude Code session. All commands become available.
 | `/autodecision` | Full iterative loop with persona council | ~15-20 min |
 | `/autodecision:quick` | Single-pass, no council, no iteration | ~2-3 min |
 | `/autodecision:compare` | Side-by-side comparison (fresh or post-facto) | ~5 min |
+| `/autodecision:revise` | Revise a previous run with changed assumptions/data/tilt | ~8-10 min |
 | `/autodecision:plan` | Interactive setup wizard (scope only) | ~2 min |
 | `/autodecision:review` | Review past decisions, compare predictions vs outcomes | ~1 min |
 | `/autodecision:export` | Bundle journal + assumptions into portable archive | ~1 min |
