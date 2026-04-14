@@ -97,6 +97,7 @@ Load these on-demand as each phase begins:
 | Phase 1.5: Elicit | `references/phases/elicit.md` |
 | Revise protocol | `references/phases/revise.md` |
 | Challenge protocol | `references/phases/challenge.md` |
+| Output validation rules | `references/validation.md` |
 | Decision Brief template | `references/output-format.md` |
 | Decision journal spec | `references/journal-spec.md` |
 | Assumption library spec | `references/assumption-library-spec.md` |

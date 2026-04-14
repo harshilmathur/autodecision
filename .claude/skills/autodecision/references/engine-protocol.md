@@ -140,6 +140,21 @@ OUTER (runs once):
 - If a phase fails mid-execution: write partial output with `"status": "partial"`, log the error,
   and continue to the next phase. Phase 8 (DECIDE) handles missing data gracefully.
 
+### Output Validation (Mandatory)
+
+After EVERY phase that writes JSON, apply the validation rules from
+`references/validation.md`. Read that file once at run start.
+
+Key validations:
+- Probabilities must be floats in 0.05 increments (auto-fix "70%" → 0.70)
+- Effect IDs and assumption keys must be lowercase snake_case (auto-fix case/format)
+- All JSON field types must match spec (auto-fix string-to-int, null-to-empty-array)
+- Timeframes must match the enum (auto-fix common variants)
+- Descriptions must not contain underscores (auto-fix snake_case → human readable)
+- Cross-references must be valid (assumption keys, parent effect IDs)
+
+Auto-fix what's fixable. Log warnings. Never block the run for a single failure.
+
 ### Shared Context File (Fix 5)
 
 Before spawning personas, the orchestrator precomputes `shared-context.md` in
