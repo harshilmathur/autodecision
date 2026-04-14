@@ -153,6 +153,12 @@ Contents of `shared-context.md`:
 - Key data points from ground-data.md (include ALL key findings, not a lossy summary)
 - Hypotheses with expected effect IDs (from hypotheses.json)
 - Persona preamble rules (from persona-preamble.md)
+- **OUTPUT FORMATTING RULE (mandatory, include verbatim):**
+  "CRITICAL: All output that will appear in the Decision Brief must use human-readable
+  language, NEVER snake_case identifiers. Write 'Merchant friction persists' not
+  'merchant_friction_persists'. Write 'Capital attach rate' not 'capital_attach_rate'.
+  The effect_id field in JSON is internal only — the description field is what appears
+  in the brief. If you write an underscore in any user-facing text, you have made an error."
 
 Target: ~1500 tokens. Each persona reads this ONE file instead of 3-4 files +
 inline preamble. Cuts spawn time and input tokens significantly.
