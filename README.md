@@ -199,6 +199,76 @@ The **journal** tracks every decision and its outcomes. The **assumption library
 
 ---
 
+## Example output
+
+### Full loop (5 personas, 2 iterations)
+
+**[Buy vs Rent vs Relocate](examples/buy-vs-rent-vs-relocate.md)** — A dual-tech-income couple evaluates buying a house in Bangalore (10 Cr), renting + investing the delta, or relocating to San Francisco. 2 iterations, 5 personas, 7 hypotheses explored.
+
+- Council surfaced a **creative alternative** (buy small 4-5 Cr + invest rest) that outperformed all three original options on stress resilience
+- **SF savings corrected** from $150-250K to $80-120K after the Constraint Analyst modeled actual CA taxes, childcare, and living costs
+- **Adversarial red team** exposed that visa risk and market risk are correlated — the scenario where you lose H1B sponsorship IS the scenario where your Indian portfolio is also down 30%
+- Final recommendation: a **staged real-options approach** with buy-small as the default endpoint, including quarterly monitoring triggers and a pre-mortem
+
+**[Law Firm AI Replacement](examples/law-firm-ai-replacement.md)** — Should a mid-sized law firm replace all first-year associates with Claude + senior review? 2 iterations, 5 personas, 6 hypotheses explored. Converged at iteration 2.
+
+- Full replacement (H1) was **unanimously ranked last** with adversary lethality 9/10 — pipeline rupture, malpractice risk, and ranking damage compound
+- The winning recommendation (H6) **didn't exist in any single persona's output** — it was synthesized from three independent alternatives across the pessimist, customer advocate, and regulator
+- Final recommendation: a **wrapped 18-month pilot** cutting the 1Y class 50-60% with binding kill criteria, anchor-client co-design, and regulatory sandbox cover
+
+### Quick mode (single-pass, no council)
+
+**[B2B SaaS 10% Price Cut](examples/b2b-saas-pricing-cut-10pct-quick.md)** — Should I drop my B2B SaaS pricing by 10%? Single-pass analysis, grounded in elasticity research.
+
+- 10% lands in the **"dead zone"** — too small to change enterprise buyer behavior, large enough to compress margins 3-7 points
+- 60% probability competitors match within 90 days, erasing any temporary advantage
+- Recommendation: don't cut; consider segmented SMB pricing or hybrid/usage-based model instead
+
+**[B2B SaaS 30% Price Cut](examples/b2b-saas-pricing-cut-30pct-quick.md)** — Should I drop my B2B SaaS pricing by 30%? Single-pass analysis, grounded in LTV and market data.
+
+- Needs **43% more volume to break even** — near-impossible in B2B sales cycles (3-9 months)
+- 30% cut in a market raising prices 8-25% annually **signals desperation** to enterprise buyers
+- LTV drops 30%+ (compounding), price anchor permanently resets with 3-5x resistance to future increases
+
+### Comparison mode
+
+**[10% vs 30% Price Cut Comparison](examples/comparison-10pct-vs-30pct.md)** — Side-by-side structural comparison of both quick runs above.
+
+- Both reach "don't cut" but for **fundamentally different reasons**: 10% fails by being too small, 30% fails by being too large
+- Every shared effect is worse at 30%, but the relationship is **not linear** — 30% crosses qualitative thresholds (brand damage, LTV compounding) that 10% doesn't
+- Both analyses **converge on the same alternative**: restructure to hybrid/usage-based pricing
+
+### Try these
+
+Decisions that work well with autodecision — copy-paste into Claude Code:
+
+```
+/autodecision "Should Adobe go all-in on agentic Creative Cloud and deprecate Photoshop's UI-first model within 3 years?"
+```
+
+```
+/autodecision "Should Uber build their own autonomous vehicles instead of partnering with Waymo/Cruise?"
+```
+
+```
+/autodecision "Should Netflix launch a free ad-supported tier in India, Brazil, and Indonesia?"
+```
+
+```
+/autodecision:quick "Should we cut pricing by 20%?"
+/autodecision "Should we cut pricing by 20%?"     # compare quick vs full on the same question
+```
+
+```
+/autodecision "YC $500K at 7% vs $3M angel round at $15M cap — which should a pre-revenue AI startup take?"
+```
+
+```
+/autodecision "Should a 50-person startup hire 4 salespeople or spend the equivalent budget going AI-native on sales?"
+```
+
+---
+
 ## Inspiration
 
 - [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) — iterative loop: modify → train → evaluate → keep/discard
