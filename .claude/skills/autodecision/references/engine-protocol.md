@@ -258,14 +258,35 @@ Key rules:
   block, and writes to `council/{persona}.json`.
 - Subagents have their own context windows and CANNOT see each other's outputs.
 
-**Fallback if Agent tool is unavailable** (e.g., orchestrator is itself a subagent):
-If the Agent tool is not available in the current environment, the orchestrator writes
-each persona's analysis SEQUENTIALLY using separate system prompts. Between each persona:
-1. Write the completed persona's output to `council/{persona}.json`
-2. Clear the persona context from the conversation
-3. Start the next persona with a fresh system prompt
-This creates file-boundary independence (weaker than true subagents but structurally
-correct). Note in the brief: "Personas authored sequentially (Agent tool unavailable)."
+**If Agent tool is unavailable** (e.g., running inside a subagent):
+
+Do NOT silently degrade. The council is the core value of the full loop. Without
+genuine persona independence, the output is significantly weaker — personas converge,
+diversity collapses, convergence is fake, and the analysis is shallow.
+
+**Detection:** Before spawning the first persona agent, test whether the Agent tool
+is available. If it fails or is not available in the current environment:
+
+**STOP and ask the user:**
+
+> "The Agent tool is not available in this environment (likely because /autodecision
+> is running inside a subagent). This means the 5-persona council cannot run with
+> genuine independence — personas would be authored sequentially in one context,
+> significantly reducing analysis quality.
+>
+> Options:
+> A) Switch to quick mode — single-pass analysis without council (~2 min, honest about its limitations)
+> B) Continue with degraded council — sequential personas, weaker diversity, faster but shallower
+> C) Abort — I'll re-run /autodecision from the main conversation for full quality"
+
+If the user picks A: switch to quick mode protocol (SCOPE → GROUND → SIMULATE single pass → DECIDE).
+If the user picks B: proceed with sequential fallback, note prominently in the brief header:
+  "WARNING: Personas authored sequentially (Agent tool unavailable). Council diversity
+  is weaker than a full-quality run. For genuine independence, run /autodecision from
+  the main conversation, not inside a subagent."
+If the user picks C: abort cleanly.
+
+**NEVER proceed with degraded quality without explicit user consent.**
 
 ### Synthesis (Inline)
 
