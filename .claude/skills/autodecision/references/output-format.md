@@ -77,6 +77,20 @@ They may be genuine blind spots OR noise. Treat with appropriate skepticism.
 {If more than 10 exploratory effects, summarize: "N additional exploratory effects
 logged in effects-chains.json. Key themes: [2-3 bullet summary]."}
 
+## Minority-View Winners
+
+If the final recommendation was influenced or originated by a single persona's
+creative alternative (an `alt_` effect or a hypothesis proposed by one persona),
+list it here. This is the most compelling proof that the council added value.
+
+In 4 of 5 test runs, the winning recommendation came from exactly one persona's
+non-obvious alternative. These are the highest-leverage outputs of the system.
+
+- **{winning idea}** — originated from {persona name}. Council agreement at origin: 1/5.
+  Became the leading recommendation because: {why it won despite low initial agreement}.
+
+If no minority-view idea influenced the final recommendation, omit this section.
+
 ## Stable Insights (robust across all scenarios)
 
 {Effects that survived adversarial pressure across iterations. council_agreement >= 3, probability shift < 0.1 across iterations.}

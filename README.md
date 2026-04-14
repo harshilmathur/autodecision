@@ -39,19 +39,14 @@ The Decision Brief includes:
 This is a [Claude Code](https://claude.ai/code) skill. Copy the `.claude/` directory into your project:
 
 ```bash
-# Clone the repo
 git clone https://github.com/harshilmathur/autodecision.git
+cd autodecision
 
-# Copy skill files to your project
-cp -r autodecision/.claude/skills/autodecision your-project/.claude/skills/
-cp -r autodecision/.claude/commands/autodecision your-project/.claude/commands/
-```
+# Install globally (available in all projects)
+./install.sh
 
-Or copy to your global Claude Code skills:
-
-```bash
-cp -r autodecision/.claude/skills/autodecision ~/.claude/skills/
-cp -r autodecision/.claude/commands/autodecision ~/.claude/commands/
+# Or install to a specific project
+./install.sh ./your-project/.claude
 ```
 
 Then in Claude Code:

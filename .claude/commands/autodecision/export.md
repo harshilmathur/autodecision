@@ -25,6 +25,35 @@ decision history, or moving to another machine.
 
 ## Execution
 
+### Pre-check: Detect non-journaled runs
+
+Before exporting, scan for runs that have briefs but no journal entries:
+
+```bash
+# List all run directories that have a DECISION-BRIEF.md
+for dir in ~/.autodecision/runs/*/; do
+  slug=$(basename "$dir")
+  if [ -f "$dir/DECISION-BRIEF.md" ]; then
+    # Check if this slug appears in journal
+    if ! grep -q "\"decision_id\":\"$slug\"" ~/.autodecision/journal.jsonl 2>/dev/null; then
+      echo "NOT_JOURNALED: $slug"
+    fi
+  fi
+done
+```
+
+If non-journaled runs are found, offer to backfill:
+> "Found {N} decision runs with briefs but no journal entries: {list slugs}.
+> These won't appear in exports or reviews until journaled."
+> Options:
+> A) Backfill now (I'll create journal entries from the briefs)
+> B) Skip — export only journaled decisions
+
+If A: For each non-journaled run, read the DECISION-BRIEF.md and config.json,
+construct a minimal journal entry, and append to journal.jsonl.
+
+### Main export
+
 1. Read `~/.autodecision/journal.jsonl` (all journal entries)
 2. Read `~/.autodecision/assumptions.jsonl` (all assumptions)
 3. For each decision in the journal, read the `DECISION-BRIEF.md` from the run path

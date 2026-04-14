@@ -74,6 +74,7 @@ library are cross-decision persistent stores.
 - **Stop when the Judge says so**, not when you run out of things to say. Max iterations configurable (default 2, up to 5).
 - **The iteration folders ARE the memory.** Read previous iteration before starting the next.
 - **The Decision Brief is for humans, not machines.** See `references/phases/decide.md` for formatting rules.
+- **Subagent nesting limitation.** If `/autodecision` is run inside a subagent (e.g., spawned by another agent or orchestrator), the Agent tool may not be available. Personas will be authored sequentially instead of as parallel subagents. Output is structurally correct but persona independence is weaker. The brief notes this when it happens. For full council independence, run `/autodecision` from the main conversation, not from inside another agent.
 
 ## References
 
