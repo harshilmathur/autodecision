@@ -1,5 +1,4 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "autodecision",
   "version": "0.1.0",
   "owner": {
