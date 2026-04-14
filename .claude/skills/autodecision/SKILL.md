@@ -65,7 +65,7 @@ library are cross-decision persistent stores.
 - **Generate 2nd-order effects for ALL 1st-order effects.** No probability gate. Tail risks matter most.
 - **Stop when the Judge says so**, not when you run out of things to say. Max 3 inner loop iterations.
 - **The iteration folders ARE the memory.** Read previous iteration before starting the next.
-- **The Decision Brief is for humans, not machines.** NEVER show raw `effect_id` or `assumption_key` identifiers (snake_case) in the brief. Always use the human-readable description. `competitor_bid_imminent` in JSON, "Competitor bid is imminent" in the brief. The brief should read like a strategy memo, not a database dump.
+- **The Decision Brief is for humans, not machines.** See `references/phases/decide.md` for formatting rules.
 
 ## References
 
