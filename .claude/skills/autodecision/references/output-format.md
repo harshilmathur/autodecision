@@ -10,7 +10,7 @@ The brief must read like a strategy memo — no snake_case identifiers, no raw e
 ```markdown
 # Decision Brief: {decision_statement}
 
-Generated: {date} | Iterations: {N} | Converged: {yes at iteration M / NOT REACHED / N/A (medium mode)}
+Generated: {date} | Iterations: {N} | Converged: {yes at iteration M / NOT REACHED / N/A (medium mode)} | Tilt: {tilt_name}
 
 ## Executive Summary
 

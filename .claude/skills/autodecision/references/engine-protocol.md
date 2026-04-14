@@ -15,8 +15,8 @@ Initialize this at the start of every full loop run:
 
 ```
 Phase 0: Scope — decompose decision              [pending]
-Phase 0.5: Elicit — review with user              [pending]
 Phase 1: Ground — web search for data             [pending]
+Phase 1.5: Elicit — review with user              [pending]
 Phase 2: Hypothesize — generate competing paths   [pending]
 Phase 3: Simulate — 5 persona council (parallel)  [pending]
 Phase 3b: Synthesis — merge persona outputs       [pending]
@@ -45,8 +45,8 @@ Phase 8: Decide — generate Quick Brief            [pending]
 
 ```
 Phase 0: Scope — decompose decision              [pending]
-Phase 0.5: Elicit — review with user              [pending]
 Phase 1: Ground — web search for data             [pending]
+Phase 1.5: Elicit — review with user              [pending]
 Phase 2: Hypothesize — generate competing paths   [pending]
 Phase 3: Simulate — 5 persona council (parallel)  [pending]
 Phase 3b: Synthesis — merge persona outputs       [pending]
@@ -101,8 +101,9 @@ go directly to Phase 8 (DECIDE). The brief notes "1 iteration, no convergence ch
 ```
 OUTER (runs once):
   Phase 0: SCOPE ──────────────→ config.json
-  Phase 0.5: ELICIT ───────────→ user-inputs.md (review assumptions, personas, data with user)
   Phase 1: GROUND ─────────────→ ground-data.md
+  Phase 1.5: ELICIT ───────────→ user-inputs.md (review assumptions, personas, data with user)
+                                  (ELICIT runs AFTER GROUND because it shows grounding data to user)
 
 INNER (max {iterations} times, default 2):
   Phase 2: HYPOTHESIZE ────────→ iteration-{N}/hypotheses.json
@@ -180,7 +181,7 @@ half its time re-reasoning about structure — inline eliminates this.
    council_agreement, specialist_insight tags.
 3. **Novel IDs:** For effects NOT in the shared vocabulary, count them:
    - ≤ 3 novel IDs: orchestrator deduplicates inline (manageable reasoning)
-   - > 3 novel IDs: spawn ONE Haiku agent for just the dedup step
+   - > 3 novel IDs: spawn a single lightweight agent for just the dedup step
 4. Write `effects-chains.json`.
 
 ### Post-Synthesis Pipeline (Parallel, Fixes 3+4+7)
@@ -280,9 +281,12 @@ Phase 7 (CONVERGE) runs the Judge. The Judge:
 | Ranking flip count | ≤ 1 | In peer review, each persona ranks the other 4 analyses. A "flip" = any pairwise ordering reversal vs previous iteration. |
 | Contradiction count | ≤ 1 | Effects where one persona's 1st-order effect directly contradicts another's (e.g., "revenue increases" vs "revenue decreases"). |
 
-4. **Converged** = ALL 4 thresholds met.
-5. **Not converged** = any threshold violated. If iteration < 3, loop back to Phase 2
-   with updated assumptions from the critique and adversary phases.
+4. **Convergence uses a weighted composite** (see `references/phases/converge.md` for full logic):
+   - PRIMARY signals (must pass): contradiction_count decreasing or ≤ 1, assumption stability > 80%
+   - SECONDARY signals (warn but don't gate): effects_delta, ranking flips
+   - A high effects_delta WITH decreasing contradictions = productive refinement, not instability
+5. **Not converged** = primary signals violated. If iteration < max, loop back to Phase 2.
+   Partial convergence triggers targeted escalation per the failing dimension.
 6. **Max iterations reached** = exit anyway. Phase 8 runs with a `Convergence: NOT REACHED`
    warning in the Decision Brief.
 
@@ -313,6 +317,8 @@ This summary is the ONLY prior-iteration context carried forward to iteration N+
 ~/.autodecision/runs/{decision-slug}/
 ├── config.json                     # Phase 0 output
 ├── ground-data.md                  # Phase 1 output
+├── user-inputs.md                  # Phase 1.5 output (if ELICIT ran)
+├── shared-context.md               # Precomputed before Phase 3 (preamble + config + data)
 ├── iteration-1/
 │   ├── hypotheses.json             # Phase 2 output
 │   ├── council/
@@ -336,7 +342,7 @@ This summary is the ONLY prior-iteration context carried forward to iteration N+
 
 ## Quick Mode Protocol
 
-Quick mode (`/autodecision:quick`) skips the council and iteration:
+Quick mode (`/autodecision:quick`) skips ELICIT, the council, and iteration (speed over depth):
 
 1. **Phase 0: SCOPE** — same as full loop. Writes `config.json`.
 2. **Phase 1: GROUND** — same as full loop. Writes `ground-data.md`.

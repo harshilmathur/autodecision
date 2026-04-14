@@ -8,6 +8,7 @@ description: >
 triggers:
   - /autodecision
   - /autodecision:quick
+  - /autodecision:compare
   - /autodecision:plan
   - /autodecision:review
   - /autodecision:export
@@ -45,8 +46,9 @@ measures convergence mechanically — it never participates in analysis.
 effects, probabilities (median + [min,max] disagreement range), assumption tracking,
 and `council_agreement` counts.
 
-**The Loop:** 9 phases with max 3 inner iterations. Convergence when: effects delta < 2,
-assumption stability > 80%, ranking flips ≤ 1, contradiction count ≤ 1.
+**The Loop:** 10 phases with configurable iterations (default 2, max 5). Convergence uses
+a weighted composite: primary signals (contradictions decreasing + assumption stability > 80%)
+must pass. Effects delta and ranking flips are warnings, not gates.
 
 **Data Storage:** All decision data lives in `~/.autodecision/` (user-level, never in repo).
 Run artifacts go in `~/.autodecision/runs/{decision-slug}/`. Journal and assumption
@@ -55,7 +57,7 @@ library are cross-decision persistent stores.
 ## Key Rules
 
 - **NEVER simulate in a vacuum.** Phase 1 (GROUND) is mandatory. Search for real data first.
-- **ALWAYS run Phase 0.5 (ELICIT) before the loop** unless `--skip-elicit` is passed. Review assumptions, personas, and data with the user. Ask for domain knowledge. This is the single biggest quality lever.
+- **ALWAYS run Phase 1.5 (ELICIT) after GROUND, before the loop** unless `--skip-elicit` is passed. ELICIT shows grounding data to the user for review. This is the single biggest quality lever.
 - **Every effect MUST have a stable `effect_id`** (e.g. `acq_increase`, `competitor_price_war`). The Judge compares effects by ID across iterations, not by description text.
 - **Every effect MUST have a probability** (median) and `probability_range` [min, max].
 - **Every effect MUST trace to explicit assumptions.** No implicit assumptions.
@@ -63,7 +65,7 @@ library are cross-decision persistent stores.
 - **Each persona runs as a SEPARATE Agent tool subagent.** The subagent reads shared context files and writes to `council/{persona}.json`. This is non-negotiable for independence.
 - **Anonymize during peer review.** Personas review "Analysis A", "Analysis B" — never by persona name. Mapping is randomized per iteration.
 - **Generate 2nd-order effects for ALL 1st-order effects.** No probability gate. Tail risks matter most.
-- **Stop when the Judge says so**, not when you run out of things to say. Max 3 inner loop iterations.
+- **Stop when the Judge says so**, not when you run out of things to say. Max iterations configurable (default 2, up to 5).
 - **The iteration folders ARE the memory.** Read previous iteration before starting the next.
 - **The Decision Brief is for humans, not machines.** See `references/phases/decide.md` for formatting rules.
 
@@ -86,7 +88,7 @@ Load these on-demand as each phase begins:
 | Phase 6: Sensitivity | `references/phases/sensitivity.md` |
 | Phase 7: Converge | `references/phases/converge.md` |
 | Phase 8: Decide | `references/phases/decide.md` |
-| Phase 0.5: Elicit | `references/phases/elicit.md` |
+| Phase 1.5: Elicit | `references/phases/elicit.md` |
 | Decision Brief template | `references/output-format.md` |
 | Decision journal spec | `references/journal-spec.md` |
 | Assumption library spec | `references/assumption-library-spec.md` |
@@ -110,7 +112,7 @@ with assumptions and probabilities from a single analytical pass. ~2 minutes.
 ## Build Phases
 
 **Phase 1 (Core — build first, prove it works):**
-- Full 9-phase loop with council
+- Full 10-phase loop with council
 - Quick mode
 - Baseline comparison test (single-shot vs full loop)
 

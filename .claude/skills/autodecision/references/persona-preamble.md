@@ -110,11 +110,11 @@ PRIOR ITERATION CONTEXT:
 
 ## Total Prompt Size Target
 
-- Shared preamble: ~500 tokens
-- Persona-specific block: ~100 tokens
-- User context: ~100 tokens
-- File reading instructions: ~100 tokens
-- **Total: ~800 tokens** (down from ~1200+ previously)
+Under the shared-context model (see engine-protocol.md), the preamble content
+is embedded in `shared-context.md` rather than inlined in each persona prompt:
 
-The persona subagent then reads context files (config.json, ground-data.md,
-hypotheses.json) via its own Read tool, keeping the prompt lean.
+- Per-persona prompt: ~150 tokens (persona block + "read shared-context.md" instruction)
+- shared-context.md: ~1500 tokens (config + ground data + hypotheses + preamble rules + schema)
+
+The preamble content above is the SOURCE for what goes into shared-context.md.
+The orchestrator copies it there before spawning personas.

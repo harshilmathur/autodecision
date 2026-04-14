@@ -115,27 +115,7 @@ Agent(prompt="[customer block]\n\nRead shared-context.md...", name="customer")
 Per-persona prompt is now ~150 tokens (persona block + file read instruction).
 The shared-context.md file carries the other ~1500 tokens of rules, schema, and data.
 
-```
-Agent(prompt="[Growth Optimist system prompt]
-
-Read the following files for context:
-- ~/.autodecision/runs/{slug}/config.json (decision scope and sub-questions)
-- ~/.autodecision/runs/{slug}/ground-data.md (real-world data from web search)
-- ~/.autodecision/runs/{slug}/iteration-{N}/hypotheses.json (hypotheses to simulate)
-[If iteration > 1:]
-- ~/.autodecision/runs/{slug}/iteration-{N-1}/convergence-summary.md (what changed last iteration)
-
-For EACH hypothesis in hypotheses.json, produce an effects chain. Follow the JSON
-format specified below exactly.
-
-Write your complete analysis to:
-  ~/.autodecision/runs/{slug}/iteration-{N}/council/optimist.json
-
-[Include the effects chain JSON schema from references/effects-chain-spec.md]
-")
-```
-
-Repeat for all 5 personas, each with their own system prompt but the same context files.
+Repeat for all 5 personas, each with their own persona-specific block but the same shared-context.md.
 
 ### Phase 4: CRITIQUE (Anonymized Peer Review)
 

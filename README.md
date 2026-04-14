@@ -88,8 +88,8 @@ Pre-built decompositions for common decisions:
 
 ```
 Phase 0:   SCOPE     — Decompose decision into sub-questions
-Phase 0.5: ELICIT    — Review assumptions, personas, data with user
 Phase 1:   GROUND    — Web search for real data and precedents
+Phase 1.5: ELICIT    — Review assumptions, personas, data with user
   ┌──────────────────────────────────────────────────┐
   │  INNER LOOP (default: 2 iterations)              │
   │                                                  │
@@ -114,7 +114,7 @@ The Convergence Judge (a 6th persona that never participates in analysis) measur
 | Ranking flips | ≤ 1 | Did peer review rankings reverse |
 | Contradictions | ≤ 1 | Do effects directly contradict each other |
 
-When all 4 pass, the loop stops. If they don't pass after max iterations, the brief includes a "Convergence NOT REACHED" warning with the delta values.
+Convergence uses a weighted composite: contradictions decreasing + assumption stability > 80% are the primary signals (must pass). Effects delta and ranking flips are warnings, not gates. A high effects delta WITH decreasing contradictions means productive refinement, not instability. If primary signals don't pass after max iterations, the brief includes a "Convergence NOT REACHED" warning.
 
 ## Data storage
 

@@ -15,7 +15,7 @@ allowed-tools:
 
 # /autodecision
 
-Run the full Auto-Decision Engine: 9 phases, 5-persona council, iterative refinement
+Run the full Auto-Decision Engine: 10 phases, 5-persona council, iterative refinement
 until convergence.
 
 ## Invocation
@@ -29,7 +29,7 @@ until convergence.
 
 1. Read the skill definition at `.claude/skills/autodecision/SKILL.md`
 2. Read `references/engine-protocol.md` for the full loop protocol
-3. Execute all 9 phases in sequence, following the protocol exactly
+3. Execute all 10 phases in sequence, following the protocol exactly
 4. Load each phase's reference file as you enter that phase
 5. For Phase 3 (SIMULATE) and Phase 4 (CRITIQUE): spawn persona subagents
    via the Agent tool as specified in `references/persona-council.md`

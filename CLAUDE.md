@@ -144,8 +144,8 @@ Skips Phase 0.5 (ELICIT) where the system reviews assumptions, personas, and dat
 ```
 OUTER (runs once):
   Phase 0:   SCOPE     Parse decision → 2-5 sub-questions + constraints
-  Phase 0.5: ELICIT    Review assumptions, personas, data with user (skippable)
   Phase 1:   GROUND    Web search for real data and precedents
+  Phase 1.5: ELICIT    Review assumptions, data, personas with user (skippable)
 
 INNER (repeats --iterations times, default 2):
   Phase 2: HYPOTHESIZE   Generate 3-5 competing hypotheses
@@ -197,7 +197,7 @@ The Judge measures 4 parameters after each iteration:
 | Ranking flips | <= 1 | Pairwise ordering reversals in peer review vs previous iteration |
 | Contradictions | <= 1 | Directly contradicting effects with council agreement >= 2 |
 
-All 4 pass = converged. Any fail + iterations remaining = loop back. Max iterations reached = proceed with "NOT REACHED" warning.
+Convergence uses a weighted composite: contradictions decreasing + assumption stability > 80% are the primary signals (must pass). Effects delta and ranking flips are warnings, not gates. A high effects delta WITH decreasing contradictions = productive refinement. See `converge.md` for full logic including partial convergence escalation.
 
 ---
 
@@ -265,7 +265,7 @@ All decision data lives in `~/.autodecision/` (user-level, never in your repo):
 ├── runs/                         # One directory per decision run
 │   └── {decision-slug}/
 │       ├── config.json           # Phase 0 output
-│       ├── user-inputs.md        # Phase 0.5 output (if ELICIT ran)
+│       ├── user-inputs.md        # Phase 1.5 output (if ELICIT ran)
 │       ├── ground-data.md        # Phase 1 output
 │       ├── iteration-1/
 │       │   ├── hypotheses.json   # Phase 2 output
@@ -296,7 +296,7 @@ All decision data lives in `~/.autodecision/` (user-level, never in your repo):
 ## 10 Critical Rules
 
 1. **Never simulate in a vacuum.** Phase 1 (GROUND) is mandatory. Search for real data first.
-2. **Always run ELICIT before the loop** (unless `--skip-elicit`). Review assumptions, personas, data with the user.
+2. **Always run ELICIT after GROUND, before the loop** (unless `--skip-elicit`). ELICIT shows grounding data to the user for review.
 3. **Each persona runs as a separate subagent.** Genuine context-window independence. Non-negotiable.
 4. **Spawn personas as foreground parallel agents**, not background. Avoids straggler notifications.
 5. **Every effect must have a stable `effect_id`.** The Judge compares by ID across iterations, not description text.
@@ -304,7 +304,7 @@ All decision data lives in `~/.autodecision/` (user-level, never in your repo):
 7. **Persona disagreement IS the uncertainty signal.** Don't average it away. The range is the data.
 8. **Generate 2nd-order effects for ALL 1st-order effects.** No probability gate. Tail risks matter most.
 9. **Iteration folders are the memory.** Read previous iteration before starting the next. Only carry forward the 500-token convergence summary, not full JSON.
-10. **Synthesis is done inline by the orchestrator.** Don't spawn a separate agent for the merge. Critique runs as a single agent pass, not 5 reviewers.
+10. **Synthesis is done inline by the orchestrator.** Don't spawn a separate agent for the merge. Critique runs as one spawned agent (not 5 separate reviewer subagents).
 
 ---
 

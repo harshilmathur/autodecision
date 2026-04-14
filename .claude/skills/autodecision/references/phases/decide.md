@@ -106,15 +106,10 @@ For each assumption in the final `effects-chains.json > all_assumptions`:
 - If assumption key is new: append a new assumption entry with `first_seen`, initial
   `times_referenced: 1`, and this decision's sensitivity/fragility ratings
 
-**5c. Print to user:**
-
-Print the full Decision Brief. Then print:
-"Decision logged to journal. Run `/autodecision:review` to compare predictions vs reality later."
-
 ### Step 6: Print Brief to User
 
-After persisting, print the full Decision Brief to the conversation so the
-user can see it immediately.
+After persisting, print the full Decision Brief to the conversation. Then print:
+"Decision logged to journal. Run `/autodecision:review` to compare predictions vs reality later."
 
 ## Handling Incomplete Data
 
@@ -126,7 +121,7 @@ If phases are missing (status: partial or file missing):
 ## Convergence Status in Brief
 
 - **Converged at iteration N:** "Insights stabilized after N iterations of adversarial pressure."
-- **NOT REACHED after 3 iterations:** "Convergence not reached. This decision has genuine
+- **NOT REACHED after max iterations:** "Convergence not reached. This decision has genuine
   unresolvable uncertainty. The effects below represent the best available analysis but
   may shift with additional iteration. Delta values: [effects_delta], [assumption_stability],
   [ranking_flips], [contradictions]."
