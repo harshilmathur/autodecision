@@ -143,7 +143,7 @@ All decision data lives in `~/.autodecision/` (user-level, never in your repo):
 
 **"Should we cut pricing by 20%?"** — Full loop found: irreversible price anchor at P=0.825 (5/5 council agreement), volume offset thesis has 88-94% joint failure probability, recommended controlled A/B promo experiment instead.
 
-**"Should Acme Corp launch in the US?"** — Full loop found: Stripe's 68% market share makes general entry non-viable (4/5 consensus), India-US corridor has <50bps margins, recommended post-IPO corridor entry with pre-IPO TAM study and monthly Xflow monitoring.
+**"Should we launch in a new international market?"** — Full loop found: incumbent's dominant market share makes general entry non-viable (4/5 consensus), cross-border corridor has compressed margins, recommended post-IPO corridor entry with pre-launch TAM study and monthly competitor monitoring.
 
 ## What makes this different
 

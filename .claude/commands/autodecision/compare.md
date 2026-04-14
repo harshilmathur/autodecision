@@ -30,7 +30,7 @@ If one option is clearly better, recommend running the full loop on it.
 
 ### Mode 2: Post-Facto Comparison (compare existing runs)
 ```
-/autodecision:compare pricing-cut-20pct-full vs acme-corp-launch-us-full
+/autodecision:compare pricing-cut-20pct-full vs market-expansion-full
 /autodecision:compare --existing slug-a vs slug-b
 ```
 
