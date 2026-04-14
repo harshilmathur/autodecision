@@ -11,6 +11,26 @@ Final synthesis. Produce the Decision Brief — the primary output of the system
 ## Outputs
 - `DECISION-BRIEF.md`
 
+## CRITICAL: Human-Readable Output
+
+Before writing ANY part of the brief, internalize this rule:
+
+**The brief is a strategy memo for decision-makers. NEVER show internal identifiers.**
+
+When you read `effect_id: "cci_phase2_review"` with `description: "CCI triggers
+Phase-2 review"` from effects-chains.json, the brief says "CCI triggers Phase-2
+review (P=0.80)" — NEVER "`cci_phase2_review` (0.80)".
+
+Same for assumptions: `bank_partner_willing` in JSON becomes "At least one major
+bank willing to partner" in the brief. Always use the `description` field, never
+the `key` field.
+
+Same for hypotheses: `h7_acquire_and_carve_jv` becomes "H7: Acquire + carve out
+cross-border into bank JV".
+
+If you catch yourself writing snake_case or backtick-wrapped identifiers in the
+brief text, stop and rewrite. The reader should never see an underscore.
+
 ## Process
 
 ### Step 1: Read Final State

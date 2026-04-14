@@ -187,6 +187,13 @@ This makes ~80% of the merge mechanical (shared IDs match directly). The remaini
 
 ### Synthesis Pass
 
+**Description quality matters.** During synthesis, when choosing which persona's
+`description` to keep for a merged effect, pick the CLEAREST and most SPECIFIC
+human-readable description. These descriptions flow directly into the Decision
+Brief — they must read like plain English, not internal shorthand.
+- GOOD description: "CCI triggers a Phase-2 review with 6-12 month timeline"
+- BAD description: "CCI phase 2 review triggered" (too terse for the brief)
+
 After all subagents complete in Phase 3:
 
 1. Read all `council/*.json` files.
