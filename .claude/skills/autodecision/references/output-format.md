@@ -2,6 +2,43 @@
 
 Use this template for Phase 8 (DECIDE) output. Write to `DECISION-BRIEF.md` in the run directory.
 
+## CRITICAL: Human-Readable Output Rules
+
+The Decision Brief is for executives and decision-makers, NOT engineers. Follow
+these rules strictly:
+
+**1. NEVER show raw effect_ids or assumption keys in the brief text.**
+- BAD: `competitor_bid_imminent` (0.35), `cci_phase2_review` triggered
+- GOOD: "Competitor bid is imminent" (P=0.35), "CCI Phase-2 review triggered"
+- The `effect_id` and assumption keys are INTERNAL identifiers stored in JSON files.
+  The brief uses ONLY the human-readable `description` field.
+
+**2. NEVER use snake_case identifiers in prose, tables, or headers.**
+- BAD: `payouts_category_lock`, `merchant_churn_during_integration`
+- GOOD: "Payouts category lock-in", "Merchant churn during integration period"
+
+**3. Effect IDs may appear ONLY in:**
+- The JSON artifacts on disk (effects-chains.json, etc.)
+- The convergence log's internal fields
+- Technical appendices explicitly labeled "for reference"
+- NEVER in the main brief sections (Executive Summary through Recommendation)
+
+**4. Assumption names follow the same rule:**
+- BAD: Key assumptions: `bank_partner_willing`, `acme-corp_execution_capacity_exists`
+- GOOD: Key assumptions: "At least one major bank willing to partner", "Acme Corp has
+  execution capacity for parallel workstreams"
+
+**5. Tables should use full sentences or clear phrases, not identifiers:**
+- BAD: | `cci_phase2_review` | 0.80 | ...
+- GOOD: | CCI triggers Phase-2 review | 0.80 | ...
+
+**6. When referencing hypotheses, use readable labels:**
+- BAD: h7_acquire_and_carve_jv
+- GOOD: H7: Acquire + carve out cross-border into bank JV
+
+The brief should read like a McKinsey strategy memo, not a database query result.
+A reader should never have to mentally parse an underscore-separated identifier.
+
 ---
 
 ```markdown
