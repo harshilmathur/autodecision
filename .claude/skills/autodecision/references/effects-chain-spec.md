@@ -166,6 +166,20 @@ not as low-consensus noise.
 - Optimist finding productization upside (1/5) → SPECIALIST (creative alternative)
 - Pessimist finding shadow AI risk (1/5) → NOT specialist (all personas should see this)
 
+## Breakthrough Detection
+
+Effects with `effect_id` prefixed `alt_` are creative alternatives proposed by
+individual personas. During synthesis, tag these with `"breakthrough": true` if:
+
+1. The effect proposes a genuinely NEW hypothesis or approach not in the original
+   hypotheses.json (e.g., h5 promo in the pricing test, h7 JV in the Cowork test)
+2. It materially changes the recommendation (not just a minor variant)
+
+Breakthroughs display as `[BREAKTHROUGH: {persona}]` in the Decision Brief alongside
+`[SPECIALIST]` tags. They appear in the high-confidence section regardless of
+council_agreement — a breakthrough from one persona that changes the recommendation
+is the highest-value output of the entire system.
+
 ## `effect_id` Rules
 
 The `effect_id` is the most important field in the system. It enables mechanical

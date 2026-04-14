@@ -15,9 +15,24 @@ irrelevant simulation.
 - `user-inputs.md` in the run directory
 - Potentially updated `config.json` (if user modifies sub-questions or constraints)
 
+## Adaptive ELICIT Rules
+
+Not every decision needs all blocks. Use these rules to skip blocks that add
+friction without value:
+
+| Block | Always Ask | Skip When |
+|-------|-----------|-----------|
+| Block 1: Assumptions + Data | YES — always | Never skip. Fast scan, high value. |
+| Block 2: Personas | Only for novel decisions | Skip if a template was used (templates already tune personas) |
+| Block 3: Decision Tilt | YES — always | Never skip. One question, frames the entire analysis. |
+| Block 4: Domain Knowledge | Only when data gaps exist | Skip if grounding returned substantive data for ALL sub-questions |
+
+**Result:** Minimum 2 questions (assumptions + tilt), maximum 4 for novel ungrounded
+decisions. Down from a fixed 4 every time.
+
 ## Process
 
-Present three review blocks to the user via AskUserQuestion. Each block is skippable.
+Present review blocks to the user via AskUserQuestion. Each block is skippable.
 
 ### Block 1: Review Assumptions and Data
 
@@ -47,7 +62,13 @@ If user provides corrections or data:
 - Update `config.json` if sub-questions change
 - Tag user-provided data as "(user-provided)" throughout the analysis
 
-### Block 2: Review Personas
+### Block 2: Review Personas (skip if template was used)
+
+**Skip this block** if a decision template was used (pricing, expansion, build-vs-buy,
+hiring). Templates already include persona enhancements tuned for the decision type.
+Note in user-inputs.md: "Personas: DEFAULT (template-tuned, skipped review)."
+
+**Ask this block** only for novel decisions without a template.
 
 Present the 5 default personas and ask if the user wants to modify:
 
@@ -75,7 +96,47 @@ If user customizes:
 - Custom personas follow the same structure: optimization objective, blind spot,
   contrarian question, no-hedging rule
 
-### Block 3: Additional Domain Knowledge
+### Block 3: Decision Tilt
+
+> **What are you optimizing for with this decision?** This tilts the analysis toward
+> your strategic priority. Every hypothesis gets scored, but the recommendation
+> weights your priority higher.
+>
+> A) **Maximize enterprise value** (Recommended) — balance growth, defensibility, and long-term value creation
+> B) **Build moat** — prioritize competitive advantage and defensibility over speed or cost
+> C) **Capital efficiency** — minimize spend, maximize ROI, shortest payback period
+> D) **Time to market** — speed and first-mover advantage above all
+> E) **Risk minimization** — most reversible, safest path, smallest blast radius
+> F) Skip — no tilt, balanced analysis
+
+Store the tilt in `config.json` as `"tilt": "maximize_enterprise_value"` (or the
+selected value). Thread into every persona prompt:
+
+```
+DECISION TILT: {tilt_name}
+Weight your analysis toward {tilt description}. When two effects have similar
+probability, favor the one that better serves this tilt. In your recommendation,
+explain how the preferred option serves this strategic priority.
+```
+
+The Decision Brief header shows: "Tilt: {tilt_name}" so readers know the analysis
+has an explicit strategic lens.
+
+| Tilt | Weights Higher | Persona Most Affected |
+|------|---------------|----------------------|
+| maximize_enterprise_value | Growth + defensibility + sustainable economics | All equally |
+| moat | Competitive advantage, switching costs, network effects | Competitor, Optimist |
+| capital_efficiency | ROI, payback, burn rate | Pessimist, Regulator |
+| time_to_market | Speed, first-mover, deployment timeline | Optimist, Customer |
+| risk_minimization | Reversibility, downside protection, incremental approach | Pessimist, Regulator |
+
+### Block 4: Additional Domain Knowledge (skip if grounding is strong)
+
+**Skip this block** if Phase 1 (GROUND) returned substantive data for ALL sub-questions
+(no sub-question flagged as ungrounded). Note in user-inputs.md: "Domain Knowledge:
+SKIPPED (grounding sufficient for all sub-questions)."
+
+**Ask this block** if any sub-question has weak or missing grounding data.
 
 Ask targeted questions based on the decision type and data gaps:
 
@@ -128,7 +189,7 @@ If user provides answers:
 
 ## Skip Behavior
 
-If the user skips ALL three blocks (or the command includes `--skip-elicit`):
+If the user skips ALL blocks (or the command includes `--skip-elicit`):
 - Write `user-inputs.md` with all statuses as "SKIPPED"
 - Proceed immediately to Phase 2
 

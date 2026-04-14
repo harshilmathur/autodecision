@@ -42,9 +42,58 @@ Apply expected value reasoning across the hypothesis space:
 
 Write `DECISION-BRIEF.md` using the template from `references/output-format.md`.
 
-### Step 5: Print Brief to User
+### Step 5: Persist to Journal and Assumption Library
 
-After writing the file, print the full Decision Brief to the conversation so the
+**This step is MANDATORY. The journal and assumption library are the compounding
+knowledge assets. Without them, /autodecision:review and /autodecision:export
+have nothing to work with.**
+
+**5a. Append to journal.jsonl:**
+
+```bash
+# Create file if it doesn't exist
+touch ~/.autodecision/journal.jsonl
+```
+
+Construct a journal entry JSON object (see `references/journal-spec.md` for full schema):
+- `decision_id`: the run slug
+- `decision_statement`: from config.json
+- `timestamp`: current ISO 8601
+- `mode`: "full" or "quick"
+- `iterations`: number completed
+- `converged`: boolean
+- `recommendation`: one-line action from the brief
+- `confidence`: HIGH/MEDIUM/LOW
+- `hypotheses`: array of {hypothesis_id, statement, status}
+- `top_effects`: top 3-5 effects by council_agreement and probability
+- `load_bearing_assumptions`: assumptions with sensitivity HIGH
+- `decision_boundaries`: from sensitivity analysis
+- `tilt`: from config.json
+- `outcome`: null (set later via /autodecision:review)
+
+Append this as ONE line to `~/.autodecision/journal.jsonl`.
+
+**5b. Update assumption library:**
+
+```bash
+touch ~/.autodecision/assumptions.jsonl
+```
+
+For each assumption in the final `effects-chains.json > all_assumptions`:
+- Read `~/.autodecision/assumptions.jsonl`
+- If assumption key already exists: append a reference entry updating `times_referenced`
+  and adding this `decision_id`
+- If assumption key is new: append a new assumption entry with `first_seen`, initial
+  `times_referenced: 1`, and this decision's sensitivity/fragility ratings
+
+**5c. Print to user:**
+
+Print the full Decision Brief. Then print:
+"Decision logged to journal. Run `/autodecision:review` to compare predictions vs reality later."
+
+### Step 6: Print Brief to User
+
+After persisting, print the full Decision Brief to the conversation so the
 user can see it immediately.
 
 ## Handling Incomplete Data

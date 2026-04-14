@@ -87,9 +87,19 @@ The Judge is NOT an analyst. It never generates hypotheses, effects, or opinions
 ### Phase 3: SIMULATE
 
 Spawn 5 FOREGROUND subagents in PARALLEL using multiple Agent tool calls in a single
-message. Do NOT use `run_in_background: true` — this causes straggler notifications
-that arrive after results are already consumed. Foreground parallel agents complete
-together and return all results in one response.
+message. Each Agent call MUST specify `run_in_background: false` (or omit the parameter,
+since foreground is the default). Do NOT use `run_in_background: true` — background
+agents cause straggler notifications that arrive after results are consumed.
+
+Example (pseudocode for the orchestrator):
+```
+Agent(prompt="[preamble + optimist block + context]", name="optimist")    # foreground
+Agent(prompt="[preamble + pessimist block + context]", name="pessimist")  # foreground
+Agent(prompt="[preamble + competitor block + context]", name="competitor") # foreground
+Agent(prompt="[preamble + regulator block + context]", name="regulator")  # foreground
+Agent(prompt="[preamble + customer block + context]", name="customer")    # foreground
+# All 5 in ONE message. All complete before orchestrator continues.
+```
 
 ```
 Agent(prompt="[Growth Optimist system prompt]
@@ -145,20 +155,37 @@ After spawning subagents, wait for all to complete. For each subagent:
   remaining personas (minimum 3 of 5 required). If fewer than 3 complete, flag
   as a critical error and proceed to Phase 8 with available data.
 
-### Synthesis Pass (done by orchestrator, not a separate agent)
+### Shared ID Vocabulary (seeded from hypotheses.json)
 
-After all subagents complete in Phase 3, the ORCHESTRATOR performs the merge directly.
-This is a mechanical operation — do NOT spawn a separate agent for it unless the
-merge involves heavy deduplication (many conflicting effect_ids).
+To reduce semantic dedup problems, Phase 2 (HYPOTHESIZE) should generate a list of
+EXPECTED effect IDs per hypothesis. These are seeded into every persona's prompt:
+
+```
+EXPECTED EFFECT IDS (use these where applicable, add new IDs only for genuinely new effects):
+  h1: acq_increase, revenue_drop, competitor_response, brand_impact
+  h2: build_delay, eng_opportunity_cost, maintenance_burden
+  h3: fast_deploy, connector_flywheel, dlp_compliance
+  h4: productivity_loss, shadow_ai_risk, talent_attrition
+```
+
+This makes ~80% of the merge mechanical (shared IDs match directly). The remaining
+~20% (novel effects a persona invents) still need semantic dedup.
+
+### Synthesis Pass
+
+After all subagents complete in Phase 3:
 
 1. Read all `council/*.json` files.
-2. For each unique `effect_id` across all personas:
-   - `probability` = median of all persona estimates for this effect
-   - `probability_range` = [min, max] across all personas
-   - `council_agreement` = count of personas who independently generated this effect
-3. Merge children (2nd-order effects) similarly.
-4. Build `all_assumptions` map from all assumption keys referenced.
-5. Write `effects-chains.json` with the synthesized output.
+2. **Mechanical merge (shared IDs):** For effects using the seeded vocabulary, merge
+   directly — compute median probability, [min,max] range, council_agreement count.
+3. **Semantic dedup (novel IDs):** For effects NOT in the shared vocabulary, check if
+   any two describe the same outcome with different IDs. If yes, merge under the
+   clearer ID. This step requires reasoning — if there are > 3 novel effects to
+   dedup, delegate to a single synthesis agent rather than doing it inline.
+4. Tag effects with `specialist_insight: true` where applicable (see effects-chain-spec.md).
+5. Tag effects with `source_persona` when council_agreement is 1 or 2.
+6. Build `all_assumptions` map from all assumption keys referenced.
+7. Write `effects-chains.json` with the synthesized output.
 
 ## JSON Example for Persona Prompts
 

@@ -41,6 +41,23 @@ Force diversity along different AXES, not just optimism level:
 At least 2 of the 3-5 hypotheses must vary along DIFFERENT axes (not just the
 same axis at different magnitudes).
 
+## Shared Effect ID Vocabulary
+
+For EACH hypothesis, generate 4-6 expected effect IDs that personas should use.
+These go into `hypotheses.json` under `expected_effect_ids` and are seeded into
+every persona's prompt in Phase 3 to reduce semantic dedup problems in synthesis.
+
+Pick IDs that cover the obvious effects for each hypothesis. Personas reuse these
+where applicable and only invent new IDs for genuinely novel effects.
+
+Example:
+```json
+{
+  "hypothesis_id": "h1_buy_cowork",
+  "expected_effect_ids": ["fast_deploy", "adoption_plateau", "vendor_lock_in", "dlp_required", "budget_fit"]
+}
+```
+
 ## Example Output
 
 See `references/effects-chain-spec.md` for the `hypotheses.json` schema.

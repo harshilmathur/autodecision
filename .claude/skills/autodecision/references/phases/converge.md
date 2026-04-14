@@ -35,7 +35,7 @@ Compare `effects-chains.json` between iterations by `effect_id`:
 - Count effects REMOVED (present in previous, absent in current)
 - Count effects with probability SHIFTED > 0.1
 
-Total = added + removed + shifted. Threshold: < 2.
+Total = added + removed + shifted. This is a WARNING signal, not a gate.
 
 **2. Assumption Stability**
 
@@ -66,11 +66,52 @@ Within the current iteration's effects:
 
 Threshold: ≤ 1.
 
-### Convergence Decision
+### Convergence Decision (Weighted Composite)
 
-**Converged** = ALL 4 thresholds met.
-**Not converged** = any threshold violated AND iteration < max (3).
-**Max reached** = exit regardless. Note which thresholds were not met.
+The old model (ALL 4 must pass) is broken. Iteration 2 legitimately resolves
+contradictions, which REQUIRES changing effects. A 22-effect delta that resolves
+5 contradictions is convergence success, not failure.
+
+**New model: PRIMARY + SECONDARY signals.**
+
+**PRIMARY signals (must pass for convergence):**
+- `contradiction_count` is DECREASING or at threshold (≤ 1)
+- `assumption_stability` > 80%
+
+**SECONDARY signals (inform but don't gate):**
+- `effects_delta` — WARNING if high, but not a gate. A high delta WITH decreasing
+  contradictions means productive refinement.
+- `ranking_flip_count` — WARNING if > 1, gate only if > 3 (complete ranking reversal)
+
+**Convergence logic:**
+```
+if contradiction_count <= 1 AND assumption_stability > 80%:
+    CONVERGED (even if effects_delta is high)
+    note effects_delta and ranking_flips as warnings in the brief
+elif contradiction_count is decreasing AND assumption_stability > 70%:
+    TRENDING (close to convergence, worth one more iteration if budget allows)
+else:
+    NOT CONVERGED
+```
+
+**Report all 4 values regardless.** The brief shows the full picture. But convergence
+is determined by contradictions resolving + assumptions stabilizing, not by effects
+freezing.
+
+### Partial Convergence Escalation
+
+When 3/4 signals are healthy but 1 is failing, don't just print "NOT REACHED."
+Offer targeted escalation:
+
+| Failing Signal | Targeted Action |
+|---------------|----------------|
+| effects_delta high (but contradictions resolved) | Not a real failure. Converge. |
+| contradictions still high | Run a focused CRITIQUE pass on the contradicting effects only |
+| assumption_stability low | Run SENSITIVITY on the shifting assumptions only |
+| ranking_flips high | Re-run PEER REVIEW with explicit instruction to resolve disagreements |
+
+If iteration budget allows (current < max), auto-run the targeted action.
+If at max iterations, note which dimension failed and what would fix it.
 
 ### Convergence Summary
 

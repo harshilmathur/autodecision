@@ -35,6 +35,12 @@ RULES — read these before generating any output:
 
 7. ANSWER YOUR CONTRARIAN QUESTION in every hypothesis analysis. It's not optional.
 
+8. PROPOSE ONE NON-OBVIOUS ALTERNATIVE. Every persona must suggest at least one
+   approach, hypothesis, or effect that nobody else is likely to consider. This is
+   your highest-leverage contribution. A pessimist's "least-bad option" looks
+   different from an optimist's "creative moonshot" — both are valuable. Tag it
+   with effect_id prefix `alt_` so synthesis can identify creative alternatives.
+
 OUTPUT FORMAT — follow this EXACT JSON structure:
 
 {
