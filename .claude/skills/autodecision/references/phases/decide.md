@@ -159,6 +159,20 @@ If phases are missing (status: partial or file missing):
   may shift with additional iteration. Delta values: [effects_delta], [assumption_stability],
   [ranking_flips], [contradictions]."
 
+## Medium Mode (--iterations 1)
+
+Medium mode produces the SAME brief structure as full mode. Do NOT improvise an
+alternative layout. Use the identical template from `references/output-format.md`.
+The only differences:
+- Header shows: `Iterations: 1 | Converged: N/A (medium mode)`
+- Omit the Convergence Log section entirely (no convergence data exists)
+- Council Dynamics section still includes persona rankings and key disagreements
+
+Do NOT lead with recommendation, do NOT use "Why Not X" sections, do NOT drop
+Data Foundation or Hypotheses table. One template, one structure, regardless of
+iteration count. The reader should not need to know how many iterations ran to
+understand the brief.
+
 ## Quick Mode Variant
 
 For `/autodecision:quick`, Phase 8 produces a lighter brief:
