@@ -160,7 +160,7 @@ Decision Brief (not the exploratory section), tagged with `[SPECIALIST: {persona
 They are treated as important findings that only one expert was equipped to see,
 not as low-consensus noise.
 
-**Examples from test runs:**
+**Examples:**
 - Regulator finding MFN clause exposure (1/5) → SPECIALIST (domain match)
 - Regulator finding PCI scope expansion (1/5) → SPECIALIST (domain match)
 - Optimist finding productization upside (1/5) → SPECIALIST (creative alternative)
@@ -172,7 +172,7 @@ Effects with `effect_id` prefixed `alt_` are creative alternatives proposed by
 individual personas. During synthesis, tag these with `"breakthrough": true` if:
 
 1. The effect proposes a genuinely NEW hypothesis or approach not in the original
-   hypotheses.json (e.g., h5 promo in the pricing test, h7 JV in the Cowork test)
+   hypotheses.json (e.g., a hypothesis proposing a promotional alternative, or one proposing a joint venture)
 2. It materially changes the recommendation (not just a minor variant)
 
 Breakthroughs display as `[BREAKTHROUGH: {persona}]` in the Decision Brief alongside

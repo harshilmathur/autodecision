@@ -15,9 +15,8 @@ how to test them. Over time this becomes an organizational knowledge asset.
 ## Strict Schema Rules
 
 **EVERY assumption entry MUST follow this exact schema.** Do NOT invent alternative
-field names or vocabularies. The audit found 3 different fragility vocabularies
-(FRAGILE/SHAKEABLE/SOLID vs HIGH/MEDIUM/LOW vs absent) and 2 different `first_seen`
-formats (slug vs date). This causes the library to fail at cross-decision comparison.
+field names or vocabularies. Multiple vocabulary variants have been observed in the wild. To prevent inconsistency
+and ensure the library works for cross-decision comparison, use ONLY the vocabularies below.
 
 ### Vocabulary (use ONLY these values)
 

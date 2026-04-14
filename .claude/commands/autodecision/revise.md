@@ -29,11 +29,11 @@ changed and re-runs from the earliest affected phase.
 ## Examples
 
 ```
-/autodecision:revise zero-mdr-upi-smb "What if Capital attach rate is only 8% and Competitor A reaches PG parity in 6 months?"
-/autodecision:revise zero-mdr-upi-smb "Add a hypothesis: partner with Orchestrator Co to offer free UPI through their orchestrator"
-/autodecision:revise acme-corp-orchestrator-co-support "Assume RBI mandates UPI interoperability within 6 months"
-/autodecision:revise acme-corp-orchestrator-co-support "Change tilt to risk minimization — IPO is in 3 months"
-/autodecision:revise acme-corp-orchestrator-co-support "New data: Competitor B just quietly reconnected with Orchestrator Co"
+/autodecision:revise pricing-cut-20pct-full "What if customer acquisition only increases 10% instead of 30%?"
+/autodecision:revise pricing-cut-20pct-full "Add a hypothesis: offer a freemium tier instead of cutting prices"
+/autodecision:revise market-expansion-full "Assume the regulatory timeline is 6 months, not 18"
+/autodecision:revise market-expansion-full "Change tilt to risk minimization — IPO is in 3 months"
+/autodecision:revise market-expansion-full "New data: a competitor just entered the same market"
 ```
 
 ## Execution

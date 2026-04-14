@@ -1,4 +1,4 @@
-# Phase 0.5: ELICIT
+# Phase 1.5: ELICIT
 
 ## Purpose
 
@@ -171,9 +171,8 @@ And in `config.json` add: `"urgency": {"grade": "HARD/SOFT/SPECULATIVE/NONE", "e
    - HARD: test as normal assumptions
    - SOFT/SPECULATIVE: automatically included in sensitivity analysis as HIGH sensitivity
 
-**Why this exists:** Calibration data from 11+ decisions shows the system systematically
-over-weights urgency when not grounded in evidence. Two outcome-recorded decisions
-confirmed this bias. This question catches it at source — the user knows whether
+**Why this exists:** The system tends to over-weight urgency when not grounded in
+evidence. This question catches that bias at source — the user knows whether
 their urgency is real.
 
 ### Block 4: Additional Domain Knowledge (skip if grounding is strong)

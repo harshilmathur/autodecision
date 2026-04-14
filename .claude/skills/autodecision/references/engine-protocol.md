@@ -155,7 +155,7 @@ Key validations:
 
 Auto-fix what's fixable. Log warnings. Never block the run for a single failure.
 
-### Shared Context File (Fix 5)
+### Shared Context File
 
 Before spawning personas, the orchestrator precomputes `shared-context.md` in
 the run directory. This avoids duplicating 3-4K tokens of preamble + config +
@@ -199,11 +199,11 @@ each persona's analysis SEQUENTIALLY using separate system prompts. Between each
 This creates file-boundary independence (weaker than true subagents but structurally
 correct). Note in the brief: "Personas authored sequentially (Agent tool unavailable)."
 
-### Synthesis (Inline, Fix 2)
+### Synthesis (Inline)
 
 After all 5 personas complete, the ORCHESTRATOR performs synthesis directly.
-Do NOT spawn a separate agent for this. The synthesis agent in prior runs spent
-half its time re-reasoning about structure — inline eliminates this.
+Do NOT spawn a separate agent for this. A separate synthesis agent wastes time
+re-reasoning about structure — inline merge is faster and more reliable.
 
 1. Read all `council/*.json` files.
 2. **Mechanical merge (shared IDs):** Effects using the seeded vocabulary from
@@ -214,7 +214,7 @@ half its time re-reasoning about structure — inline eliminates this.
    - > 3 novel IDs: spawn a single lightweight agent for just the dedup step
 4. Write `effects-chains.json`.
 
-### Post-Synthesis Pipeline (Parallel, Fixes 3+4+7)
+### Post-Synthesis Pipeline (Parallel)
 
 The actual dependency graph is thinner than the old sequential pipeline assumed.
 Critique and Adversary are INDEPENDENT — adversary red-teams effects-chains.json
@@ -225,7 +225,7 @@ Personas (5, parallel) → Synthesis (inline)
                               │
                     ┌─────────┴─────────┐
                     ▼                   ▼
-              Critique agent      Adversary agent        ← PARALLEL (Fix 4)
+              Critique agent      Adversary agent        ← PARALLEL
               reads: council/*,   reads: effects-chains
               effects-chains      (NOT critique.json)
                     │                   │
@@ -237,7 +237,7 @@ Personas (5, parallel) → Synthesis (inline)
                               ▼
                     ┌─────────┴──────────┐
                     ▼                    ▼
-              Sensitivity agent    Judge (INLINE, Fix 3)
+              Sensitivity agent    Judge (INLINE)
               reads: effects +     reads: effects +
               adversary            peer-review
                     │                    │
@@ -256,17 +256,17 @@ Personas (5, parallel) → Synthesis (inline)
 Step 1: Spawn Critique + Adversary in PARALLEL (2 foreground agents, 1 message)
 Step 2: Wait for both
 Step 3: Spawn Sensitivity agent
-         SIMULTANEOUSLY run Judge INLINE (Fix 3 — set operations on 2 JSON files,
+         SIMULTANEOUSLY run Judge INLINE (set operations on 2 JSON files,
          not an agent. Diff effect_ids, count changes, compute convergence. ~5 sec.)
 Step 4: Wait for Sensitivity (Judge is already done)
 Step 5: If final iteration OR convergence reached:
-          Start Phase 8 DECIDE (Fix 7 — can start before judge writes
+          Start Phase 8 DECIDE (can start before judge writes
           convergence-summary if judge is inline and already done)
         If NOT final and NOT converged:
           Loop back to Phase 2 for next iteration
 ```
 
-**Fix 7 detail (Phase 8 concurrent start):** Since the Judge is now inline (~5 sec),
+**Phase 8 concurrent start:** Since the Judge is now inline (~5 sec),
 Phase 8 can start immediately after Sensitivity completes — the judge-score.json and
 convergence-summary.md are already written. This is only safe WHEN the judge is
 inline (instant). If for any reason the judge runs as an agent, wait for it first.
@@ -274,17 +274,6 @@ inline (instant). If for any reason the judge runs as an agent, wait for it firs
 Only apply concurrent start when this is DEFINITELY the final iteration (iteration
 count = max, or convergence was achieved). If another iteration might be needed,
 wait for the Judge to decide.
-
-### Projected Timing
-
-| Phase | Old | New | Fix |
-|-------|-----|-----|-----|
-| Synthesis | ~180s (agent) | ~10s | Fix 2: inline |
-| Critique + Adversary | ~300s (sequential) | ~180s | Fix 4: parallel |
-| Judge | ~60s (agent) | ~5s | Fix 3: inline |
-| Phase 8 start | waits for judge | immediate | Fix 7: concurrent |
-| Per-persona input prep | ~30s x 5 | ~5s x 5 | Fix 5: shared context |
-| **Total post-personas** | **~24 min** | **~13 min** | |
 
 ### Iteration Modes
 

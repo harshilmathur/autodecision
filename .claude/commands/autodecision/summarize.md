@@ -18,8 +18,8 @@ or stakeholders who won't read 300 lines.
 
 ```
 /autodecision:summarize {slug}
-/autodecision:summarize zero-mdr-upi-smb
-/autodecision:summarize acme-corp-orchestrator-co-support
+/autodecision:summarize pricing-cut-20pct-full
+/autodecision:summarize market-expansion-full
 ```
 
 ## Execution

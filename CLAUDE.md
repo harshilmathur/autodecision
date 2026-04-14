@@ -330,10 +330,13 @@ This is a pure Claude Code skill. No Python, no external APIs, no build step. Th
 
 ```
 .claude/
-├── commands/autodecision/          # 6 command entry points
+├── commands/autodecision/          # 9 command entry points
 │   ├── autodecision.md             # Full loop
 │   ├── quick.md                    # Single-pass
 │   ├── compare.md                  # Side-by-side comparison
+│   ├── revise.md                   # What-if scenario revision
+│   ├── challenge.md                # Adversary-only stress test
+│   ├── summarize.md                # One-page summary
 │   ├── plan.md                     # Scope wizard
 │   ├── review.md                   # Past decisions + outcomes
 │   └── export.md                   # Portable archive

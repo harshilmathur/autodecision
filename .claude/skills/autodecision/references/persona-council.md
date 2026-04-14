@@ -137,7 +137,7 @@ Run as a SINGLE agent pass (not 5 separate subagents). One agent:
 6. Writes `critique.json` with consolidated flaws and suggested fixes.
 
 NOTE: This runs as ONE agent for efficiency. In practice, a single reviewer evaluating
-all 5 analyses produces the same quality critique as 5 reviewers (tested in Phase 1 build).
+all 5 analyses produces the same quality critique as 5 reviewers.
 If future testing shows quality degrades, revert to 5 separate subagents.
 
 ### Subagent Output Handling

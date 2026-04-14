@@ -53,14 +53,14 @@ hypothesis list from hypotheses.json. Use these as the vocabulary to match again
 
 | Pattern in User Input | Change Type | Example |
 |----------------------|-------------|---------|
-| "What if {assumption} is {value}" | ASSUMPTION_OVERRIDE | "What if attach rate is only 8%" |
-| "Assume {fact}" | ASSUMPTION_OVERRIDE | "Assume Competitor A reaches parity in 6 months" |
-| "Add hypothesis: {description}" | NEW_HYPOTHESIS | "Add: partner with Orchestrator Co for free UPI" |
+| "What if {assumption} is {value}" | ASSUMPTION_OVERRIDE | "What if acquisition only increases 10%?" |
+| "Assume {fact}" | ASSUMPTION_OVERRIDE | "Assume the competitor reaches parity in 6 months" |
+| "Add hypothesis: {description}" | NEW_HYPOTHESIS | "Add: offer a freemium tier instead" |
 | "Remove/eliminate/drop H{N}" | REMOVE_HYPOTHESIS | "Eliminate H2, it's off the table" |
-| "New data: {fact}" | NEW_DATA | "Competitor A hired 5 ex-Acme Corp engineers" |
+| "New data: {fact}" | NEW_DATA | "Competitor just hired 5 senior engineers from us" |
 | "Change tilt to {tilt}" | TILT_CHANGE | "Change tilt to risk minimization" |
 | "{constraint} changed to {value}" | CONSTRAINT_CHANGE | "IPO is now in 3 months" |
-| Multiple statements | COMBINED | "What if attach is 8% AND Competitor A matches in 6 months" |
+| Multiple statements | COMBINED | "What if acquisition is only 10% AND competitor matches in 6 months" |
 
 ### Earliest Affected Phase
 

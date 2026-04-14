@@ -119,15 +119,3 @@ Single-pass mode for decisions that don't need the full loop:
 No personas, no peer review, no iteration. Just structured effects-chain output
 with assumptions and probabilities from a single analytical pass. ~2 minutes.
 
-## Build Phases
-
-**Phase 1 (Core — build first, prove it works):**
-- Full 10-phase loop with council
-- Quick mode
-- Baseline comparison test (single-shot vs full loop)
-
-**Phase 2 (Persistence — build after core loop is proven):**
-- Decision journal (`~/.autodecision/journal.jsonl`)
-- Decision templates (pricing, expansion, build-vs-buy, hiring)
-- Assumption library (`~/.autodecision/assumptions.jsonl`)
-- Export command (`/autodecision:export`)

@@ -53,7 +53,7 @@ where applicable and only invent new IDs for genuinely novel effects.
 Example:
 ```json
 {
-  "hypothesis_id": "h1_buy_cowork",
+  "hypothesis_id": "h1_buy_vendor",
   "expected_effect_ids": ["fast_deploy", "adoption_plateau", "vendor_lock_in", "dlp_required", "budget_fit"]
 }
 ```

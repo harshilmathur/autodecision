@@ -25,8 +25,7 @@ Same for assumptions: `bank_partner_willing` in JSON becomes "At least one major
 bank willing to partner" in the brief. Always use the `description` field, never
 the `key` field.
 
-Same for hypotheses: `h7_acquire_and_carve_jv` becomes "H7: Acquire + carve out
-cross-border into bank JV".
+Same for hypotheses: `h3_build_in_house` becomes "H3: Build the capability in-house".
 
 If you catch yourself writing snake_case or backtick-wrapped identifiers in the
 brief text, stop and rewrite. The reader should never see an underscore.
@@ -76,8 +75,8 @@ Write `DECISION-BRIEF.md` using the template from `references/output-format.md`.
 - Convergence Log (omit for medium mode, omit for quick mode)
 - Appendix A: Decision Timeline
 
-The audit found 5/10 full-mode briefs missing Executive Summary. Some used "Headline"
-instead. Do NOT improvise section names. Use the template exactly.
+The Executive Summary section is frequently omitted or misnamed. Do NOT use
+"Headline" or "Summary" instead. Use the template exactly.
 
 ### Step 5: Persist to Journal and Assumption Library
 

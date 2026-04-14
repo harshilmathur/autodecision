@@ -22,9 +22,9 @@ to adversary + sensitivity analysis. ~5 minutes.
 ## Invocation
 
 ```
-/autodecision:challenge "We're going to drop UPI fees to zero next month"
-/autodecision:challenge "We'll acquire Competitor B at $800M with a bank JV"
-/autodecision:challenge "We're hiring 50 engineers in Bangalore over the next quarter"
+/autodecision:challenge "We're cutting pricing by 30% across all plans next month"
+/autodecision:challenge "We're acquiring a competitor at $500M to enter a new vertical"
+/autodecision:challenge "We're hiring 50 engineers over the next quarter"
 ```
 
 ## Execution
