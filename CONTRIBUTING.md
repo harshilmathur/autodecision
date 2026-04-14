@@ -6,16 +6,52 @@ protocol files, no code to build or test. Contributing is straightforward.
 ## How the skill works
 
 The skill is a set of `.md` files that instruct Claude how to behave. There's no
-runtime, no build step, no dependencies. When a user types `/autodecision`, Claude
-reads these files and follows the protocol.
+runtime, no build step, no dependencies. When a user types `/autodecision:autodecision`
+(plugin) or `/autodecision` (legacy install), Claude reads these files and follows
+the protocol.
+
+## Repo layout
+
+The repo ships two mirrored trees:
 
 ```
-.claude/
-├── commands/autodecision/     # 9 command entry points (what the user types)
+claude-plugin/              # CANONICAL — edit files here
+├── .claude-plugin/
+│   └── plugin.json         # Plugin manifest
+├── commands/               # Flat layout: plugin namespace provides the prefix
+│   ├── autodecision.md     # → /autodecision:autodecision
+│   ├── quick.md            # → /autodecision:quick
+│   └── ...
 └── skills/autodecision/
-    ├── SKILL.md               # Core routing + key rules
-    └── references/            # Protocols, specs, templates, validation rules
+    ├── SKILL.md
+    └── references/
+
+.claude/                    # DERIVED — do not edit by hand
+├── commands/autodecision/  # Nested layout: directory is the namespace
+│   ├── autodecision.md     # → /autodecision (bare, legacy install)
+│   └── ...
+└── skills/autodecision/    # Identical copy of claude-plugin/skills/
+
+.claude-plugin/             # Repo-level marketplace manifest
+└── marketplace.json
 ```
+
+**Golden rule: edit `claude-plugin/` only.** The `.claude/` tree is regenerated
+from `claude-plugin/` by `scripts/sync.sh`. A GitHub Action (`.github/workflows/sync-check.yml`)
+fails any PR where `.claude/` is out of sync.
+
+## Making changes
+
+After editing anything under `claude-plugin/`:
+
+```bash
+./scripts/sync.sh
+git add claude-plugin/ .claude/
+git commit -m "..."
+```
+
+Commit both trees together. If the sync-check CI flags drift, you forgot to run
+the sync script — re-run it and amend/commit the regenerated `.claude/`.
 
 ## What to contribute
 
@@ -43,11 +79,12 @@ clearer, more actionable, or more consistent, that's the highest-leverage contri
 
 1. Fork the repo
 2. Create a branch (`git checkout -b my-improvement`)
-3. Make your changes
-4. Test by installing locally: `./install.sh`
-5. Run at least one decision through the skill to verify nothing broke
-6. Commit with a descriptive message
-7. Open a PR
+3. Make your changes under `claude-plugin/` (never edit `.claude/` directly)
+4. Run `./scripts/sync.sh` to regenerate `.claude/`
+5. Test by installing locally: `./install.sh` (or install the plugin from your fork)
+6. Run at least one decision through the skill to verify nothing broke
+7. Commit both `claude-plugin/` and `.claude/` together
+8. Open a PR — the sync-check workflow will verify the trees match
 
 ## Style guide
 

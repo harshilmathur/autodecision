@@ -1,0 +1,37 @@
+name: Sync check
+
+on:
+  pull_request:
+    paths:
+      - 'claude-plugin/**'
+      - '.claude/**'
+      - 'scripts/sync.sh'
+  push:
+    branches: [main]
+    paths:
+      - 'claude-plugin/**'
+      - '.claude/**'
+      - 'scripts/sync.sh'
+
+jobs:
+  verify-sync:
+    name: Verify .claude/ matches claude-plugin/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run sync script
+        run: ./scripts/sync.sh
+
+      - name: Check for drift
+        run: |
+          if ! git diff --quiet -- .claude/; then
+            echo "::error::.claude/ is out of sync with claude-plugin/."
+            echo "Someone edited the derived tree directly. Edit claude-plugin/"
+            echo "and run ./scripts/sync.sh to regenerate .claude/."
+            echo ""
+            echo "Drift detected:"
+            git diff --stat -- .claude/
+            exit 1
+          fi
+          echo ".claude/ matches claude-plugin/ — no drift."
