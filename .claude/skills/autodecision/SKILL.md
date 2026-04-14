@@ -69,6 +69,7 @@ library are cross-decision persistent stores.
 - **Every effect MUST trace to explicit assumptions.** No implicit assumptions.
 - **Persona disagreement IS the uncertainty signal.** Don't average it away — the range is the data.
 - **Each persona runs as a SEPARATE Agent tool subagent.** The subagent reads shared context files and writes to `council/{persona}.json`. This is non-negotiable for independence.
+- **The main conversation IS the orchestrator.** Follow the phases step by step. Spawn agents for tasks (personas, critique, adversary). NEVER spawn a single agent to "run the full loop" — that agent can't spawn grandchild agents, so personas get authored sequentially in one context, destroying the council's value. See engine-protocol.md "Orchestration Model."
 - **Anonymize during peer review.** Personas review "Analysis A", "Analysis B" — never by persona name. Mapping is randomized per iteration.
 - **Generate 2nd-order effects for ALL 1st-order effects.** No probability gate. Tail risks matter most.
 - **Stop when the Judge says so**, not when you run out of things to say. Max iterations configurable (default 2, up to 5).

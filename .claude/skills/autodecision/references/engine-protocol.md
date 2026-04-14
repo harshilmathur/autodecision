@@ -124,6 +124,36 @@ OUTER (runs once):
   Phase 8: DECIDE ─────────────→ DECISION-BRIEF.md
 ```
 
+## CRITICAL: Orchestration Model
+
+**The main conversation IS the orchestrator. It NEVER delegates the full loop to a
+single agent.** This is the most important architectural rule in the skill.
+
+```
+CORRECT — main conversation orchestrates:
+  Main conversation → Phase 0-2 (inline)
+  Main conversation → Agent("optimist") + Agent("pessimist") + ... (5 parallel)
+  Main conversation → synthesis (inline)
+  Main conversation → Agent("critique") + Agent("adversary") (2 parallel)
+  Main conversation → sensitivity + judge (inline)
+  Main conversation → Phase 8 (inline or single agent)
+
+WRONG — delegating orchestration to a subagent:
+  Main conversation → Agent("run the full loop")
+    └→ that agent tries Agent("optimist") → FAILS (no grandchild agents)
+    └→ falls back to writing all 5 personas sequentially in one context
+    └→ personas see each other → fake diversity → fast shallow convergence
+```
+
+When the main conversation spawns a persona agent, that agent has its own context
+window and genuinely cannot see the other personas' work. When a single agent
+authors all 5 personas sequentially, it sees its own prior output — diversity
+collapses, convergence is fake, and the analysis is shallow.
+
+**The practical rule:** Follow the phases step by step in the main conversation.
+Use the Agent tool to spawn tasks (persona analysis, critique, adversary, decide).
+NEVER spawn a single agent to "run everything" or "do phases 3-8."
+
 ## Phase Execution Rules
 
 ### Reading Context
@@ -154,6 +184,44 @@ Key validations:
 - Cross-references must be valid (assumption keys, parent effect IDs)
 
 Auto-fix what's fixable. Log warnings. Never block the run for a single failure.
+
+### Quality Gates (Post-Phase Checks)
+
+After certain phases, the orchestrator checks output quality before proceeding.
+These catch shallow analysis that would otherwise produce a fast but worthless brief.
+
+**After Phase 3 (SIMULATE) — Diversity Check:**
+After all 5 persona files are written, before synthesis:
+1. Count effects per persona per hypothesis. If any persona has fewer than 3
+   first-order effects for any hypothesis, the analysis is too shallow. Log a
+   warning and note in the brief.
+2. Check probability spread. For each effect that 3+ personas generated, compute
+   the range (max - min probability). If the AVERAGE range across all shared
+   effects is < 0.10, the personas are not genuinely disagreeing — the council
+   added no value. Log: "Council diversity LOW — average probability spread {N}.
+   Consider re-running with independent subagents."
+3. Check for creative alternatives. Count effects with `alt_` prefix across all
+   personas. If fewer than 3 total (across all 5 personas), the "non-obvious
+   alternative" rule is not being followed. This is a quality issue, not a
+   blocking error.
+
+**After Synthesis — Depth Check:**
+After effects-chains.json is written:
+1. Count total unique first-order effects across all hypotheses. If fewer than
+   10 total, the analysis is shallow.
+2. Count hypotheses. If fewer than 3, the hypothesis space is underexplored.
+3. Check that every first-order effect has at least one second-order child.
+
+**After Phase 7 (CONVERGE) — False Convergence Check:**
+If convergence is reached at iteration 1 (which should never happen by design)
+or if ALL convergence parameters are at perfect scores (effects_delta = 0,
+assumption_stability = 100%, flips = 0, contradictions = 0), something is wrong.
+Perfect convergence usually means the personas didn't genuinely disagree.
+Log: "WARNING: Perfect convergence may indicate low council diversity."
+
+These checks are informational — they don't block the run but they get noted
+in the Decision Brief header so the reader knows if the analysis is weaker
+than usual.
 
 ### Shared Context File
 
