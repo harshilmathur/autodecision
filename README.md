@@ -1,17 +1,14 @@
 <p align="center">
   <h1 align="center">autodecision</h1>
   <p align="center">
-    A decision operating system that simulates disagreement, stress-tests assumptions,
-    and converges on what actually holds up.
-    <br /><br />
-    Built for high-stakes decisions — business, strategy, career — where second-order
-    effects and hidden risks matter most.
+    <b>A decision operating system for high-stakes choices</b> — business, strategy, career.<br />
+    Simulates disagreement, stress-tests assumptions, and converges on what actually holds up.
     <br /><br />
     <a href="#quick-start">Quick Start</a> · <a href="#why-decisions-fail">Why Decisions Fail</a> · <a href="#what-autodecision-does-differently">How It's Different</a> · <a href="#examples">Examples</a> · <a href="TODOS.md">Roadmap</a>
+    <br /><br />
+    <sub>Applies <a href="https://github.com/karpathy/autoresearch">Karpathy's autoresearch</a> + <a href="https://github.com/karpathy/llm-council">LLM Council</a> patterns to decisions.</sub>
   </p>
 </p>
-
-Applies [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) principles (iterative hypothesize → simulate → critique → refine) and the [LLM Council](https://github.com/karpathy/llm-council) pattern (multi-persona debate with anonymized peer review) to high-stakes decision simulation.
 
 ---
 
@@ -295,7 +292,7 @@ The **journal** tracks every decision and its outcome. The **assumption library*
 
 ## Distribution
 
-Works with **Claude Code** today. Multi-model support (GPT + Gemini + Claude + Grok via OpenRouter) and a standalone CLI are on the roadmap.
+Works with **Claude Code** today. **Codex** and **opencode** support coming soon.
 
 ---
 
