@@ -1,52 +1,81 @@
-# autodecision
+<p align="center">
+  <h1 align="center">autodecision</h1>
+  <p align="center">
+    AI decision engine that argues with itself until robust answers emerge.
+    <br />
+    <a href="#quick-start">Quick Start</a> · <a href="#commands">Commands</a> · <a href="#how-the-loop-works">How It Works</a> · <a href="TODOS.md">Roadmap</a>
+  </p>
+</p>
 
-AI decision engine that argues with itself until robust answers emerge.
+---
+
+> Most AI gives one answer in one pass. Autodecision gives **20+ reasoning passes** — simulate, critique, refine — until the answer is robust. The product is not the answer. It is a system that **refuses to accept the first answer.**
 
 Applies [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) principles (iterative hypothesis → test → critique → refine) and [LLM Council](https://github.com/karpathy/llm-council) pattern (multi-persona debate with anonymized peer review) to business decision simulation.
 
-Most AI gives one answer in one pass. Autodecision gives 20+ reasoning passes — simulate, critique, refine — until the answer is robust. The product is not the answer. It is a system that refuses to accept the first answer.
+---
 
 ## What it does
 
 You give it a decision. It:
 
 1. **Decomposes** the decision into sub-questions
-2. **Grounds** with real data via web search
+2. **Grounds** with real data via web search — no vacuum reasoning
 3. **Reviews** assumptions, personas, and data with you before simulating
-4. **Spawns 5 independent personas** (Growth Optimist, Risk Pessimist, Competitor Strategist, Regulator, Customer Advocate) as parallel subagents — each with its own context window, genuinely unable to see the others
+4. **Spawns 5 independent personas** as parallel subagents — each with its own context window, genuinely unable to see the others:
+
+   | Persona | Sees | Blind Spot |
+   |---------|------|------------|
+   | Growth Optimist | Upside, creative alternatives | Execution risk |
+   | Risk Pessimist | Downside, failure modes | Opportunity cost of inaction |
+   | Competitor Strategist | Market dynamics, game theory | Overestimates rationality |
+   | Regulator | Legal, compliance, constraints | Overweights unlikely regulation |
+   | Customer Advocate | User value, adoption, retention | Ignores unit economics |
+
 5. **Simulates** first-order and second-order effects with probabilities and assumption tracking
-6. **Critiques** via anonymized peer review (personas rank each other without knowing who wrote what)
+6. **Critiques** via anonymized peer review — personas rank each other without knowing who wrote what
 7. **Red-teams** with worst-case scenarios, irrational actors, and black swans
 8. **Analyzes sensitivity** — which assumptions flip the conclusion?
 9. **Iterates** until a Convergence Judge measures that insights have stabilized mechanically
-10. **Produces a Decision Brief** with stable insights, fragile insights, decision boundaries, and a recommendation
+10. **Produces a Decision Brief** — the final output
 
-## Output format
+---
 
-The Decision Brief includes:
+## Output: The Decision Brief
 
-- **Data Foundation** — sourced facts, not speculation
-- **High-Confidence Effects** (3+ of 5 personas agree) vs **Exploratory Effects** (1-2 personas)
-- **Stable Insights** — survived adversarial pressure across iterations
-- **Fragile Insights** — with exact decision boundaries ("if X changes, the recommendation flips")
-- **Assumptions ranked by sensitivity** — which ones matter most
-- **Adversarial scenarios** — worst cases and black swans
-- **Recommendation** with confidence, dependencies, monitoring signals, and pre-mortem
-- **Decision Timeline** — month-by-month cascade of effects
+```
+┌─────────────────────────────────────────────────────────┐
+│  EXECUTIVE SUMMARY (30-second read)                     │
+│  Recommendation + confidence + cost comparison          │
+│  + first action + biggest risk                          │
+├─────────────────────────────────────────────────────────┤
+│  DATA FOUNDATION          — sourced facts, not guesses  │
+│  HYPOTHESES               — competing paths explored    │
+│  HIGH-CONFIDENCE EFFECTS  — 3+ personas agree           │
+│  MINORITY-VIEW WINNERS    — one persona's idea that won │
+│  STABLE INSIGHTS          — survived adversarial attack │
+│  FRAGILE INSIGHTS         — with exact flip thresholds  │
+│  KEY ASSUMPTIONS          — ranked by sensitivity       │
+│  ADVERSARIAL SCENARIOS    — worst cases + black swans   │
+│  RECOMMENDATION           — phased plan with kill-stops │
+│  COUNCIL DYNAMICS         — who agreed, who disagreed   │
+│  CONVERGENCE LOG          — iteration-by-iteration data │
+├─────────────────────────────────────────────────────────┤
+│  APPENDIX A: Decision Timeline with dependencies        │
+│  APPENDIX B: Quick vs Full comparison (if applicable)   │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
 
 ## Quick start
 
-This is a [Claude Code](https://claude.ai/code) skill. Copy the `.claude/` directory into your project:
+This is a [Claude Code](https://claude.ai/code) skill. No dependencies, no build step.
 
 ```bash
 git clone https://github.com/harshilmathur/autodecision.git
 cd autodecision
-
-# Install globally (available in all projects)
-./install.sh
-
-# Or install to a specific project
-./install.sh ./your-project/.claude
+./install.sh           # Global install (~/.claude)
 ```
 
 Then in Claude Code:
@@ -55,21 +84,38 @@ Then in Claude Code:
 /autodecision "Should we cut pricing by 20%?"
 ```
 
+That's it. The system decomposes, grounds, simulates, critiques, and produces a Decision Brief.
+
+For a quick sanity check (no council, ~2 min):
+
+```
+/autodecision:quick "Should we launch in Southeast Asia?"
+```
+
+---
+
 ## Commands
 
-| Command | What it does | Time |
-|---------|-------------|------|
-| `/autodecision "decision"` | Full loop: 5 personas, 2 iterations, convergence | ~15-20 min |
-| `/autodecision --iterations 1 "decision"` | Medium: council, 1 pass, no convergence | ~8-10 min |
-| `/autodecision --iterations 4 "decision"` | Deep: up to 4 iterations for high-stakes | ~25-30 min |
-| `/autodecision:quick "decision"` | Single analyst, no council, no iteration | ~2-3 min |
-| `/autodecision:compare "A" vs "B"` | Side-by-side comparison of two decisions | ~5 min |
-| `/autodecision:revise {slug} "{changes}"` | Revise with changed assumptions, new data, or tilt | ~8-10 min |
-| `/autodecision:challenge "{action}"` | Stress-test a proposed action (adversary-only) | ~5 min |
-| `/autodecision:summarize {slug}` | One-page shareable summary of any decision | ~1 min |
-| `/autodecision:plan` | Interactive setup wizard (scope only) | ~2 min |
-| `/autodecision:review` | Review past decisions, compare predictions vs outcomes | ~1 min |
-| `/autodecision:export` | Bundle journal + assumptions + briefs into portable archive | ~1 min |
+| Command | What | Time |
+|---------|------|------|
+| `/autodecision` | Full loop — 5 personas, 2 iterations, convergence | ~15 min |
+| `/autodecision:quick` | Single-pass, no council | ~2 min |
+| `/autodecision:challenge` | Adversary-only stress test of a proposed action | ~5 min |
+| `/autodecision:compare` | Side-by-side comparison of two decisions | ~5 min |
+| `/autodecision:revise` | What-if on an existing run (changed assumptions/data) | ~8 min |
+| `/autodecision:summarize` | One-page shareable summary | ~1 min |
+| `/autodecision:plan` | Interactive scope wizard | ~2 min |
+| `/autodecision:review` | Past decisions + outcome tracking | ~1 min |
+| `/autodecision:export` | Portable archive of all decisions | ~1 min |
+
+**Iteration depth is configurable:**
+
+```
+/autodecision --iterations 1 "decision"     # Medium: council, 1 pass
+/autodecision --iterations 3 "decision"     # Deep: up to 3 iterations
+```
+
+---
 
 ## Decision templates
 
@@ -82,66 +128,35 @@ Pre-built decompositions for common decisions:
 /autodecision --template hiring "Should we hire a VP of Engineering?"
 ```
 
+Templates pre-populate sub-questions, constraints, and search queries. You can modify them or create your own in `references/templates/`.
+
+---
+
 ## How the loop works
 
 ```
-Phase 0:   SCOPE     — Decompose decision into sub-questions
-Phase 1:   GROUND    — Web search for real data and precedents
-Phase 1.5: ELICIT    — Review assumptions, personas, data with user
-  ┌──────────────────────────────────────────────────┐
-  │  INNER LOOP (default: 2 iterations)              │
-  │                                                  │
-  │  Phase 2: HYPOTHESIZE — Generate competing paths │
-  │  Phase 3: SIMULATE    — 5 parallel persona agents│
-  │  Phase 4: CRITIQUE    — Anonymized peer review   │
-  │  Phase 5: ADVERSARY   — Red-team and stress-test │
-  │  Phase 6: SENSITIVITY — Find decision boundaries │
-  │  Phase 7: CONVERGE    — Judge measures stability  │
-  └──────────────────────────────────────────────────┘
-Phase 8:   DECIDE    — Produce Decision Brief
+OUTER (runs once):
+  Phase 0    SCOPE      Decompose decision → sub-questions
+  Phase 1    GROUND     Web search for real data and precedents
+  Phase 1.5  ELICIT     Review assumptions, personas, data with user
+
+INNER (iterates until convergence, default 2x):
+  ┌──────────────────────────────────────────────────────┐
+  │  Phase 2   HYPOTHESIZE  Generate competing paths     │
+  │  Phase 3   SIMULATE     5 parallel persona agents    │
+  │  Phase 4   CRITIQUE     Anonymized peer review       │
+  │  Phase 5   ADVERSARY    Red-team and stress-test     │
+  │  Phase 6   SENSITIVITY  Find decision boundaries     │
+  │  Phase 7   CONVERGE     Judge measures stability     │
+  └──────────────────────────────────────────────────────┘
+
+OUTER (runs once):
+  Phase 8    DECIDE     Produce Decision Brief
 ```
 
-## Convergence
+**Convergence** uses a weighted composite: contradictions decreasing + assumption stability > 80% are the primary signals. Effects delta and ranking flips are warnings, not gates. A high effects delta WITH decreasing contradictions means productive refinement, not instability.
 
-The Convergence Judge (a 6th persona that never participates in analysis) measures 4 parameters:
-
-| Parameter | Threshold | What it measures |
-|-----------|-----------|-----------------|
-| Effects delta | < 2 | How many effects changed between iterations |
-| Assumption stability | > 80% | What % of assumptions are unchanged |
-| Ranking flips | ≤ 1 | Did peer review rankings reverse |
-| Contradictions | ≤ 1 | Do effects directly contradict each other |
-
-Convergence uses a weighted composite: contradictions decreasing + assumption stability > 80% are the primary signals (must pass). Effects delta and ranking flips are warnings, not gates. A high effects delta WITH decreasing contradictions means productive refinement, not instability. If primary signals don't pass after max iterations, the brief includes a "Convergence NOT REACHED" warning.
-
-## Data storage
-
-All decision data lives in `~/.autodecision/` (user-level, never in your repo):
-
-```
-~/.autodecision/
-├── runs/                    # One directory per decision run
-│   └── pricing-cut-20pct/
-│       ├── config.json
-│       ├── ground-data.md
-│       ├── user-inputs.md
-│       ├── iteration-1/
-│       │   ├── council/     # One file per persona
-│       │   ├── effects-chains.json
-│       │   ├── critique.json
-│       │   └── ...
-│       ├── convergence-log.json
-│       └── DECISION-BRIEF.md
-├── journal.jsonl            # Cross-decision log with outcome tracking
-├── assumptions.jsonl        # Assumption library (compounds over time)
-└── exports/                 # Portable archives
-```
-
-## Tested on
-
-**"Should we cut pricing by 20%?"** — Full loop found: irreversible price anchor at P=0.825 (5/5 council agreement), volume offset thesis has 88-94% joint failure probability, recommended controlled A/B promo experiment instead.
-
-**"Should we launch in a new international market?"** — Full loop found: incumbent's dominant market share makes general entry non-viable (4/5 consensus), cross-border corridor has compressed margins, recommended post-IPO corridor entry with pre-launch TAM study and monthly competitor monitoring.
+---
 
 ## What makes this different
 
@@ -155,6 +170,35 @@ All decision data lives in `~/.autodecision/` (user-level, never in your repo):
 | Implicit assumptions | Every effect traces to explicit, tracked assumptions |
 | "Here's what to do" | "Here's what's robust, what's fragile, and what flips the conclusion" |
 
+---
+
+## Data storage
+
+All decision data lives in `~/.autodecision/` (user-level, never in your repo):
+
+```
+~/.autodecision/
+├── runs/                    # One directory per decision run
+│   └── {decision-slug}/
+│       ├── config.json      # Decision scope + constraints
+│       ├── ground-data.md   # Web search results
+│       ├── shared-context.md
+│       ├── iteration-1/
+│       │   ├── council/     # One JSON per persona
+│       │   ├── effects-chains.json
+│       │   ├── critique.json
+│       │   └── ...
+│       ├── convergence-log.json
+│       └── DECISION-BRIEF.md
+├── journal.jsonl            # Cross-decision log + outcome tracking
+├── assumptions.jsonl        # Assumption library (compounds over time)
+└── exports/                 # Portable archives
+```
+
+The **journal** tracks every decision and its outcomes. The **assumption library** tracks which assumptions held or broke across decisions — it gets smarter over time.
+
+---
+
 ## Inspiration
 
 - [Karpathy's autoresearch](https://github.com/karpathy/autoresearch) — iterative loop: modify → train → evaluate → keep/discard
@@ -162,13 +206,17 @@ All decision data lives in `~/.autodecision/` (user-level, never in your repo):
 
 ## Roadmap
 
-See [TODOS.md](TODOS.md) for deferred work. Key v2 features:
+See [TODOS.md](TODOS.md). Key next features:
 
-- **Codex adversarial review** — hand the Decision Brief to a different AI model for independent challenge
-- **OpenRouter multi-model council** — replace personas with GPT + Gemini + Claude + Grok for genuine model diversity
+- **Multi-model council** — replace personas with GPT + Gemini + Claude + Grok via OpenRouter
+- **Codex adversarial review** — hand the brief to a different AI model for independent challenge
 - **Backtesting** — run on historical decisions with known outcomes to calibrate
 - **Mermaid visualization** — effects tree diagrams in the Decision Brief
-- **EV computation** — quantified expected value per hypothesis when financial data is available
+- **Decision similarity detection** — surface related past decisions when starting a new one
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
