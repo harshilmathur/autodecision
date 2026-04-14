@@ -6,7 +6,9 @@ by simulating worst-case scenarios, irrational actors, and black swans.
 
 ## Inputs
 - `iteration-{N}/effects-chains.json`
-- `iteration-{N}/critique.json`
+- (Adversary does NOT read critique.json — it runs PARALLEL with Critique.
+  Independent red-teaming finds different things than building on critique findings.
+  Accept occasional duplicate findings; dedup in synthesis.)
 
 ## Outputs
 - `iteration-{N}/adversary.json`

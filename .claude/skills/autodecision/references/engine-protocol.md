@@ -86,54 +86,121 @@ OUTER (runs once):
 - If a phase fails mid-execution: write partial output with `"status": "partial"`, log the error,
   and continue to the next phase. Phase 8 (DECIDE) handles missing data gracefully.
 
+### Shared Context File (Fix 5)
+
+Before spawning personas, the orchestrator precomputes `shared-context.md` in
+the run directory. This avoids duplicating 3-4K tokens of preamble + config +
+ground data across 5 persona prompts.
+
+Contents of `shared-context.md`:
+- Decision statement + sub-questions + constraints (from config.json)
+- Decision tilt (from config.json)
+- User-provided domain knowledge (from user-inputs.md, if any)
+- Key data points from ground-data.md (include ALL key findings, not a lossy summary)
+- Hypotheses with expected effect IDs (from hypotheses.json)
+- Persona preamble rules (from persona-preamble.md)
+
+Target: ~1500 tokens. Each persona reads this ONE file instead of 3-4 files +
+inline preamble. Cuts spawn time and input tokens significantly.
+
 ### Persona Subagent Protocol
 
 In Phase 3 (SIMULATE), personas run as SEPARATE subagents via the Agent tool.
 See `references/persona-council.md` for the full subagent protocol.
 
 Key rules:
-- Spawn 5 subagents in PARALLEL as FOREGROUND agents (use multiple Agent tool calls
-  in one message, do NOT use run_in_background). This avoids straggler notifications
-  and ensures all results are available before proceeding.
-- Each subagent receives: persona system prompt + instruction to read shared context files
-  and write output to `council/{persona}.json`.
+- Spawn 5 subagents in PARALLEL as FOREGROUND agents (multiple Agent tool calls
+  in one message, `run_in_background: false` or omit — foreground is default).
+- Each subagent reads `shared-context.md` (precomputed above) + its persona-specific
+  block, and writes to `council/{persona}.json`.
 - Subagents have their own context windows and CANNOT see each other's outputs.
-- After all 5 complete, the ORCHESTRATOR (not a separate agent) reads all `council/*.json`
-  files and performs the synthesis merge inline: compute medians, ranges, council_agreement,
-  deduplicate effect_ids, and write `effects-chains.json`. This is a mechanical operation,
-  not a reasoning task — do it directly.
 
-Phase 4 (CRITIQUE) runs as a SINGLE agent pass that reviews all 5 analyses, not 5
-separate reviewer subagents. One agent produces both `peer-review.json` and `critique.json`.
+### Synthesis (Inline, Fix 2)
 
-### Post-Simulation Pipeline (3 stages, NOT one mega-agent)
+After all 5 personas complete, the ORCHESTRATOR performs synthesis directly.
+Do NOT spawn a separate agent for this. The synthesis agent in prior runs spent
+half its time re-reasoning about structure — inline eliminates this.
 
-After Phase 3 personas complete and synthesis is done, the remaining phases run as
-3 SEPARATE sequential agents. This prevents a single failure from losing all work,
-and makes debugging possible.
+1. Read all `council/*.json` files.
+2. **Mechanical merge (shared IDs):** Effects using the seeded vocabulary from
+   hypotheses.json merge directly — compute median probability, [min,max] range,
+   council_agreement, specialist_insight tags.
+3. **Novel IDs:** For effects NOT in the shared vocabulary, count them:
+   - ≤ 3 novel IDs: orchestrator deduplicates inline (manageable reasoning)
+   - > 3 novel IDs: spawn ONE Haiku agent for just the dedup step
+4. Write `effects-chains.json`.
 
-**Stage A: Critique Agent**
-- Runs Phase 4 (CRITIQUE): anonymized peer review + flaw identification
-- Reads: `council/*.json`, `effects-chains.json`
-- Writes: `peer-review.json`, `critique.json`
+### Post-Synthesis Pipeline (Parallel, Fixes 3+4+7)
 
-**Stage B: Stress-Test Agent**
-- Runs Phase 5 (ADVERSARY) + Phase 6 (SENSITIVITY) + Phase 7 (CONVERGE)
-- Reads: `effects-chains.json`, `critique.json`
-- Writes: `adversary.json`, `sensitivity.json`, `judge-score.json`, `convergence-summary.md`
-- Appends to: `convergence-log.json`
+The actual dependency graph is thinner than the old sequential pipeline assumed.
+Critique and Adversary are INDEPENDENT — adversary red-teams effects-chains.json
+without needing critique findings. This enables parallelism.
 
-**Stage C: Decision Agent**
-- If iteration 2+ needed: runs light-mode Phase 2-3 + Phase 7, then Phase 8
-- If converged or final iteration: runs Phase 8 (DECIDE) only
-- Reads: all iteration outputs, `convergence-log.json`, `ground-data.md`, `user-inputs.md`
-- Writes: `DECISION-BRIEF.md` (+ `COMPARISON-VS-QUICK.md` if quick run exists)
+```
+Personas (5, parallel) → Synthesis (inline)
+                              │
+                    ┌─────────┴─────────┐
+                    ▼                   ▼
+              Critique agent      Adversary agent        ← PARALLEL (Fix 4)
+              reads: council/*,   reads: effects-chains
+              effects-chains      (NOT critique.json)
+                    │                   │
+                    ▼                   ▼
+              peer-review.json    adversary.json
+              critique.json             │
+                    │                   │
+                    └─────────┬─────────┘
+                              ▼
+                    ┌─────────┴──────────┐
+                    ▼                    ▼
+              Sensitivity agent    Judge (INLINE, Fix 3)
+              reads: effects +     reads: effects +
+              adversary            peer-review
+                    │                    │
+                    ▼                    ▼
+              sensitivity.json     judge-score.json
+                                   convergence-summary.md
+                    │                    │
+                    └─────────┬──────────┘
+                              ▼
+                        Phase 8 DECIDE agent
+```
 
-Each stage writes to disk before the next starts. If Stage B fails, Stage A's
-critique output is preserved and Stage B can be re-run.
+**Execution sequence:**
 
-The orchestrator sequences these: spawn Stage A → wait → spawn Stage B → wait →
-spawn Stage C → wait → done. NOT one agent doing all 7 steps.
+```
+Step 1: Spawn Critique + Adversary in PARALLEL (2 foreground agents, 1 message)
+Step 2: Wait for both
+Step 3: Spawn Sensitivity agent
+         SIMULTANEOUSLY run Judge INLINE (Fix 3 — set operations on 2 JSON files,
+         not an agent. Diff effect_ids, count changes, compute convergence. ~5 sec.)
+Step 4: Wait for Sensitivity (Judge is already done)
+Step 5: If final iteration OR convergence reached:
+          Start Phase 8 DECIDE (Fix 7 — can start before judge writes
+          convergence-summary if judge is inline and already done)
+        If NOT final and NOT converged:
+          Loop back to Phase 2 for next iteration
+```
+
+**Fix 7 detail (Phase 8 concurrent start):** Since the Judge is now inline (~5 sec),
+Phase 8 can start immediately after Sensitivity completes — the judge-score.json and
+convergence-summary.md are already written. This is only safe WHEN the judge is
+inline (instant). If for any reason the judge runs as an agent, wait for it first.
+
+Only apply concurrent start when this is DEFINITELY the final iteration (iteration
+count = max, or convergence was achieved). If another iteration might be needed,
+wait for the Judge to decide.
+
+### Projected Timing
+
+| Phase | Old | New | Fix |
+|-------|-----|-----|-----|
+| Synthesis | ~180s (agent) | ~10s | Fix 2: inline |
+| Critique + Adversary | ~300s (sequential) | ~180s | Fix 4: parallel |
+| Judge | ~60s (agent) | ~5s | Fix 3: inline |
+| Phase 8 start | waits for judge | immediate | Fix 7: concurrent |
+| Per-persona input prep | ~30s x 5 | ~5s x 5 | Fix 5: shared context |
+| **Total post-personas** | **~24 min** | **~13 min** | |
 
 ### Iteration Modes
 

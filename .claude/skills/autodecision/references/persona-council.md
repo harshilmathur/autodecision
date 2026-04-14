@@ -91,15 +91,29 @@ message. Each Agent call MUST specify `run_in_background: false` (or omit the pa
 since foreground is the default). Do NOT use `run_in_background: true` — background
 agents cause straggler notifications that arrive after results are consumed.
 
+**Each persona reads `shared-context.md`** (precomputed by the orchestrator before
+spawning — see engine-protocol.md "Shared Context File"). This single file replaces
+3-4 separate file reads per persona, cutting input tokens and spawn time.
+
 Example (pseudocode for the orchestrator):
 ```
-Agent(prompt="[preamble + optimist block + context]", name="optimist")    # foreground
-Agent(prompt="[preamble + pessimist block + context]", name="pessimist")  # foreground
-Agent(prompt="[preamble + competitor block + context]", name="competitor") # foreground
-Agent(prompt="[preamble + regulator block + context]", name="regulator")  # foreground
-Agent(prompt="[preamble + customer block + context]", name="customer")    # foreground
+# Step 0: orchestrator writes shared-context.md to the run directory
+
+# Step 1: spawn all 5 in ONE message
+Agent(prompt="[persona-specific block only — 4 lines]\n\nRead shared-context.md at
+  ~/.autodecision/runs/{slug}/shared-context.md for all rules, context, and schema.
+  Then write your analysis to council/optimist.json", name="optimist")
+
+Agent(prompt="[pessimist block]\n\nRead shared-context.md...", name="pessimist")
+Agent(prompt="[competitor block]\n\nRead shared-context.md...", name="competitor")
+Agent(prompt="[regulator block]\n\nRead shared-context.md...", name="regulator")
+Agent(prompt="[customer block]\n\nRead shared-context.md...", name="customer")
+
 # All 5 in ONE message. All complete before orchestrator continues.
 ```
+
+Per-persona prompt is now ~150 tokens (persona block + file read instruction).
+The shared-context.md file carries the other ~1500 tokens of rules, schema, and data.
 
 ```
 Agent(prompt="[Growth Optimist system prompt]
