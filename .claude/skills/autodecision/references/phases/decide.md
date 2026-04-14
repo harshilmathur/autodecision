@@ -62,6 +62,23 @@ Apply expected value reasoning across the hypothesis space:
 
 Write `DECISION-BRIEF.md` using the template from `references/output-format.md`.
 
+**MANDATORY SECTIONS (never skip, never rename):**
+- Executive Summary (6 lines max — NOT "Headline", NOT "Summary", exactly "Executive Summary")
+- Data Foundation
+- Hypotheses Explored (or "Hypotheses Evaluated" — table format)
+- High-Confidence Effects (agreement >= 3)
+- Stable Insights
+- Fragile Insights (with decision boundaries)
+- Key Assumptions (ranked by sensitivity)
+- Adversarial Scenarios
+- Recommendation (with phased plan, confidence, dependencies, monitoring, pre-mortem)
+- Council Dynamics
+- Convergence Log (omit for medium mode, omit for quick mode)
+- Appendix A: Decision Timeline
+
+The audit found 5/10 full-mode briefs missing Executive Summary. Some used "Headline"
+instead. Do NOT improvise section names. Use the template exactly.
+
 ### Step 5: Persist to Journal and Assumption Library
 
 **This step is MANDATORY. The journal and assumption library are the compounding

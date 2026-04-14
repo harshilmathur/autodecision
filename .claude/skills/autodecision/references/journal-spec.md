@@ -73,27 +73,85 @@ Appended at the end of Phase 8 (DECIDE) for every decision run:
 }
 ```
 
-## Field Definitions
+## Field Definitions (STRICT — all required unless marked optional)
 
-| Field | Type | Set When | Description |
-|-------|------|----------|-------------|
-| `decision_id` | string | Phase 8 | The run slug |
-| `decision_statement` | string | Phase 8 | Original decision question |
-| `timestamp` | ISO 8601 | Phase 8 | When the brief was generated |
-| `mode` | string | Phase 8 | "full" or "quick" |
-| `iterations` | integer | Phase 8 | Number of iterations run |
-| `converged` | boolean | Phase 8 | Whether convergence was reached |
-| `recommendation` | string | Phase 8 | The action recommended |
-| `confidence` | string | Phase 8 | HIGH / MEDIUM / LOW |
-| `hypotheses` | array | Phase 8 | Summary of each hypothesis and its final status |
-| `top_effects` | array | Phase 8 | Top 3-5 effects by council agreement and probability |
-| `load_bearing_assumptions` | array | Phase 8 | Assumptions ranked HIGH sensitivity |
-| `decision_boundaries` | array | Phase 8 | Specific thresholds that flip the conclusion |
-| `run_path` | string | Phase 8 | Path to the full run directory |
-| `outcome` | string | Review | What actually happened (user-provided) |
-| `outcome_recorded_at` | ISO 8601 | Review | When the outcome was recorded |
-| `outcome_notes` | string | Review | User's notes on what played out |
-| `accuracy_score` | object | Review | Computed comparison of predictions vs actuals |
+EVERY journal entry MUST use exactly these field names and types. Do NOT invent
+alternative field names (no `decision` instead of `decision_statement`, no `slug`
+instead of `decision_id`, no `date` instead of `timestamp`). Do NOT add custom
+fields outside the schema (no `walk_line_usd_m`, no `output_style`, no `runner_up`).
+If you need decision-specific data, put it in `notes` (string, optional).
+
+| Field | Type | Required | Allowed Values / Format | Description |
+|-------|------|----------|------------------------|-------------|
+| `decision_id` | string | YES | lowercase-kebab-case slug | The run directory name |
+| `decision_statement` | string | YES | free text | The original decision question |
+| `timestamp` | string | YES | ISO 8601 (`2026-04-14T12:45:00Z`) | When the brief was generated |
+| `mode` | string | YES | `"full"`, `"quick"`, `"medium"`, `"challenge"`, `"revision"` | Which command was used |
+| `iterations` | integer | YES | 0-5 | Number of iterations run (0 for quick/challenge) |
+| `converged` | boolean | YES | `true` or `false` ONLY | Never strings like "primary_signals" |
+| `converged_at_iteration` | integer or null | YES | 1-5 or null | Which iteration converged, null if not |
+| `grounding` | string | YES | `"GROUNDED"` or `"UNGROUNDED"` | Whether Phase 1 found data |
+| `tilt` | string or null | YES | `"maximize_enterprise_value"`, `"moat"`, `"capital_efficiency"`, `"time_to_market"`, `"risk_minimization"`, `null` | User's strategic tilt |
+| `recommendation` | string | YES | free text, one sentence | The action recommended |
+| `confidence` | string | YES | `"HIGH"`, `"MEDIUM"`, `"LOW"` ONLY | Never `"HIGH (0.72)"`, never a float |
+| `hypotheses` | array of objects | YES | see sub-schema below | NEVER an array of strings |
+| `top_effects` | array of objects | YES | see sub-schema below | NEVER an array of strings |
+| `load_bearing_assumptions` | array of objects | YES | see sub-schema below | NEVER an array of strings |
+| `decision_boundaries` | array of strings | YES | human-readable sentences | Specific thresholds |
+| `run_path` | string | YES | `"~/.autodecision/runs/{slug}/"` | Path to run directory |
+| `notes` | string or null | optional | free text | Any decision-specific data that doesn't fit above |
+| `outcome` | string or null | YES | null until recorded | What actually happened |
+| `outcome_recorded_at` | string or null | YES | ISO 8601 or null | When outcome was recorded |
+| `outcome_notes` | string or null | YES | null until recorded | User's notes |
+| `accuracy_score` | object or null | YES | null until recorded | Prediction vs reality comparison |
+
+### Sub-schema: hypothesis object
+
+```json
+{"hypothesis_id": "h1_volume_offset", "statement": "Price cut drives volume", "status": "eliminated"}
+```
+
+| Field | Type | Allowed Values |
+|-------|------|---------------|
+| `hypothesis_id` | string | `h{N}_{descriptor}` format |
+| `statement` | string | human-readable, one sentence |
+| `status` | string | `"supported"`, `"weakened"`, `"eliminated"`, `"conditional"` |
+
+### Sub-schema: top_effect object
+
+```json
+{"effect_id": "irreversible_price_anchor", "probability": 0.825, "council_agreement": 5, "description": "Price cut creates one-way-door pricing expectation"}
+```
+
+| Field | Type | Allowed Values |
+|-------|------|---------------|
+| `effect_id` | string | snake_case (internal, not shown in brief) |
+| `probability` | float | 0.05-0.95, in 0.05 increments |
+| `council_agreement` | integer or null | 1-5, null for quick/challenge mode |
+| `description` | string | human-readable, NO snake_case |
+
+### Sub-schema: assumption object
+
+```json
+{"key": "segments_are_separable", "sensitivity": "HIGH", "fragility": "FRAGILE"}
+```
+
+| Field | Type | Allowed Values |
+|-------|------|---------------|
+| `key` | string | snake_case |
+| `sensitivity` | string | `"HIGH"`, `"MEDIUM"`, `"LOW"` |
+| `fragility` | string | `"SOLID"`, `"SHAKEABLE"`, `"FRAGILE"` |
+
+### Revision entry sub-schema
+
+Revision entries use the SAME top-level schema plus these additional fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `original_decision_id` | string | The slug of the original run being revised |
+| `revision_input` | string | The user's natural language revision input |
+| `changes_applied` | array of strings | What was changed |
+| `recommendation_changed` | boolean | Did the revision flip the recommendation? |
 
 ## Outcome Recording
 

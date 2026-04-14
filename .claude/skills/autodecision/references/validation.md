@@ -179,6 +179,49 @@ PROPAGATION: If any persona file has status: partial, set effects-chains.json
 status to partial. If effects-chains.json is partial, note in Decision Brief header.
 ```
 
+## Rule 11: Journal Entry Schema
+
+**Applies to:** Every append to `journal.jsonl` (Phase 8 and revise)
+
+```
+REQUIRED FIELDS: decision_id, decision_statement, timestamp, mode, iterations,
+  converged (BOOLEAN only), recommendation, confidence (string: HIGH/MEDIUM/LOW only)
+
+REQUIRED ARRAYS (of objects, NEVER strings):
+  hypotheses: [{hypothesis_id, statement, status}]
+  top_effects: [{effect_id, probability, council_agreement, description}]
+  load_bearing_assumptions: [{key, sensitivity, fragility}]
+
+NEVER:
+  - "decision" instead of "decision_statement"
+  - "slug" instead of "decision_id"
+  - "date" instead of "timestamp"
+  - converged as string ("primary_signals") — must be boolean
+  - confidence as float (0.72) — must be string ("HIGH")
+  - top_effects as array of strings — must be array of objects
+  - Custom fields (walk_line_usd_m, output_style, runner_up) — use "notes" field
+
+See references/journal-spec.md for the full strict schema.
+```
+
+## Rule 12: Assumption Library Schema
+
+**Applies to:** Every append to `assumptions.jsonl`
+
+```
+FRAGILITY VOCABULARY: "SOLID", "SHAKEABLE", "FRAGILE" only
+  NEVER: "HIGH"/"MEDIUM"/"LOW" (those are for sensitivity, not fragility)
+
+SENSITIVITY VOCABULARY: "HIGH", "MEDIUM", "LOW" only
+
+FIRST_SEEN FORMAT: ISO 8601 timestamp only
+  NEVER: decision slugs, bare dates
+
+CATEGORY: "market", "competition", "execution", "financial", "customer", "regulatory"
+
+See references/assumption-library-spec.md for the full strict schema.
+```
+
 ## How to Apply These Rules
 
 The orchestrator applies validation as follows:

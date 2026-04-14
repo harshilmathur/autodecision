@@ -12,6 +12,26 @@ how to test them. Over time this becomes an organizational knowledge asset.
 - Format: append-only JSONL
 - Each line is an assumption entry or an update event
 
+## Strict Schema Rules
+
+**EVERY assumption entry MUST follow this exact schema.** Do NOT invent alternative
+field names or vocabularies. The audit found 3 different fragility vocabularies
+(FRAGILE/SHAKEABLE/SOLID vs HIGH/MEDIUM/LOW vs absent) and 2 different `first_seen`
+formats (slug vs date). This causes the library to fail at cross-decision comparison.
+
+### Vocabulary (use ONLY these values)
+
+| Field | Allowed Values | NEVER Use |
+|-------|---------------|-----------|
+| `sensitivity` | `"HIGH"`, `"MEDIUM"`, `"LOW"` | "CRITICAL", "MEDIUM-HIGH", numeric values |
+| `fragility` | `"SOLID"`, `"SHAKEABLE"`, `"FRAGILE"` | "HIGH", "MEDIUM", "LOW" (those are for sensitivity, not fragility) |
+| `first_seen` | ISO 8601 timestamp (`"2026-04-14T12:00:00Z"`) | Decision slugs, bare dates without time |
+| `category` | `"market"`, `"competition"`, `"execution"`, `"financial"`, `"customer"`, `"regulatory"` | Free-form text |
+
+**Sensitivity** = how much the conclusion changes if this assumption is wrong.
+**Fragility** = how likely the assumption is to BE wrong.
+These are different dimensions. An assumption can be HIGH sensitivity + SOLID (important but reliable) or LOW sensitivity + FRAGILE (likely wrong but doesn't matter).
+
 ## Assumption Entry Schema
 
 ```json
