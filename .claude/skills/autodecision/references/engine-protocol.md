@@ -106,6 +106,35 @@ Key rules:
 Phase 4 (CRITIQUE) runs as a SINGLE agent pass that reviews all 5 analyses, not 5
 separate reviewer subagents. One agent produces both `peer-review.json` and `critique.json`.
 
+### Post-Simulation Pipeline (3 stages, NOT one mega-agent)
+
+After Phase 3 personas complete and synthesis is done, the remaining phases run as
+3 SEPARATE sequential agents. This prevents a single failure from losing all work,
+and makes debugging possible.
+
+**Stage A: Critique Agent**
+- Runs Phase 4 (CRITIQUE): anonymized peer review + flaw identification
+- Reads: `council/*.json`, `effects-chains.json`
+- Writes: `peer-review.json`, `critique.json`
+
+**Stage B: Stress-Test Agent**
+- Runs Phase 5 (ADVERSARY) + Phase 6 (SENSITIVITY) + Phase 7 (CONVERGE)
+- Reads: `effects-chains.json`, `critique.json`
+- Writes: `adversary.json`, `sensitivity.json`, `judge-score.json`, `convergence-summary.md`
+- Appends to: `convergence-log.json`
+
+**Stage C: Decision Agent**
+- If iteration 2+ needed: runs light-mode Phase 2-3 + Phase 7, then Phase 8
+- If converged or final iteration: runs Phase 8 (DECIDE) only
+- Reads: all iteration outputs, `convergence-log.json`, `ground-data.md`, `user-inputs.md`
+- Writes: `DECISION-BRIEF.md` (+ `COMPARISON-VS-QUICK.md` if quick run exists)
+
+Each stage writes to disk before the next starts. If Stage B fails, Stage A's
+critique output is preserved and Stage B can be re-run.
+
+The orchestrator sequences these: spawn Stage A → wait → spawn Stage B → wait →
+spawn Stage C → wait → done. NOT one agent doing all 7 steps.
+
 ### Iteration Modes
 
 **Iteration 1: FULL.** Run all phases 2-7 (hypothesize, simulate, critique, adversary,

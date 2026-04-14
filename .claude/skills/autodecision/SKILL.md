@@ -74,6 +74,7 @@ Load these on-demand as each phase begins:
 |-----------|------|
 | Full loop protocol | `references/engine-protocol.md` |
 | Persona definitions + subagent protocol | `references/persona-council.md` |
+| Shared persona prompt preamble | `references/persona-preamble.md` |
 | Effects chain JSON spec | `references/effects-chain-spec.md` |
 | Phase 0: Scope | `references/phases/scope.md` |
 | Phase 1: Ground | `references/phases/ground.md` |

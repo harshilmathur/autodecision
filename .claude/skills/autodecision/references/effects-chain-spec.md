@@ -114,6 +114,8 @@ After all 5 personas complete, the synthesis pass produces:
 | `probability` | float | YES | Per-persona: that persona's estimate (0.0-1.0). Synthesized: median across all personas who generated this effect. |
 | `probability_range` | [float, float] | Synthesized only | [min, max] across all persona estimates. Only present in `effects-chains.json`, not individual persona files. |
 | `council_agreement` | integer | Synthesized only | Count of personas (out of 5) who independently generated this effect. Only in `effects-chains.json`. |
+| `specialist_insight` | boolean | Synthesized only | `true` if council_agreement is 1 AND the generating persona's domain expertise is directly relevant to this effect. See Specialist Insight Rules below. |
+| `source_persona` | string | Synthesized only | Which persona generated this effect. Only set when `council_agreement` is 1 or 2. Helps trace specialist insights. |
 | `timeframe` | string | YES | When this effect manifests. Use: "immediate", "0-3 months", "3-6 months", "6-12 months", "12+ months". |
 | `assumptions` | [string] | YES | Array of assumption keys this effect depends on. Keys must match entries in `all_assumptions`. |
 | `parent_effect_id` | string | 2nd-order only | The `effect_id` of the first-order effect that triggers this second-order effect. |
@@ -134,6 +136,35 @@ After all 5 personas complete, the synthesis pass produces:
 | `hypothesis_id` | string | YES | Stable identifier. Format: `h{N}_{short_descriptor}`. Example: `h1_price_growth`. |
 | `statement` | string | YES | One-sentence hypothesis statement. |
 | `effects` | [Effect] | YES | Array of first-order effects (with nested children for second-order). |
+
+## Specialist Insight Rules
+
+An effect with `council_agreement` = 1 is NOT automatically low-value. If the single
+persona who generated it has domain expertise directly relevant to the effect, it is
+a **specialist insight** — something the majority correctly missed because it's outside
+their lens, but the specialist correctly caught.
+
+Tag `specialist_insight: true` when ALL of these are true:
+1. `council_agreement` = 1
+2. The generating persona's optimization domain matches the effect's domain:
+   - **Regulator** generated a compliance, legal, regulatory, or contractual effect
+   - **Competitor** generated a competitive dynamics, market response, or industry effect
+   - **Customer** generated a user experience, adoption, or retention effect
+   - **Optimist** generated a creative alternative or non-obvious opportunity
+   - **Pessimist** generated a hidden cost, failure mode, or downside scenario
+
+3. The effect is actionable (not vague speculation)
+
+**Display rule:** Specialist insights appear in the HIGH-CONFIDENCE section of the
+Decision Brief (not the exploratory section), tagged with `[SPECIALIST: {persona}]`.
+They are treated as important findings that only one expert was equipped to see,
+not as low-consensus noise.
+
+**Examples from test runs:**
+- Regulator finding MFN clause exposure (1/5) → SPECIALIST (domain match)
+- Regulator finding PCI scope expansion (1/5) → SPECIALIST (domain match)
+- Optimist finding productization upside (1/5) → SPECIALIST (creative alternative)
+- Pessimist finding shadow AI risk (1/5) → NOT specialist (all personas should see this)
 
 ## `effect_id` Rules
 

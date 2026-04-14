@@ -44,6 +44,29 @@ This is what prevents the system from reasoning in a vacuum.
 - Search for risks: "why {decision type} fails"
 - Issue 2-3 targeted searches per sub-question, max 8-10 searches total.
 
+### Competitor Intelligence Search (for build-vs-buy and expansion decisions)
+
+In addition to the sub-question searches, run 1-2 targeted competitor searches:
+
+- "{industry} companies AI tools adoption {year}" (what are peers using?)
+- "{competitor category} {capability} build vs buy case study"
+
+Examples:
+- For a fintech build-vs-buy: "fintech companies AI workspace deployment 2026"
+- For market expansion: "SaaS companies entering {market} results"
+
+Include findings in a **Competitor Intelligence** section of `ground-data.md`:
+```markdown
+## Competitor Intelligence
+- {Competitor A}: uses {tool} for {use case}. Source: [url]
+- {Competitor B}: built internal {capability}. Outcome: {what happened}. Source: [url]
+- Industry trend: {general adoption pattern}. Source: [url]
+```
+
+If no competitor-specific data is found, note: "No competitor intelligence available
+via public search. Recommend internal competitive analysis." This is still useful
+information — it means the decision can't be grounded in competitor behavior.
+
 ## Conflicting Evidence
 
 When search results conflict (one source says price cuts increase acquisition,
