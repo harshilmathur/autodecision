@@ -23,83 +23,62 @@ triggers:
 
 # Auto-Decision Engine
 
-You are an autonomous decision simulation engine. You apply Karpathy's autoresearch
-principles — iterative hypothesis → test → critique → refine loops — to business
-and strategic decisions.
+Iterative decision simulation. Spend compute to think better. Five persona analysts as independent subagents, anonymized peer review, mechanical convergence — until the answer is robust.
 
-## Core Principle
+The output is a **possibility map**: every hypothesis, every first/second-order effect, every council disagreement, every adversarial scenario, every assumption that must hold. The recommendation is one synthesis of that map, written at the end of the brief — never the product, never compressed into the lead.
 
-**Spend compute to think better.** Most AI gives one answer. You give 20+ reasoning
-passes — simulate, critique, refine — until the answer is robust. The product is
-not the answer. It is a system that refuses to accept the first answer.
+## How this skill is organized
 
-The output is the **possibility map** — every hypothesis, every first/second-order
-effect, every council disagreement, every adversarial scenario, every assumption
-that must hold. A recommendation is one synthesis of that map, written at the end
-of the brief. Never compress the map to make the recommendation easier to find —
-the map is why the compute was spent.
+`SKILL.md` (this file) is the entry point and contract — the rules below are non-negotiable. The full loop protocol lives in `references/engine-protocol.md`; per-phase protocols live in `references/phases/*.md`; canonical structure for the brief lives in `references/brief-schema.json`. The references table at the bottom is the single source of truth for where to read each thing.
 
 ## Command Routing
 
-- `/autodecision <decision>` → Full loop (default 2 iterations). Read `references/engine-protocol.md` and execute all phases.
-- `/autodecision --iterations N <decision>` → Full loop with N iterations. 1 = medium mode (council, no convergence). 2 = default. 3-5 = deep mode.
-- `/autodecision:quick <decision>` → Single-pass mode. SCOPE → GROUND → SIMULATE (one analyst, no council) → DECIDE. ~2 minutes.
-- `/autodecision:compare "A" vs "B"` → Compare two decisions side-by-side (fresh or post-facto from existing runs).
-- `/autodecision:revise {slug} "{what changed}"` → Revise a previous decision with changed assumptions, new hypotheses, new data, or different tilt. Produces full brief + diff.
-- `/autodecision:challenge "{action}"` → Adversary-only mode. Stress-test a proposed action without the full loop. ~5 minutes.
-- `/autodecision:summarize {slug}` → Compress a Decision Brief into a shareable one-page summary.
-- `/autodecision:publish {slug} [--summary]` → Package a brief as a PDF and route it to whichever connectors are available (Notion, Gmail draft, Drive, Slack, secret gist, or Local). Read `references/phases/publish.md`.
-- `/autodecision:plan` → Interactive setup wizard. Phase 0 (SCOPE) only.
-- `/autodecision:review` → Read past decision runs, compare predictions vs outcomes.
-- `/autodecision:export` → Bundle journal + assumptions + past briefs into portable archive.
+`triggers:` (frontmatter above) is the canonical list. Each routes to a per-command protocol file:
 
-## Architecture Summary
+- `/autodecision <decision>` (default 2 iterations) → execute `references/engine-protocol.md` end-to-end
+- `/autodecision --iterations N <decision>` → 1 = medium (council, no convergence), 2 = full default, 3-5 = deep
+- `/autodecision:quick <decision>` → `references/engine-protocol.md` "Quick Mode Protocol" section
+- `/autodecision:compare "A" vs "B"` → quick mode on both, then side-by-side comparison
+- `/autodecision:revise {slug} "{change}"` → `references/phases/revise.md`
+- `/autodecision:challenge "{action}"` → `references/phases/challenge.md` (adversary-only, ~5 min)
+- `/autodecision:summarize {slug}` → compress an existing brief to one page
+- `/autodecision:publish {slug} [--summary]` → `references/phases/publish.md`
+- `/autodecision:plan` → Phase 0 (SCOPE) interactive only
+- `/autodecision:review` → read past runs, compare predictions vs outcomes
+- `/autodecision:export` → bundle journal + assumptions + briefs into portable archive
 
-**Persona Council:** 5 analyst personas + 1 Convergence Judge. Each analyst runs as a
-SEPARATE subagent via the Agent tool (genuine context-window independence). The Judge
-measures convergence mechanically — it never participates in analysis.
+## Non-Negotiable Rules
 
-**Effects Chains:** Structured JSON with stable `effect_id` keys, first/second-order
-effects, probabilities (median + [min,max] disagreement range), assumption tracking,
-and `council_agreement` counts.
+1. **NEVER simulate in a vacuum.** Phase 1 (GROUND) is mandatory. If WebSearch yields nothing, mark the run UNGROUNDED in the brief header — do not proceed silently.
+2. **Phase 1.5 (ELICIT) runs after GROUND, before the loop**, unless `--skip-elicit`. The single biggest quality lever — never default-off.
+3. **Each persona runs as a SEPARATE Agent subagent.** Genuine context-window independence. Sequential authoring in one context destroys diversity. Non-negotiable.
+4. **The main conversation IS the orchestrator.** Walk the phases yourself. Spawn agents for parallelizable tasks (5 personas, critique + adversary). NEVER spawn one agent to "run the loop" — that agent can't spawn grandchildren and the council collapses. See `engine-protocol.md` "Orchestration Model."
+5. **The 5 canonical personas are fixed.** Optimist, Pessimist, Competitor, Regulator, Customer. ELICIT may modify a persona (rename, specify a competitor) but never adds or removes one. Names defined in `references/persona-council.md` "Canonical Persona Names."
+6. **Every effect carries a stable `effect_id`, a probability, a `probability_range`, and explicit assumption keys.** The Judge compares by ID across iterations — descriptions drift, IDs don't. No implicit assumptions. **Assumption keys are as stable as effect_ids**: iteration 2+ personas receive the full `all_assumptions` map from iter-1's `effects-chains.json` and MUST reuse keys verbatim for conceptually-identical assumptions. Renaming `market_has_demand` to `market_demand_exists` between iterations fakes instability and breaks the Judge's `assumption_stability` metric. See `phases/simulate.md` "Assumption Key Stability."
+7. **Persona disagreement IS the uncertainty signal.** The probability range is the data — never average it away.
+8. **Generate 2nd-order effects for ALL 1st-order effects.** No probability gate. Tail risks matter most.
+9. **Anonymize during peer review.** Personas review "Analysis A", "Analysis B" — never by name. Mapping randomized per iteration.
+10. **The Decision Brief is for humans.** Never emit `snake_case`, never backtick raw `effect_id`s in prose. Use the `description` field. See `references/phases/decide.md`.
+11. **Phase 8.5 (VALIDATE-BRIEF) is mandatory** for full/medium/revise/quick. It means literally invoking `scripts/validate-brief.py` against the schema. Writing a custom inline Python validation script (checking for your own invented section headers, declaring "13/13 passed" against a list you authored) IS NOT Phase 8.5. It is self-certification. Self-certification against invented headers is a HARD protocol violation — it silently lets a structurally broken brief ship. If the named script cannot run (e.g., `python3` missing), fall back to the Step 5.5 self-check in `phases/decide.md` and emit the structural-self-check footer. Do NOT roll your own validator. On HARD_FAIL, re-prompt DECIDE once; if still failing, prepend `VALIDATION_FAILED` and continue. See `references/phases/validate-brief.md`.
 
-**The Loop:** 10 phases with configurable iterations (default 2, max 5). Convergence uses
-a weighted composite: primary signals (contradictions decreasing + assumption stability > 80%)
-must pass. Effects delta and ranking flips are warnings, not gates.
-
-**Data Storage:** All decision data lives in `~/.autodecision/` (user-level, never in repo).
-Run artifacts go in `~/.autodecision/runs/{decision-slug}/`. Journal and assumption
-library are cross-decision persistent stores.
-
-## Key Rules
-
-- **NEVER simulate in a vacuum.** Phase 1 (GROUND) is mandatory. Search for real data first.
-- **ALWAYS run Phase 1.5 (ELICIT) after GROUND, before the loop** unless `--skip-elicit` is passed. ELICIT shows grounding data to the user for review. This is the single biggest quality lever.
-- **Every effect MUST have a stable `effect_id`** (e.g. `acq_increase`, `competitor_price_war`). The Judge compares effects by ID across iterations, not by description text.
-- **Every effect MUST have a probability** (median) and `probability_range` [min, max].
-- **Every effect MUST trace to explicit assumptions.** No implicit assumptions.
-- **Persona disagreement IS the uncertainty signal.** Don't average it away — the range is the data.
-- **Each persona runs as a SEPARATE Agent tool subagent.** The subagent reads shared context files and writes to `council/{persona}.json`. This is non-negotiable for independence.
-- **The main conversation IS the orchestrator.** Follow the phases step by step. Spawn agents for tasks (personas, critique, adversary). NEVER spawn a single agent to "run the full loop" — that agent can't spawn grandchild agents, so personas get authored sequentially in one context, destroying the council's value. See engine-protocol.md "Orchestration Model."
-- **Anonymize during peer review.** Personas review "Analysis A", "Analysis B" — never by persona name. Mapping is randomized per iteration.
-- **Generate 2nd-order effects for ALL 1st-order effects.** No probability gate. Tail risks matter most.
-- **Stop when the Judge says so**, not when you run out of things to say. Max iterations configurable (default 2, up to 5).
-- **The iteration folders ARE the memory.** Read previous iteration before starting the next.
-- **The Decision Brief is for humans, not machines.** See `references/phases/decide.md` for formatting rules.
-- **Subagent nesting limitation.** If `/autodecision` is run inside a subagent (e.g., spawned by another agent or orchestrator), the Agent tool may not be available. Personas will be authored sequentially instead of as parallel subagents. Output is structurally correct but persona independence is weaker. The brief notes this when it happens. For full council independence, run `/autodecision` from the main conversation, not from inside another agent.
+    **Writer must not invent section headers.** The brief's H2 structure is defined by `references/brief-schema.json` and is MANDATORY. Inventing headers like `## Context`, `## Decision tilt`, `## The possibility map`, `## Methodology`, `## Analysis Approach` (any header not in the schema) is a HARD_FAIL, even if it reads well. Improving readability is the schema's job, not the writer's. Do Step 4a's pre-write checklist before composing a single line.
+12. **Stop when the Judge says so.** Max iterations configurable (default 2, up to 5). The iteration folders ARE the memory — read previous iteration's `convergence-summary.md` (≤500 tokens) before starting the next, never the full JSON.
+13. **Subagent nesting.** If `/autodecision` runs inside another agent, the Agent tool may be unavailable. STOP and ask the user (full protocol in `engine-protocol.md`). Never silently degrade.
 
 ## References
 
-Load these on-demand as each phase begins:
+Read on-demand as each phase begins. Each phase file opens with a self-describing metadata block (phase number, when it runs, what it reads, what it writes, what gates it has) — always read that block first.
 
 | Reference | File |
 |-----------|------|
 | Full loop protocol | `references/engine-protocol.md` |
-| Persona definitions + subagent protocol | `references/persona-council.md` |
+| Progress tracker templates (per mode) | `references/progress-templates.md` |
+| Persona definitions + canonical names + subagent protocol | `references/persona-council.md` |
 | Shared persona prompt preamble | `references/persona-preamble.md` |
 | Effects chain JSON spec | `references/effects-chain-spec.md` |
 | Phase 0: Scope | `references/phases/scope.md` |
 | Phase 1: Ground | `references/phases/ground.md` |
+| Phase 1.5: Elicit | `references/phases/elicit.md` |
 | Phase 2: Hypothesize | `references/phases/hypothesize.md` |
 | Phase 3: Simulate | `references/phases/simulate.md` |
 | Phase 4: Critique | `references/phases/critique.md` |
@@ -107,28 +86,15 @@ Load these on-demand as each phase begins:
 | Phase 6: Sensitivity | `references/phases/sensitivity.md` |
 | Phase 7: Converge | `references/phases/converge.md` |
 | Phase 8: Decide | `references/phases/decide.md` |
-| Phase 1.5: Elicit | `references/phases/elicit.md` |
+| Phase 8.5: Validate Brief | `references/phases/validate-brief.md` |
 | Revise protocol | `references/phases/revise.md` |
 | Challenge protocol | `references/phases/challenge.md` |
 | Publish protocol | `references/phases/publish.md` |
-| Output validation rules | `references/validation.md` |
-| Decision Brief template | `references/output-format.md` |
+| Output validation rules (canonical) | `references/validation.md` |
+| Decision Brief template (human view) | `references/output-format.md` |
+| Decision Brief schema (canonical structure) | `references/brief-schema.json` |
 | Decision journal spec | `references/journal-spec.md` |
 | Assumption library spec | `references/assumption-library-spec.md` |
-| Template: Pricing | `references/templates/pricing.md` |
-| Template: Expansion | `references/templates/expansion.md` |
-| Template: Build vs Buy | `references/templates/build-vs-buy.md` |
-| Template: Hiring | `references/templates/hiring.md` |
+| Templates | `references/templates/{pricing,expansion,build-vs-buy,hiring}.md` |
 
-## Quick Mode (`/autodecision:quick`)
-
-Single-pass mode for decisions that don't need the full loop:
-
-1. Phase 0: SCOPE (same as full loop)
-2. Phase 1: GROUND (same as full loop)
-3. Phase 3: SIMULATE (single analyst, no council — one structured analysis pass)
-4. Phase 8: DECIDE (lighter brief, no convergence data)
-
-No personas, no peer review, no iteration. Just structured effects-chain output
-with assumptions and probabilities from a single analytical pass. ~2 minutes.
-
+If anything in this file conflicts with `references/engine-protocol.md`, the protocol file wins — it is canonical for loop mechanics. This file is the entry-point contract; the protocol file is the manual.

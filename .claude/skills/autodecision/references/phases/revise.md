@@ -145,7 +145,24 @@ Write TWO files to the revision run directory:
 A full standalone Decision Brief using the standard output-format.md template.
 A reader should understand this brief WITHOUT reading the original.
 
-Add a header note: "This is a revised analysis. Original run: {slug}. Changes: {list}."
+**Revision chain header (mandatory).** Below the brief's standard header metadata,
+emit two lines that locate this run inside the revision chain. First, discover the
+chain by listing sibling revisions:
+
+```bash
+ls -d ~/.autodecision/runs/{slug}-revise-* 2>/dev/null | sort -V
+```
+
+Then read each sibling's `config.json` (or `user-inputs.md`) to extract its one-line
+change description. Emit:
+
+```
+**This is a revision of:** [{original slug}](../{original slug}/) | **Change:** "{this revision's input verbatim}"
+**Revision chain:** [Original](../{original slug}/) → [Revise 1: {change}](../{slug}-revise-1/) → **This revision** → [Revise N: {change}](../{slug}-revise-N/)
+```
+
+Mark THIS revision with `**This revision**` (no link). Earlier and later revisions
+are linked. If this is the first revision, the chain is just `[Original] → **This revision**`.
 
 Follow ALL the standard brief rules including human-readable output (no snake_case).
 

@@ -41,7 +41,21 @@ RULES — read these before generating any output:
    different from an optimist's "creative moonshot" — both are valuable. Tag it
    with effect_id prefix `alt_` so synthesis can identify creative alternatives.
 
-OUTPUT FORMAT — follow this EXACT JSON structure:
+OUTPUT FORMAT — follow this EXACT JSON structure.
+
+**STRICT JSON ONLY.** Your output will be parsed with `JSON.parse` / `json.loads` / `jq`.
+Any of the following breaks the run and disqualifies your analysis:
+- Trailing commas (after the last element in an array or object — `[1, 2, 3,]` or `{"a": 1,}`)
+- Comments (`//` line comments, `/* */` block comments)
+- Single-quoted strings (use `"double quotes"`)
+- Unquoted keys
+- Missing commas between fields
+- Any text before `{` or after the final `}`
+- `NaN`, `Infinity`, `undefined` (not valid JSON)
+
+Before emitting, mentally test: would `JSON.parse(output)` succeed? If not, fix it.
+Prefer slightly fewer effects over an unparseable output. An excluded persona
+contributes zero signal; a parseable 6-effect output beats a broken 10-effect one.
 
 {
   "status": "complete",

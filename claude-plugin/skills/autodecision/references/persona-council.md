@@ -1,5 +1,23 @@
 # Persona Council Protocol
 
+## Canonical Persona Names
+
+These are the ONLY 5 personas. No custom personas (Investor, Founder, etc.) — those drift across runs and break peer-review anonymization mapping. ELICIT may *modify* a persona (e.g., name a specific competitor) but never adds or removes one.
+
+| Long name (for prompts and protocol) | Short tag (for brief output, file names, JSON `persona` field) |
+|--------------------------------------|----------------------------------------------------------------|
+| Growth Optimist | Optimist |
+| Risk Pessimist | Pessimist |
+| Competitor Strategist | Competitor |
+| Regulator / Constraint Analyst | Regulator |
+| Customer Advocate | Customer |
+
+**Where each name appears:**
+- **Long name** — every persona-specific block in this file, every analyst prompt, every reference to "the council member"
+- **Short tag** — `council/{tag}.json` filename, `"persona": "{tag}"` field in JSON outputs, `[SPECIALIST: {tag}]` lead in Specialist Insights table, "Source Persona" column in Exploratory Effects table, `peer-review.json` mapping values
+
+`output-format.md` and `references/phases/decide.md` both read this table — never define short tags inline in those files.
+
 ## The 5 Analyst Personas
 
 Each persona has a distinct optimization objective, a known blind spot it must
@@ -181,53 +199,17 @@ After all subagents complete in Phase 3:
 6. Build `all_assumptions` map from all assumption keys referenced.
 7. Write `effects-chains.json` with the synthesized output.
 
-## JSON Example for Persona Prompts
+## JSON Schema for Persona Output
 
-ALWAYS include this concrete example in every persona subagent prompt. Models follow
-examples better than specifications. Copy this verbatim into the prompt:
+The full schema (with concrete example and the 8 numbered persona rules — no hedging,
+probability format, effect_id format, etc.) lives in `references/persona-preamble.md`
+and is bundled verbatim into `shared-context.md` before the orchestrator spawns
+personas. Do NOT duplicate it here — if you need to update the schema or a rule,
+update the preamble. This file owns the *who* and the *how to spawn*; the preamble
+owns *what each persona sees*.
 
-```
-OUTPUT FORMAT — follow this EXACT JSON structure:
-
-{
-  "status": "complete",
-  "persona": "optimist",
-  "hypotheses": [
-    {
-      "hypothesis_id": "h1_volume_offset",
-      "statement": "Price cut drives volume growth",
-      "effects": [
-        {
-          "effect_id": "acq_increase",
-          "description": "Customer acquisition increases 25-35%",
-          "order": 1,
-          "probability": 0.65,
-          "timeframe": "0-3 months",
-          "assumptions": ["price_sensitivity_moderate", "market_has_demand"],
-          "children": [
-            {
-              "effect_id": "support_cost_rise",
-              "description": "Support costs increase 20%",
-              "order": 2,
-              "probability": 0.75,
-              "timeframe": "3-6 months",
-              "assumptions": ["no_automation"],
-              "parent_effect_id": "acq_increase",
-              "children": []
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-
-RULES:
-- effect_id: snake_case, max 30 chars, stable across iterations
-- probability: 0.05 increments only (0.05, 0.10, 0.15 ... 0.95)
-- Every 1st-order effect MUST have at least one 2nd-order child
-- assumptions: snake_case keys, reuse across effects when same assumption applies
-```
+For the field-level type spec independent of the prompt format, see
+`references/effects-chain-spec.md`.
 
 ## Token Budget Per Persona
 

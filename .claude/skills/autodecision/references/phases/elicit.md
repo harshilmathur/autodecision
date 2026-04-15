@@ -1,3 +1,22 @@
+<!--
+phase: 1.5
+phase_name: ELICIT
+runs_in:
+  - full       (outer, after GROUND, before HYPOTHESIZE — UNLESS --skip-elicit)
+  - medium     (outer, after GROUND, before HYPOTHESIZE — UNLESS --skip-elicit)
+  - quick      (SKIPPED entirely — single-pass mode does not elicit)
+  - revise     (interactive revision input is the elicit equivalent)
+reads:
+  - ~/.autodecision/runs/{slug}/config.json
+  - ~/.autodecision/runs/{slug}/ground-data.md
+  - references/persona-council.md (to display canonical 5 personas to user)
+writes:
+  - ~/.autodecision/runs/{slug}/user-inputs.md (or empty placeholder if user declined)
+gates:
+  - User confirms or modifies: assumptions, persona council, sub-questions, tilt
+  - Persona modifications restricted to {add | remove | rename}; never invent a 6th persona type without rules
+-->
+
 # Phase 1.5: ELICIT
 
 ## Purpose

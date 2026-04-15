@@ -1,3 +1,28 @@
+<!--
+phase: 7
+phase_name: CONVERGE
+runs_in:
+  - full.iteration-1     (baseline scoring — iteration 1 NEVER converges by design; scores contradictions only)
+  - full.iteration-2+    (mechanical scoring vs prior iteration — gates whether to loop or exit)
+  - medium.iteration-1   (SKIPPED — medium mode goes straight to DECIDE with "Converged: N/A")
+  - quick                (SKIPPED — no iterations)
+reads:
+  - current iteration: effects-chains.json + peer-review.json
+  - previous iteration (iter ≥ 2): effects-chains.json + peer-review.json
+runs_inline:
+  - Judge runs INLINE in orchestrator (~5 sec; set operations on JSON, not an agent)
+  - Inline timing enables Phase 8 concurrent start when this is the final iteration
+writes:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/judge-score.json (4 parameters + converged boolean)
+  - ~/.autodecision/runs/{slug}/iteration-{N}/convergence-summary.md (~500-token carry-forward to next iter)
+  - ~/.autodecision/runs/{slug}/convergence-log.json (append-only)
+gates:
+  - PRIMARY (must pass): contradiction_count ≤ 1 OR decreasing AND assumption_stability > 80%
+  - SECONDARY (warn but don't gate): effects_delta < 2, ranking_flips ≤ 1
+  - false_convergence_check: perfect scores at iter-1 OR all-perfect-on-iter-2 → "Council diversity LOW" warning
+  - max iterations reached → exit anyway with "Convergence: NOT REACHED" warning in brief
+-->
+
 # Phase 7: CONVERGE
 
 ## Purpose
@@ -72,31 +97,81 @@ The old model (ALL 4 must pass) is broken. Iteration 2 legitimately resolves
 contradictions, which REQUIRES changing effects. A 22-effect delta that resolves
 5 contradictions is convergence success, not failure.
 
-**New model: PRIMARY + SECONDARY signals.**
+**New model: PRIMARY + SECONDARY signals with a delta-weighted cap.**
 
 **PRIMARY signals (must pass for convergence):**
 - `contradiction_count` is DECREASING or at threshold (≤ 1)
 - `assumption_stability` > 80%
 
-**SECONDARY signals (inform but don't gate):**
-- `effects_delta` — WARNING if high, but not a gate. A high delta WITH decreasing
-  contradictions means productive refinement.
+**SECONDARY signals (inform but also hard-cap):**
+- `effects_delta` — WARNING if high. **Hard-cap gate:** if `effects_delta > 50`,
+  convergence is FALSE regardless of other signals. A delta that high means the
+  map is still being rewritten, not refined. Exception: if iter-N explicitly
+  labeled any added hypothesis with `new_in_iter_N: true`, subtract effects
+  attributable to that hypothesis from the delta before comparing to 50. This
+  prevents "productive refinement" from masking genuine churn (the bug we hit
+  at delta=126 in the pricing rerun).
 - `ranking_flip_count` — WARNING if > 1, gate only if > 3 (complete ranking reversal)
 
 **Convergence logic:**
 ```
-if contradiction_count <= 1 AND assumption_stability > 80%:
-    CONVERGED (even if effects_delta is high)
-    note effects_delta and ranking_flips as warnings in the brief
+effective_delta = effects_delta
+if any hypothesis is flagged new_in_iter_N:
+    effective_delta -= count_of_effects_attributable_to_that_hypothesis
+
+if effective_delta > 50:
+    NOT CONVERGED  (map is still rewriting itself)
+elif contradiction_count <= 1 AND assumption_stability > 80%:
+    CONVERGED (even if effective_delta is moderate, e.g., 5-50)
+    note effective_delta and ranking_flips as warnings in the brief
 elif contradiction_count is decreasing AND assumption_stability > 70%:
     TRENDING (close to convergence, worth one more iteration if budget allows)
 else:
     NOT CONVERGED
 ```
 
-**Report all 4 values regardless.** The brief shows the full picture. But convergence
-is determined by contradictions resolving + assumptions stabilizing, not by effects
-freezing.
+**Report all 4 values regardless** — and add `effective_delta` alongside
+`effects_delta` in `judge-score.json` so the brief's Convergence Log shows both
+the raw delta and what was excluded. The brief shows the full picture. But
+convergence is determined by contradictions resolving + assumptions stabilizing
+AND the map actually stabilizing.
+
+### User Confirmation Before Iteration 3+
+
+After iteration 2 completes, if the Judge says NOT CONVERGED and budget allows
+another iteration, the orchestrator MUST pause and ask the user before starting
+iteration 3, 4, or 5. Running a third iteration doubles wall-clock time and
+burns another 5 persona subagents — that's a user decision, not a Judge decision.
+
+Ask via AskUserQuestion (once per additional iteration — before iter-3, before
+iter-4, before iter-5):
+
+> "Iteration {N-1} did not converge. Current Judge score:
+> - Effects delta: {value} (effective {effective_delta} after new-hypothesis adjustment)
+> - Assumption stability: {pct}% (threshold 80%)
+> - Ranking flips: {value}
+> - Contradictions: {value}
+>
+> Running iteration {N} will spend ~{minutes} more minutes and re-simulate the
+> council with the current convergence summary as carry-forward. What would
+> you like to do?"
+>
+> Options:
+> A) Run iteration {N} (try for convergence)
+> B) Stop here and write the brief with "Converged: NOT REACHED" flagged
+> C) Downgrade to medium mode — skip remaining iterations, write brief from
+>    iter-(N-1) state with "Iterations: {N-1} | Converged: N/A (user stopped)"
+
+Default recommendation: A if trending (contradictions decreasing, stability
+> 70%); B if flat (no improvement iter-(N-2) → iter-(N-1)).
+
+**Why this gate exists.** Without it, a low-quality run keeps iterating in the
+hope that something stabilizes — burning time and compute on a decision whose
+uncertainty is genuine and won't resolve. The user knows whether another 15
+minutes is worth it; the Judge doesn't.
+
+**Iteration 2 does NOT require this confirmation.** iter-2 is the default loop
+behavior. The gate applies only when iter-N ≥ 3 is about to start.
 
 ### Partial Convergence Escalation
 

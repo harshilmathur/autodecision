@@ -1,3 +1,22 @@
+<!--
+phase: 5
+phase_name: ADVERSARY
+runs_in:
+  - full.iteration-1     (runs in PARALLEL with CRITIQUE — the two are independent)
+  - full.iteration-2+    (SKIPPED in LIGHT mode; carries forward from iter-1 unless convergence FAILS)
+  - medium.iteration-1   (one adversary pass)
+  - quick                (SKIPPED in standard quick mode; the /autodecision:challenge command is adversary-only standalone)
+reads:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/effects-chains.json (does NOT need critique.json — independent of CRITIQUE)
+writes:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/adversary.json
+spawns:
+  - 1 dedicated adversary agent (foreground, parallel with CRITIQUE)
+gates:
+  - Must populate worst_cases[], black_swans[], irrational_actors[] arrays (each ≥ 1 entry — never empty if effects exist)
+  - Every scenario carries scenario_id (wc/bs/ia prefix) — referenced via <!-- ref:ID --> comments in the brief
+-->
+
 # Phase 5: ADVERSARY
 
 ## Purpose
@@ -47,6 +66,24 @@ For each assumption in `effects-chains.json > all_assumptions`:
 
 Assign each assumption a `fragility_score`: "SOLID" / "SHAKEABLE" / "FRAGILE"
 
+### Stable Scenario IDs (REQUIRED)
+
+Every entry in `worst_cases`, `irrational_actors`, and `black_swans` MUST have a
+`scenario_id` using these prefixes:
+
+| Array | Prefix | Example |
+|-------|--------|---------|
+| `worst_cases` | `wc` | `wc1_compound_negative`, `wc2_demand_collapse` |
+| `irrational_actors` | `ia` | `ia1_competitor_overreacts`, `ia2_regulator_retaliates` |
+| `black_swans` | `bs` | `bs1_competitor_acquisition`, `bs2_macro_recession` |
+
+The validator uses these IDs to confirm which scenarios made it from `adversary.json`
+into `DECISION-BRIEF.md` via `<!-- ref:{scenario_id} -->` comments. Without stable
+IDs, the brief can silently drop adversary findings and no one notices.
+
+Pattern: `^(wc|ia|bs)\d+_[a-z_]{1,40}$` — lowercase snake_case, numbered per array,
+short descriptive tail.
+
 ### Output Format
 
 ```json
@@ -64,6 +101,7 @@ Assign each assumption a `fragility_score`: "SOLID" / "SHAKEABLE" / "FRAGILE"
   ],
   "irrational_actors": [
     {
+      "scenario_id": "ia1_competitor_overreacts",
       "actor": "Primary competitor",
       "rational_response": "Match price selectively for contested accounts",
       "irrational_response": "Slash prices 40% across the board as emotional overreaction",
@@ -73,6 +111,7 @@ Assign each assumption a `fragility_score`: "SOLID" / "SHAKEABLE" / "FRAGILE"
   ],
   "black_swans": [
     {
+      "scenario_id": "bs1_competitor_acquisition",
       "event": "Competitor gets acquired by major tech company with deep pockets",
       "probability": 0.10,
       "impact": "HIGH — changes competitive dynamics entirely",

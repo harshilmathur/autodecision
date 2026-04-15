@@ -1,3 +1,25 @@
+<!--
+phase: 4
+phase_name: CRITIQUE
+runs_in:
+  - full.iteration-1     (one critique pass — runs in PARALLEL with ADVERSARY)
+  - full.iteration-2+    (SKIPPED in LIGHT mode; carries forward from iter-1 unless convergence FAILS, then re-runs)
+  - medium.iteration-1   (one critique pass)
+  - quick                (SKIPPED — no council to critique)
+reads:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/council/*.json (all 5)
+  - ~/.autodecision/runs/{slug}/iteration-{N}/effects-chains.json
+writes:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/peer-review.json (anonymization mapping + rankings)
+  - ~/.autodecision/runs/{slug}/iteration-{N}/critique.json (consolidated flaws)
+spawns:
+  - 1 SINGLE agent (NOT 5 separate reviewer subagents — see persona-council.md Phase 4 note)
+gates:
+  - Anonymization mapping randomized per iteration (A/B/C/D/E ↔ 5 personas, never persona names visible to reviewer)
+  - Each analysis rated on groundedness, specificity, diversity, blind spots
+  - Top 5 flaws and missing variables aggregated
+-->
+
 # Phase 4: CRITIQUE
 
 ## Purpose

@@ -12,6 +12,59 @@ after each phase completes.
 After EVERY phase that writes a JSON file. Read the file back, apply the rules
 below, fix what can be fixed automatically, reject and re-prompt what can't.
 
+## Rule 0: JSON Syntax Validity
+
+**Applies to:** ALL JSON output files, BEFORE any semantic validation.
+
+This is the first gate. If a file doesn't parse, no other rule can run and
+downstream synthesis breaks. Trailing commas are the most common LLM leak —
+persona subagents emit JS-style object literals instead of strict JSON.
+
+```
+STEP 1: Parse the file. Use `jq . {file}` or read + JSON.parse.
+
+STEP 2: If parse fails, apply auto-fixes in this order, re-parsing after each:
+  a. Strip trailing commas before ] or }
+       Regex: `,(\s*[\]}])` → `\1`
+  b. Strip // line comments and /* ... */ block comments
+  c. Convert single-quoted string literals to double-quoted
+       (only if the string has no unescaped double quotes inside)
+  d. Strip any text before the first `{` or `[` and after the last matching `}` or `]`
+
+STEP 3: If parse STILL fails, reject and re-prompt the agent exactly once:
+  "Your JSON output failed to parse at line {N}: {parser error}.
+  Emit only strict, parseable JSON — no trailing commas, no comments,
+  no single quotes, no trailing text. Re-emit the full output."
+
+STEP 4: If second attempt also fails:
+  - Exclude this file from downstream phases
+  - Log: "Persona {name} excluded: unparseable JSON after retry"
+  - Synthesis continues with the remaining personas
+  - Note the exclusion in the Decision Brief header
+```
+
+**NEVER:** silently swallow parse errors. A file that doesn't parse is a broken
+persona; the brief must note which persona was excluded so the reader knows the
+council ran with fewer than 5 voices.
+
+**Common failure examples:**
+```
+// trailing comma after last effect
+{"effects": [
+  {"effect_id": "a"},
+  {"effect_id": "b"},   ← trailing comma breaks parse
+]}
+
+// JS-style comments
+{
+  // probability is median
+  "probability": 0.65
+}
+
+// single quotes
+{'effect_id': 'a'}  ← must be double quotes
+```
+
 ## Rule 1: Probability Format
 
 **Applies to:** All `probability` fields in persona outputs and effects-chains.json
@@ -222,22 +275,79 @@ CATEGORY: "market", "competition", "execution", "financial", "customer", "regula
 See references/assumption-library-spec.md for the full strict schema.
 ```
 
+## Rule 13: Brief Structure Validity
+
+**Applies to:** `DECISION-BRIEF.md` AFTER Phase 8 writes it, BEFORE the user sees it.
+
+```
+GATE: Run `scripts/validate-brief.py` with the canonical schema
+  `references/brief-schema.json`. Full protocol in
+  `references/phases/validate-brief.md`.
+
+CHECKS:
+  - All mandatory H2 sections present in the correct order
+  - Mandatory subsections present under their parent (### Worst Cases etc.)
+  - Required content patterns present (e.g. `**Action:**`, `**Confidence:**`)
+  - Tables present where the schema requires them
+  - No snake_case identifiers in prose (outside code, inline code, links)
+  - Cross-reference coverage: source JSON items traced via `<!-- ref:ID -->`
+    comments in the brief
+  - Recommendation never appears before position 12
+
+SEVERITIES (from schema):
+  - structural_section_missing       HARD_FAIL
+  - section_out_of_order             HARD_FAIL
+  - subsection_missing               HARD_FAIL
+  - required_content_missing         HARD_FAIL
+  - table_missing                    HARD_FAIL
+  - snake_case_leak                  HARD_FAIL
+  - cross_ref_coverage_below         HARD_FAIL
+  - recommendation_before_pos_12     HARD_FAIL
+  - table_columns_mismatch           WARN
+  - raw_effect_id_in_prose           WARN
+  - min_bullets_unmet                WARN
+
+ON HARD_FAIL: re-prompt DECIDE once with the specific violations from
+  validation-report.json. If retry also HARD_FAILs, prepend a
+  VALIDATION_FAILED warning to the brief and continue.
+
+ON WARN: continue. Append one-line validation footer to the brief.
+
+ON SCRIPT ERROR (exit 3): log stderr, continue without validation. Never
+  block a run on a broken validator.
+```
+
+The schema is canonical. If you change the brief template in `output-format.md`,
+update `brief-schema.json` in the same commit, or the validator will reject briefs
+that follow the new template.
+
 ## How to Apply These Rules
 
 The orchestrator applies validation as follows:
 
-1. **After persona subagents complete (Phase 3):** Validate each `council/{persona}.json`
-   against Rules 1-8. Auto-fix what's fixable. Log warnings. If a persona file fails
-   critically (wrong structure entirely), exclude it from synthesis and note in peer review.
+0. **Before any other rule — Rule 0 first.** For every JSON file written by any phase,
+   attempt to parse before any semantic check. If parse fails, run the auto-fix chain
+   (trailing commas, comments, single quotes). If still unparseable, re-prompt once;
+   if still unparseable, exclude the file and continue. No other rule can run on
+   unparseable JSON.
 
-2. **After synthesis (effects-chains.json):** Validate against Rules 1-10 (all rules).
-   This is the most important checkpoint — effects-chains.json feeds all downstream phases.
+1. **After persona subagents complete (Phase 3):** Apply Rule 0 to each
+   `council/{persona}.json`. Then validate the parsed content against Rules 1-8.
+   Auto-fix what's fixable. Log warnings. If a persona file fails critically
+   (wrong structure entirely), exclude it from synthesis and note in peer review.
+
+2. **After synthesis (effects-chains.json):** Apply Rule 0, then validate against
+   Rules 1-10 (all rules). This is the most important checkpoint — effects-chains.json
+   feeds all downstream phases.
 
 3. **After convergence (judge-score.json):** Validate convergence parameters are
    non-negative integers.
 
-4. **After Decision Brief (DECISION-BRIEF.md):** Scan for snake_case tokens
-   (Rule 7 applied to the final markdown output). This is the last line of defense.
+4. **After Decision Brief (DECISION-BRIEF.md):** Run Rule 13 (the mechanical
+   brief validator at `scripts/validate-brief.py` driven by
+   `references/brief-schema.json`). This supersedes the ad-hoc snake_case scan —
+   Rule 13 covers structure, content, cross-references, and prohibited patterns
+   in one gate. Protocol details: `references/phases/validate-brief.md`.
 
 ## Error Handling
 

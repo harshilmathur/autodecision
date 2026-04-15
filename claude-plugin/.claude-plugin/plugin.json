@@ -1,6 +1,6 @@
 {
   "name": "autodecision",
-  "version": "0.2.0",
+  "version": "0.3.3",
   "description": "A decision operating system for high-stakes choices. Simulates disagreement across 5 independent personas, stress-tests assumptions, and converges on what actually holds up.",
   "author": {
     "name": "Harshil Mathur"

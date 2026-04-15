@@ -1,3 +1,23 @@
+<!--
+phase: 2
+phase_name: HYPOTHESIZE
+runs_in:
+  - full.iteration-1     (full re-hypothesize)
+  - full.iteration-2+    (LIGHT mode: re-hypothesize using convergence-summary carry-forward)
+  - medium.iteration-1   (single iteration)
+  - quick                (lighter — just generates a flat list, no expected effect IDs)
+reads:
+  - ~/.autodecision/runs/{slug}/config.json
+  - ~/.autodecision/runs/{slug}/ground-data.md
+  - ~/.autodecision/runs/{slug}/user-inputs.md (if exists)
+  - ~/.autodecision/runs/{slug}/iteration-{N-1}/convergence-summary.md (iteration 2+)
+writes:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/hypotheses.json
+gates:
+  - At least 3 hypotheses, meaningfully different (not just optimistic/neutral/pessimistic)
+  - Each hypothesis carries an "expected_effect_ids" list (seeded vocabulary for SIMULATE)
+-->
+
 # Phase 2: HYPOTHESIZE
 
 ## Purpose

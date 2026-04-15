@@ -1,3 +1,22 @@
+<!--
+phase: 0
+phase_name: SCOPE
+runs_in:
+  - full       (outer, runs once before the inner loop)
+  - medium     (outer, runs once)
+  - quick      (outer, runs once)
+  - revise     (re-uses prior config, may patch via revision input)
+reads:
+  - user decision statement (from /autodecision invocation)
+  - optional: --template flag (pricing | expansion | build-vs-buy | hiring)
+  - if template: references/templates/{template}.md
+writes:
+  - ~/.autodecision/runs/{slug}/config.json
+gates:
+  - At least 2 sub-questions identified
+  - Decision tilt set (default "balanced" if user did not specify)
+-->
+
 # Phase 0: SCOPE
 
 ## Purpose
