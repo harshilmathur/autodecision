@@ -13,9 +13,9 @@ Iterative decision simulation based on [Karpathy's autoresearch](https://github.
 
 ## Installation
 
-### Plugin (recommended)
+### Claude Code
 
-In Claude Code:
+**Plugin (recommended)**
 
 ```
 /plugin marketplace add harshilmathur/autodecision
@@ -24,19 +24,7 @@ In Claude Code:
 
 All commands become available under the `/autodecision:` namespace (the main loop is `/autodecision:autodecision`).
 
-### Custom plugin zip (Cowork, offline, distributing to teammates)
-
-Cowork and other harnesses that take a custom plugin zip upload need a single archive with `.claude-plugin/plugin.json` at the root. Grab it from the [latest release](https://github.com/harshilmathur/autodecision/releases/latest), or build it yourself:
-
-```bash
-git clone https://github.com/harshilmathur/autodecision.git
-cd autodecision
-./scripts/build-plugin-zip.sh     # → dist/autodecision-<version>.zip
-```
-
-Upload the zip via **Settings → Plugins → Add custom plugin**. Commands land under `/autodecision:`. Do not use macOS Finder's "Compress" on `claude-plugin/` — it wraps the contents in a top-level folder and Cowork rejects the result with "Invalid plugin: missing .claude-plugin/plugin.json".
-
-### Legacy skill install
+**Legacy skill install**
 
 If you'd rather vendor the skill files directly into a `.claude/` directory:
 
@@ -47,7 +35,17 @@ cd autodecision
 ./install.sh ./your-project/.claude   # project-level
 ```
 
-Then restart your Claude Code session. In this mode, bare `/autodecision` works (the plugin form requires the `autodecision:` prefix).
+Bare `/autodecision` works in this mode (the plugin form requires the `autodecision:` prefix). Restart your Claude Code session to pick up the changes.
+
+### Claude Cowork
+
+**From marketplace (recommended)**
+
+In Cowork: **Customize → Create plugin → Add marketplace**, paste `https://github.com/harshilmathur/autodecision`.
+
+**From release zip** (offline / restricted network)
+
+Download `autodecision-<version>.zip` from the [latest release](https://github.com/harshilmathur/autodecision/releases/latest), then in Cowork: **Customize → Create plugin → Upload plugin** and select the zip.
 
 ---
 
