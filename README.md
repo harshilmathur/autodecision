@@ -120,40 +120,55 @@ Every effect traces to explicit assumptions. Every probability comes with a [min
 
 ## Quick start
 
-Works with [Claude Code](https://claude.ai/code) today.
+Works with [Claude Code](https://claude.ai/code) and [Claude Cowork](https://claude.com/product/cowork).
 
-### Install as a plugin (recommended)
+### In Claude Code
 
-In Claude Code:
+**Plugin (recommended)**
 
 ```
 /plugin marketplace add harshilmathur/autodecision
 /plugin install autodecision@autodecision
 ```
 
-Then run:
+Commands land under `/autodecision:` — the main loop is `/autodecision:autodecision`. All subcommands (`:quick`, `:challenge`, `:compare`, `:revise`, `:summarize`, `:plan`, `:review`, `:export`) share the same prefix.
 
-```
-/autodecision:autodecision "Should we cut pricing by 20%?"
-/autodecision:quick "Should we launch in Southeast Asia?"
-/autodecision:challenge "We're dropping UPI fees to zero next month"
-```
-
-Plugins are namespaced, so the main command is `/autodecision:autodecision`. All subcommands (`:quick`, `:challenge`, `:compare`, `:revise`, `:summarize`, `:plan`, `:review`, `:export`) live under the same `/autodecision:` prefix.
-
-### Install as a local skill (legacy)
+**Legacy skill install**
 
 If you'd rather copy the skill files directly into `~/.claude/`:
 
 ```bash
 git clone https://github.com/harshilmathur/autodecision.git
 cd autodecision
-./install.sh           # Global install (~/.claude)
+./install.sh
 ```
 
-Then in Claude Code: `/autodecision "Should we cut pricing by 20%?"` (bare invocation works in this mode).
+Bare `/autodecision "..."` works in this mode. If both paths are installed, the plugin wins — pick one per environment.
 
-**Precedence:** if both paths are installed, the plugin wins — Claude Code loads plugin commands before top-level skills. Pick one install path per environment.
+### In Claude Cowork
+
+**From marketplace (recommended)**
+
+In Cowork: **Customize → Create plugin → Add marketplace**, then paste:
+
+```
+https://github.com/harshilmathur/autodecision
+```
+
+**From release zip**
+
+For offline installs, or environments that can't reach GitHub at runtime:
+
+1. Download `autodecision-<version>.zip` from the [latest release](https://github.com/harshilmathur/autodecision/releases/latest)
+2. In Cowork: **Customize → Create plugin → Upload plugin**, select the zip
+
+### Then run
+
+```
+/autodecision:autodecision "Should we cut pricing by 20%?"
+/autodecision:quick "Should we launch in Southeast Asia?"
+/autodecision:challenge "We're dropping UPI fees to zero next month"
+```
 
 The system scopes, grounds, simulates, critiques, stress-tests, and produces a Decision Brief.
 

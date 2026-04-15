@@ -53,6 +53,41 @@ git commit -m "..."
 Commit both trees together. If the sync-check CI flags drift, you forgot to run
 the sync script — re-run it and amend/commit the regenerated `.claude/`.
 
+## Release process
+
+We ship pre-built plugin zips on every GitHub Release so Cowork users (and
+anyone doing an offline install) can download one directly instead of cloning
+the repo. Cutting a release is fully automated — push a `v*` tag and the
+workflow does the rest.
+
+**To cut a release:**
+
+1. Bump `version` in `claude-plugin/.claude-plugin/plugin.json` and
+   `.claude-plugin/marketplace.json`
+2. Run `./scripts/sync.sh` so `.claude/` picks up the bump
+3. Commit both trees, open a PR, merge to `main`
+4. Tag and push:
+   ```bash
+   git tag v0.2.0
+   git push --tags
+   ```
+5. `.github/workflows/release.yml` runs `scripts/build-plugin-zip.sh` and
+   attaches `dist/autodecision-<version>.zip` to the new GitHub Release
+
+**Local zip build** (testing the workflow, or sharing a one-off zip):
+
+```bash
+./scripts/build-plugin-zip.sh             # → dist/autodecision-<version>.zip
+./scripts/build-plugin-zip.sh /tmp/x.zip  # custom output path
+```
+
+The script zips the *contents* of `claude-plugin/` (not the folder itself),
+strips `.DS_Store`, and refuses to write the zip if `.claude-plugin/plugin.json`
+isn't at the archive root. This is what prevents the most common failure mode:
+macOS Finder → Compress on `claude-plugin/` wraps everything in a top-level
+folder, and Cowork's uploader rejects the result with "Invalid plugin: missing
+.claude-plugin/plugin.json".
+
 ## What to contribute
 
 Check [TODOS.md](TODOS.md) for the current backlog. High-value areas:
