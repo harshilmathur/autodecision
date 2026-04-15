@@ -13,6 +13,9 @@ Feed assumption validation history back into persona prompts: "This assumption w
 
 ## P2 — Medium Impact
 
+### `/autodecision:share` — Hosted brief link
+Upload a Decision Brief to a hosted endpoint and return a shareable URL. Removes the "paste a 300-line markdown into Slack" friction. Lets briefs circulate to stakeholders who'll never run a terminal. Requires: hosting target (Vercel/Cloudflare/GitHub Pages), privacy model (public vs signed link), expiry semantics.
+
 ### Mermaid Effects Tree Visualization
 Generate Mermaid flowchart in Decision Brief showing causal tree with color-coded probabilities. Makes effects scannable at a glance vs reading tables.
 

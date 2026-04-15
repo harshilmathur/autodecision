@@ -122,25 +122,40 @@ Every effect traces to explicit assumptions. Every probability comes with a [min
 
 Works with [Claude Code](https://claude.ai/code) today.
 
+### Install as a plugin (recommended)
+
+In Claude Code:
+
+```
+/plugin marketplace add harshilmathur/autodecision
+/plugin install autodecision@autodecision
+```
+
+Then run:
+
+```
+/autodecision:autodecision "Should we cut pricing by 20%?"
+/autodecision:quick "Should we launch in Southeast Asia?"
+/autodecision:challenge "We're dropping UPI fees to zero next month"
+```
+
+Plugins are namespaced, so the main command is `/autodecision:autodecision`. All subcommands (`:quick`, `:challenge`, `:compare`, `:revise`, `:summarize`, `:plan`, `:review`, `:export`) live under the same `/autodecision:` prefix.
+
+### Install as a local skill (legacy)
+
+If you'd rather copy the skill files directly into `~/.claude/`:
+
 ```bash
 git clone https://github.com/harshilmathur/autodecision.git
 cd autodecision
 ./install.sh           # Global install (~/.claude)
 ```
 
-Then in Claude Code:
+Then in Claude Code: `/autodecision "Should we cut pricing by 20%?"` (bare invocation works in this mode).
 
-```
-/autodecision "Should we cut pricing by 20%?"
-```
+**Precedence:** if both paths are installed, the plugin wins — Claude Code loads plugin commands before top-level skills. Pick one install path per environment.
 
 The system scopes, grounds, simulates, critiques, stress-tests, and produces a Decision Brief.
-
-For a quick sanity check (no council, ~2 min):
-
-```
-/autodecision:quick "Should we launch in Southeast Asia?"
-```
 
 ---
 
