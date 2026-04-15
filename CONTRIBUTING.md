@@ -53,6 +53,25 @@ git commit -m "..."
 Commit both trees together. If the sync-check CI flags drift, you forgot to run
 the sync script — re-run it and amend/commit the regenerated `.claude/`.
 
+## Building the custom-plugin zip
+
+Users who install via Cowork (or any harness with a custom-plugin uploader)
+need a zip with `.claude-plugin/plugin.json` at the archive root. Build it with:
+
+```bash
+./scripts/build-plugin-zip.sh             # → dist/autodecision-<version>.zip
+./scripts/build-plugin-zip.sh /tmp/x.zip  # custom output path
+```
+
+The script zips the *contents* of `claude-plugin/` (not the folder itself),
+strips `.DS_Store`, and verifies `.claude-plugin/plugin.json` is at the root
+before writing the final zip. Don't use `Finder → Compress` on `claude-plugin/`
+— that wraps everything in a top-level folder and the resulting zip gets
+rejected with "Invalid plugin: missing .claude-plugin/plugin.json".
+
+Release tags (`v*`) trigger `.github/workflows/release.yml`, which runs this
+script and attaches the zip to the GitHub Release automatically.
+
 ## What to contribute
 
 Check [TODOS.md](TODOS.md) for the current backlog. High-value areas:

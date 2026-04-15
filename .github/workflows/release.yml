@@ -1,0 +1,46 @@
+name: Release plugin zip
+
+# Builds the custom-plugin zip on every v* tag push and attaches it to the
+# GitHub Release. Gives users (and Cowork uploads) a durable download URL:
+#   https://github.com/harshilmathur/autodecision/releases/latest
+#
+# To cut a release:
+#   git tag v0.1.0 && git push --tags
+# GitHub creates the Release automatically via softprops/action-gh-release@v2.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify sync invariant
+        # If the canonical and derived trees drift, the tagged commit is
+        # inconsistent and the plugin zip would ship broken. Fail loud.
+        run: |
+          ./scripts/sync.sh
+          if ! git diff --quiet -- .claude/; then
+            echo "::error::.claude/ does not match claude-plugin/ at this tag."
+            echo "Run ./scripts/sync.sh and re-tag."
+            git diff --stat -- .claude/
+            exit 1
+          fi
+
+      - name: Build plugin zip
+        run: ./scripts/build-plugin-zip.sh
+
+      - name: Attach zip to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/autodecision-*.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true

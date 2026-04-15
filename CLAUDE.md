@@ -24,6 +24,18 @@ In Claude Code:
 
 All commands become available under the `/autodecision:` namespace (the main loop is `/autodecision:autodecision`).
 
+### Custom plugin zip (Cowork, offline, distributing to teammates)
+
+Cowork and other harnesses that take a custom plugin zip upload need a single archive with `.claude-plugin/plugin.json` at the root. Grab it from the [latest release](https://github.com/harshilmathur/autodecision/releases/latest), or build it yourself:
+
+```bash
+git clone https://github.com/harshilmathur/autodecision.git
+cd autodecision
+./scripts/build-plugin-zip.sh     # → dist/autodecision-<version>.zip
+```
+
+Upload the zip via **Settings → Plugins → Add custom plugin**. Commands land under `/autodecision:`. Do not use macOS Finder's "Compress" on `claude-plugin/` — it wraps the contents in a top-level folder and Cowork rejects the result with "Invalid plugin: missing .claude-plugin/plugin.json".
+
 ### Legacy skill install
 
 If you'd rather vendor the skill files directly into a `.claude/` directory:

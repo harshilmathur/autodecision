@@ -141,6 +141,23 @@ Then run:
 
 Plugins are namespaced, so the main command is `/autodecision:autodecision`. All subcommands (`:quick`, `:challenge`, `:compare`, `:revise`, `:summarize`, `:plan`, `:review`, `:export`) live under the same `/autodecision:` prefix.
 
+### Install in Cowork (custom plugin zip)
+
+Cowork (and any harness that takes a custom plugin zip upload) needs a single `.zip` with `.claude-plugin/plugin.json` at the archive root.
+
+Grab it from the [latest release](https://github.com/harshilmathur/autodecision/releases/latest) (attached as `autodecision-<version>.zip`), or build it yourself:
+
+```bash
+git clone https://github.com/harshilmathur/autodecision.git
+cd autodecision
+./scripts/build-plugin-zip.sh
+# → dist/autodecision-0.1.0.zip
+```
+
+Then in Cowork: **Settings → Plugins → Add custom plugin** → upload the zip. Commands land under `/autodecision:`.
+
+> **Don't zip the `claude-plugin/` folder in Finder.** macOS Finder's "Compress" wraps the contents in a top-level folder, so the archive ends up with `claude-plugin/.claude-plugin/plugin.json` (nested). Cowork rejects that with *"Invalid plugin: missing .claude-plugin/plugin.json"*. The build script above zips the folder contents — not the folder — so `plugin.json` sits at the root like Cowork expects.
+
 ### Install as a local skill (legacy)
 
 If you'd rather copy the skill files directly into `~/.claude/`:
