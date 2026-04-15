@@ -4,7 +4,10 @@ description: >
   Auto-Decision Engine: iterative decision simulation using autoresearch principles
   and a persona council. Decomposes decisions, generates competing hypotheses,
   simulates first/second-order effects with probabilities, critiques via anonymized
-  peer review, and iterates until insights stabilize mechanically.
+  peer review, and iterates until insights stabilize mechanically. The output is
+  a possibility map — hypotheses, effects, council disagreements, adversarial
+  scenarios, assumptions — with a recommendation synthesized at the end, not as
+  the product.
 triggers:
   - /autodecision
   - /autodecision:quick
@@ -29,6 +32,12 @@ and strategic decisions.
 **Spend compute to think better.** Most AI gives one answer. You give 20+ reasoning
 passes — simulate, critique, refine — until the answer is robust. The product is
 not the answer. It is a system that refuses to accept the first answer.
+
+The output is the **possibility map** — every hypothesis, every first/second-order
+effect, every council disagreement, every adversarial scenario, every assumption
+that must hold. A recommendation is one synthesis of that map, written at the end
+of the brief. Never compress the map to make the recommendation easier to find —
+the map is why the compute was spent.
 
 ## Command Routing
 

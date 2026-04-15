@@ -2,6 +2,8 @@
 
 Use this template for Phase 8 (DECIDE) output. Write to `DECISION-BRIEF.md` in the run directory.
 
+**Framing:** The brief is a possibility map, not a decision memo. It shows what the exploration surfaced (hypotheses, effects, council disagreements, adversarial scenarios, assumptions) and closes with one synthesis at the end. The map is the output. The recommendation is a convenience for readers who need a single direction, not the product.
+
 NOTE: Human-readable output rules are defined in `references/phases/decide.md`.
 The brief must read like a strategy memo — no snake_case identifiers, no raw effect_ids.
 
@@ -15,14 +17,13 @@ Generated: {date} | Iterations: {N} | Converged: {yes at iteration M / NOT REACH
 ## Executive Summary
 
 > **Decision:** {decision_statement — one line}
-> **Recommendation:** {action — one line}
-> **Confidence:** {HIGH/MEDIUM/LOW} | Converged: {yes/no}
-> **Cost comparison:** {winning option cost} vs {runner-up cost} vs {do-nothing cost}
-> **Start now:** {first action the decision-maker should take this week}
-> **Biggest risk:** {the single assumption that, if wrong, flips the recommendation}
+> **Recommendation:** {action — one line} | **Confidence:** {HIGH/MEDIUM/LOW} | Converged: {yes/no}
+> **Hypotheses explored:** {N — one-line framing of what was in play}
+> **Deepest disagreement:** {biggest council divergence and why it matters}
+> **Dominant risk:** {top worst case or black swan — one line}
+> **Load-bearing assumption:** {top HIGH-sensitivity assumption}
 
-This box should be readable in 30 seconds by someone who will never scroll past it.
-Keep it to 6 lines max. No hedging. No "it depends." Pick the action.
+Readable in 30 seconds. Preview of the possibility map with the recommendation called out. No hedging. No "it depends." The full possibility map is in the body of the brief. The full recommendation — with action plan, dependencies, monitoring signals, pre-mortem, and review trigger — is in the Recommendation section at the end.
 
 ---
 
@@ -77,6 +78,17 @@ They may be genuine blind spots OR noise. Treat with appropriate skepticism.
 {If more than 10 exploratory effects, summarize: "N additional exploratory effects
 logged in effects-chains.json. Key themes: [2-3 bullet summary]."}
 
+## Council Dynamics
+
+Who thought what, where the council diverged. This is the diversity signal — the reason to run a council rather than a single analyst. Do NOT compress this to one line.
+
+- **Strongest analysis:** {persona} (per peer review) — {one line on why}
+- **Weakest analysis:** {persona} — {one line on why: too generic, not grounded, etc.}
+- **Key disagreement:** {what effect or hypothesis, and why personas split — include the probability range or effect_ids in dispute}
+- **Uncertainty hotspot:** {effect with widest probability range — show the range}
+- **Consensus surprises:** {effects where unexpected personas agreed — e.g., Optimist and Pessimist aligned on X}
+- **Blind spots caught:** {effects that only 1-2 personas saw but peer review elevated as credible}
+
 ## Minority-View Winners
 
 If the final recommendation was influenced or originated by a single persona's
@@ -102,35 +114,24 @@ If no minority-view idea influenced the final recommendation, omit this section.
 - **{insight}** — breaks if {assumption} changes
   - **Decision boundary:** {specific threshold where conclusion flips}
 
+## Adversarial Scenarios
+
+Applied AFTER stable/fragile classification so the reader already knows what survived pressure before seeing what attacks it. Sourced from `adversary.json`. Every entry in the source JSON appears here — never drop a subsection that has source data.
+
+### Worst Cases
+{Top 2-3 worst case scenarios with probability and severity. Not just "bad outcomes" — specifically the scenarios where the primary recommendation is wrong AND costly.}
+
+### Black Swans
+{Low probability, high impact events. Unexpected disruptions (macro, security, regulatory, new entrant). 2-3 entries. Each as a paragraph with specific narrative — not a bullet.}
+
+### Irrational Actors
+{Scenarios where a competitor, regulator, or internal actor behaves in a way rational analysis would not predict. At least one. Rare but high-impact.}
+
 ## Key Assumptions (ranked by sensitivity)
 
 | Rank | Assumption | Sensitivity | Effects Impacted | Fragility |
 |------|-----------|-------------|-----------------|-----------|
 | 1 | {assumption} | HIGH | {N} effects | {SOLID/SHAKEABLE/FRAGILE} |
-
-## Adversarial Scenarios
-
-### Worst Cases
-{Top 2-3 worst case scenarios with probability and severity.}
-
-### Black Swans
-{Low probability, high impact events.}
-
-## Recommendation
-
-- **Action:** {what to do}
-- **Confidence:** {HIGH / MEDIUM / LOW}
-- **Confidence reasoning:** {why}
-- **Depends on:** {top 1-2 assumptions}
-- **Monitor:** {signals that would change this recommendation}
-- **Pre-mortem:** {if this fails, it will most likely be because...}
-- **Review trigger:** {when to re-run this analysis}
-
-## Council Dynamics
-
-- Strongest analysis: {persona} (per peer review)
-- Key disagreement: {what and why it matters}
-- Uncertainty hotspot: {effect with widest probability range}
 
 ## Convergence Log
 
@@ -138,6 +139,18 @@ If no minority-view idea influenced the final recommendation, omit this section.
 |-----------|--------------|---------------------|---------------|----------------|-----------|
 | 1 | baseline | baseline | baseline | {N} | no |
 | 2 | {N} | {N}% | {N} | {N} | {yes/no} |
+
+## Recommendation
+
+The synthesis of everything above. One path forward, based on expected value across the hypothesis space with worst cases and black swans factored in. This is a synthesis of the map, not the product of the analysis — the map above is the product.
+
+- **Action:** {what to do}
+- **Confidence:** {HIGH / MEDIUM / LOW}
+- **Confidence reasoning:** {why this level — what the stable findings support and what the fragile findings caveat}
+- **Depends on:** {top 1-2 load-bearing assumptions — if either breaks, revisit this}
+- **Monitor:** {specific signals that would change this recommendation — metrics, events, dates}
+- **Pre-mortem:** {if this fails in 12 months, it will most likely be because... — 3-5 failure modes synthesized from Adversarial Scenarios + Fragile Insights}
+- **Review trigger:** {when to re-run this analysis — a date, a metric threshold, or a named event}
 
 ---
 

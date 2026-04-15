@@ -250,18 +250,22 @@ Every effect is structured JSON with stable IDs for mechanical comparison:
 
 ## Decision Brief Output
 
-The final output includes:
+The output is a **possibility map** — what the exploration surfaced, where the council diverged, what held up under pressure — with a recommendation synthesized at the end. Sections in order:
 
-- **Data Foundation** with sourced citations
-- **High-Confidence Effects** (3+ personas agree) vs **Exploratory Effects** (1-2 personas)
-- **Stable Insights** that survived adversarial pressure across iterations
-- **Fragile Insights** with exact decision boundaries
-- **Assumptions ranked by sensitivity** (HIGH/MEDIUM/LOW)
-- **Adversarial Scenarios** (worst cases, black swans, irrational actors)
-- **Recommendation** with confidence, dependencies, monitoring signals, pre-mortem
-- **Council Dynamics** (agreement patterns, biggest disagreement, peer review rankings)
-- **Convergence Log** (iteration-by-iteration parameter values)
-- **Appendix: Decision Timeline** (month-by-month effects cascade)
+1. **Executive Summary** — 30-second preview: decision, recommendation (called out), confidence, hypotheses explored, deepest disagreement, dominant risk, load-bearing assumption
+2. **Data Foundation** with sourced citations
+3. **Hypotheses Explored** — 3-5 competing paths and their status
+4. **Effects Map** — High-Confidence (3+ personas agree), Specialist (single-persona domain match), Exploratory (1-2 personas, no match)
+5. **Council Dynamics** — who thought what, where they diverged, peer review rankings
+6. **Stable Insights** that survived adversarial pressure across iterations
+7. **Fragile Insights** with exact decision boundaries
+8. **Adversarial Scenarios** — worst cases, black swans, irrational actors
+9. **Key Assumptions** ranked by sensitivity (HIGH/MEDIUM/LOW)
+10. **Convergence Log** — iteration-by-iteration parameter values
+11. **Recommendation** — action, confidence, confidence reasoning, dependencies, monitoring signals, pre-mortem, review trigger
+12. **Appendix A: Decision Timeline** — month-by-month effects cascade
+
+**Exploration first, synthesis last. The map is the product.**
 
 ---
 

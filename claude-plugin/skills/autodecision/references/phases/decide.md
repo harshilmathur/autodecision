@@ -1,7 +1,9 @@
 # Phase 8: DECIDE
 
 ## Purpose
-Final synthesis. Produce the Decision Brief — the primary output of the system.
+Make the possibility map legible. The brief is a decision map: what the exploration surfaced, where the council diverged, what survived adversarial pressure, what didn't. A recommendation appears at the end as one synthesis of the map, not as the product.
+
+The possibility map IS the output. The decision is a downstream convenience for readers who need a single action. Do not compress the map to make the recommendation faster to find — the map is why we spent the compute.
 
 ## Inputs
 - `config.json`, `ground-data.md`
@@ -49,34 +51,50 @@ and `council_agreement` >= 3. These survived adversarial pressure.
 **Fragile insights:** Effects with HIGH sensitivity assumptions, wide probability ranges
 (> 0.3), or `council_agreement` < 3. These depend on assumptions that could be wrong.
 
-### Step 3: Generate Recommendation
+### Step 3: Synthesize Findings
 
-Apply expected value reasoning across the hypothesis space:
+The goal of Phase 8 is to make the exploration legible. That means two passes:
+
+**Pass 1 — Map the possibility space.** For each major bucket the loop produced (hypotheses, effects by agreement tier, council dynamics, stable and fragile insights, adversarial scenarios, assumptions), write the section that shows what the exploration found in its own terms. Do NOT pre-summarize toward a recommendation. Do NOT drop a section because "the reader just wants the answer." The map IS the answer.
+
+**Pass 2 — Synthesize a recommendation.** After the map is written, apply expected value reasoning across the hypothesis space:
 - For each hypothesis, compute the expected net impact by weighting effects by probability
-- Factor in worst-case scenarios from the adversary phase
+- Factor in worst-case scenarios and black swans from the adversary phase
 - Identify the action with the best expected outcome ACROSS hypotheses
 - Note which assumptions the recommendation depends on
+
+The recommendation goes at the end of the brief (section 12), not the top. The Executive Summary at the top gives readers a 30-second preview of the map with the recommendation called out, but it is NOT a substitute for the full Recommendation block at the end.
 
 ### Step 4: Write Decision Brief
 
 Write `DECISION-BRIEF.md` using the template from `references/output-format.md`.
 
-**MANDATORY SECTIONS (never skip, never rename):**
-- Executive Summary (6 lines max — NOT "Headline", NOT "Summary", exactly "Executive Summary")
-- Data Foundation
-- Hypotheses Explored (or "Hypotheses Evaluated" — table format)
-- High-Confidence Effects (agreement >= 3)
-- Stable Insights
-- Fragile Insights (with decision boundaries)
-- Key Assumptions (ranked by sensitivity)
-- Adversarial Scenarios
-- Recommendation (with phased plan, confidence, dependencies, monitoring, pre-mortem)
-- Council Dynamics
-- Convergence Log (omit for medium mode, omit for quick mode)
-- Appendix A: Decision Timeline
+**MANDATORY SECTIONS (never skip, never rename, in this order):**
 
-The Executive Summary section is frequently omitted or misnamed. Do NOT use
-"Headline" or "Summary" instead. Use the template exactly.
+1. **Executive Summary** — 6-line bullet box. Decision, Recommendation (called out), Confidence, Hypotheses explored, Deepest disagreement, Dominant risk, Load-bearing assumption. NOT a standalone memo — a preview of the map with the recommendation visible. Literal header "## Executive Summary" — never "Bottom Line", "Headline", or "Summary".
+2. **Data Foundation**
+3. **Hypotheses Explored** (table format)
+4. **Effects Map** (High-Confidence / Specialist / Exploratory subsections)
+5. **Council Dynamics** (who thought what, where they diverged — the diversity signal, not a footnote)
+6. **Minority-View Winners** (optional — include only if a single-persona insight became the recommendation)
+7. **Stable Insights** (what survived adversarial pressure across iterations)
+8. **Fragile Insights** (with decision boundaries)
+9. **Adversarial Scenarios** (Worst Cases + Black Swans + Irrational Actors subsections — placed AFTER Stable/Fragile so readers know what held up before seeing what attacks it)
+10. **Key Assumptions** (ranked by sensitivity)
+11. **Convergence Log** (omit for medium mode, omit for quick mode)
+12. **Recommendation** (the full 7-field synthesis block — Action, Confidence, Confidence reasoning, Depends on, Monitor, Pre-mortem, Review trigger)
+13. **Appendix A: Decision Timeline**
+
+The order signals what matters. Sections 2-11 are the possibility map. Section 12 is one synthesis of that map. The Executive Summary at section 1 lets decision-makers skim, but the bulk of the brief is exploration.
+
+**Common failure modes to avoid:**
+- Renaming "Executive Summary" to "Bottom Line", "Headline", or "Summary" — use the literal header.
+- Renaming "Hypotheses Explored" to "Hypothesis Ranking" or similar — use the literal header.
+- Moving Recommendation back to the top — it belongs at section 12.
+- Dropping Black Swans or Irrational Actors from Adversarial Scenarios when the adversary phase produced them — never drop a subsection that has source data.
+- Compressing Council Dynamics to one line — this is one of the main outputs, not a footnote. At minimum 5 bullets.
+- Conflating Stable Insights and the Recommendation — Stable Insights are findings about the map, Recommendation is an action synthesized from those findings.
+- Using `effect_id` or `assumption_key` in human-readable text — always use the description field, replace underscores with spaces, capitalize the first letter.
 
 ### Step 5: Persist to Journal and Assumption Library
 
