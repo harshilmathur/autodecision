@@ -12,6 +12,7 @@ triggers:
   - /autodecision:revise
   - /autodecision:challenge
   - /autodecision:summarize
+  - /autodecision:publish
   - /autodecision:plan
   - /autodecision:review
   - /autodecision:export
@@ -38,6 +39,7 @@ not the answer. It is a system that refuses to accept the first answer.
 - `/autodecision:revise {slug} "{what changed}"` → Revise a previous decision with changed assumptions, new hypotheses, new data, or different tilt. Produces full brief + diff.
 - `/autodecision:challenge "{action}"` → Adversary-only mode. Stress-test a proposed action without the full loop. ~5 minutes.
 - `/autodecision:summarize {slug}` → Compress a Decision Brief into a shareable one-page summary.
+- `/autodecision:publish {slug} [--summary]` → Package a brief as a PDF and route it to whichever connectors are available (Notion, Gmail draft, Drive, Slack, secret gist, or Local). Read `references/phases/publish.md`.
 - `/autodecision:plan` → Interactive setup wizard. Phase 0 (SCOPE) only.
 - `/autodecision:review` → Read past decision runs, compare predictions vs outcomes.
 - `/autodecision:export` → Bundle journal + assumptions + past briefs into portable archive.
@@ -99,6 +101,7 @@ Load these on-demand as each phase begins:
 | Phase 1.5: Elicit | `references/phases/elicit.md` |
 | Revise protocol | `references/phases/revise.md` |
 | Challenge protocol | `references/phases/challenge.md` |
+| Publish protocol | `references/phases/publish.md` |
 | Output validation rules | `references/validation.md` |
 | Decision Brief template | `references/output-format.md` |
 | Decision journal spec | `references/journal-spec.md` |

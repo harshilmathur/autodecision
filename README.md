@@ -131,7 +131,7 @@ Works with [Claude Code](https://claude.ai/code) and [Claude Cowork](https://cla
 /plugin install autodecision@autodecision
 ```
 
-Commands land under `/autodecision:` — the main loop is `/autodecision:autodecision`. All subcommands (`:quick`, `:challenge`, `:compare`, `:revise`, `:summarize`, `:plan`, `:review`, `:export`) share the same prefix.
+Commands land under `/autodecision:` — the main loop is `/autodecision:autodecision`. All subcommands (`:quick`, `:challenge`, `:compare`, `:revise`, `:summarize`, `:publish`, `:plan`, `:review`, `:export`) share the same prefix.
 
 **Legacy skill install**
 
@@ -265,6 +265,7 @@ OUTER (runs once):
 | `/autodecision:compare` | Side-by-side comparison of two decisions | ~5 min |
 | `/autodecision:revise` | What-if on an existing run (changed assumptions/data) | ~8 min |
 | `/autodecision:summarize` | One-page shareable summary | ~1 min |
+| `/autodecision:publish` | Ship a brief as PDF → Notion, email draft, gist, Slack, Drive, or Local | ~1 min |
 | `/autodecision:plan` | Interactive scope wizard | ~2 min |
 | `/autodecision:review` | Past decisions + outcome tracking | ~1 min |
 | `/autodecision:export` | Portable archive of all decisions | ~1 min |

@@ -1,6 +1,6 @@
 {
   "name": "autodecision",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "owner": {
     "name": "Harshil Mathur",
     "url": "https://github.com/harshilmathur"
@@ -10,7 +10,7 @@
       "name": "autodecision",
       "source": "./claude-plugin",
       "description": "Iterative decision simulation with a 5-persona council, adversarial red-teaming, and mechanical convergence. Applies Karpathy's autoresearch + LLM Council patterns to high-stakes business and strategy decisions.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "productivity",
       "keywords": [
         "decision-making",

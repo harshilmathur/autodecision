@@ -59,6 +59,7 @@ Download `autodecision-<version>.zip` from the [latest release](https://github.c
 | `/autodecision:revise` | Revise a previous run with changed assumptions/data/tilt | ~8-10 min |
 | `/autodecision:challenge` | Stress-test a proposed action (adversary-only, no full loop) | ~5 min |
 | `/autodecision:summarize` | Compress a brief into a shareable one-page summary | ~1 min |
+| `/autodecision:publish` | Ship a brief as PDF → Notion, email draft, gist, Slack, Drive, or Local | ~1 min |
 | `/autodecision:plan` | Interactive setup wizard (scope only) | ~2 min |
 | `/autodecision:review` | Review past decisions, compare predictions vs outcomes | ~1 min |
 | `/autodecision:export` | Bundle journal + assumptions into portable archive | ~1 min |
@@ -355,7 +356,7 @@ claude-plugin/                        # CANONICAL — edit here
 │   ├── autodecision.md               # → /autodecision:autodecision (full loop)
 │   ├── quick.md                      # → /autodecision:quick
 │   ├── compare.md, revise.md, challenge.md, summarize.md,
-│   ├── plan.md, review.md, export.md
+│   ├── publish.md, plan.md, review.md, export.md
 └── skills/autodecision/
     ├── SKILL.md                      # Core routing + key rules
     └── references/

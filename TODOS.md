@@ -13,14 +13,14 @@ Feed assumption validation history back into persona prompts: "This assumption w
 
 ## P2 — Medium Impact
 
-### `/autodecision:share` — Hosted brief link
-Upload a Decision Brief to a hosted endpoint and return a shareable URL. Removes the "paste a 300-line markdown into Slack" friction. Lets briefs circulate to stakeholders who'll never run a terminal. Requires: hosting target (Vercel/Cloudflare/GitHub Pages), privacy model (public vs signed link), expiry semantics.
+### Board-ready PDF template (for `/autodecision:publish`)
+Today the full brief goes through pandoc with default styling — readable but unpolished (long JSON blocks wrap awkwardly, no cover page, no brand). Build a second pass that filters the markdown before conversion: drop raw JSON, convergence logs, iteration folders; keep Executive Summary + Recommendation + Risks + Timeline + short appendix. The `--summary` path already has a designed one-page format; this is the "full brief but exec-ready" variant. Ship as a flag on publish (e.g. `--board`) once the templated layout is stable.
+
+### Public hosted brief link
+Today `/autodecision:publish` covers Notion, Gmail draft, secret gist, Slack, Drive, and Local — all require the reader to have the respective account. A hosted public URL (Cloudflare Pages / Vercel / GitHub Pages) removes that friction for briefs meant for broad circulation. Requires: hosting target, privacy model (public vs signed link with expiry), and a path for revoking an old link.
 
 ### Mermaid Effects Tree Visualization
 Generate Mermaid flowchart in Decision Brief showing causal tree with color-coded probabilities. Makes effects scannable at a glance vs reading tables.
-
-### Notion Integration
-Optional push of Decision Brief to a Notion page after run completes. Decision Briefs become shared team artifacts.
 
 ### Council Agreement Threshold Tuning
 Evaluate whether >= 3/5 is the right threshold for "stable insight" vs >= 2/5. Needs empirical data from 10+ decisions to calibrate properly.
