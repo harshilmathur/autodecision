@@ -6,7 +6,7 @@ name: Release plugin zip
 #
 # To cut a release:
 #   git tag v0.1.0 && git push --tags
-# GitHub creates the Release automatically via softprops/action-gh-release@v2.
+# GitHub creates the Release automatically via softprops/action-gh-release@v3.
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Verify sync invariant
         # If the canonical and derived trees drift, the tagged commit is
@@ -39,7 +39,7 @@ jobs:
         run: ./scripts/build-plugin-zip.sh
 
       - name: Attach zip to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/autodecision-*.zip
           generate_release_notes: true
