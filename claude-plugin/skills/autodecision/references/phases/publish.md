@@ -105,9 +105,9 @@ HTML_PATH="$SHARE_DIR/$BASENAME.html"
 mkdir -p "$SHARE_DIR"
 ```
 
-## Step 2: GENERATE PDF
+## Step 2: GENERATE PDF (or styled HTML)
 
-Try three methods in priority order. First success wins. Surface the method used
+Try methods in priority order. First success wins. Surface the method used
 in the final status message.
 
 ### 2a. anthropic-skills:pdf (preferred)
@@ -118,13 +118,12 @@ invoke it via the Skill tool with the source markdown file as input and
 
 If the skill errors or isn't available, fall through to 2b.
 
-### 2b. pandoc
+### 2b. pandoc → PDF
 
 Check for pandoc on PATH:
 
 ```bash
 if command -v pandoc >/dev/null 2>&1; then
-  # pandoc present
   pandoc "$SOURCE_MD" -o "$PDF_PATH" 2>&1
 fi
 ```
@@ -132,34 +131,63 @@ fi
 Pandoc figures out the PDF engine (xelatex, lualatex, wkhtmltopdf, weasyprint) from
 what's installed. If no engine is available, pandoc errors — fall through to 2c.
 
-**Quality note:** v0 accepts pandoc's default styling. The full brief has tables,
-code blocks, and long JSON snippets; default wrapping isn't pretty for those. Users
-who need a board-ready PDF should use `--summary` (one-page, designed format).
-A templated full-brief PDF is a v0.3 follow-up.
+### 2c. Python md-to-html.py → styled HTML (then Print to PDF)
 
-### 2c. HTML fallback
-
-If both PDF methods fail, produce an HTML file and open it:
+If PDF generation failed, produce a properly styled HTML file. **Do NOT dump raw
+markdown into a `<pre>` tag.** The script at `scripts/md-to-html.py` converts
+markdown to clean, print-friendly HTML with rendered tables, headers, bold, source
+tag highlights, and `@media print` rules for File → Print → Save as PDF.
 
 ```bash
-if command -v pandoc >/dev/null 2>&1; then
-  # Pandoc present but no PDF engine — produce standalone HTML
-  pandoc "$SOURCE_MD" -o "$HTML_PATH" --standalone --metadata title="$BASENAME"
-else
-  # No pandoc — wrap the raw markdown in minimal HTML.
-  # The heredoc is UNQUOTED so $BASENAME expands; use Python's html-escape
-  # path or printf/sed for the body if you want proper <, >, & escaping.
-  {
-    printf '<!doctype html><meta charset="utf-8"><title>%s</title>\n' "$BASENAME"
-    printf '<style>body{font:14px/1.5 -apple-system,system-ui,sans-serif;max-width:780px;margin:2em auto;padding:0 1em}pre{white-space:pre-wrap}</style>\n'
-    printf '<pre>\n'
-    # Escape &, <, > so arbitrary markdown content can't break the HTML
-    sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' "$SOURCE_MD"
-    printf '</pre>\n'
-  } > "$HTML_PATH"
-fi
+# Find the script. It lives alongside validate-brief.py in the skill's scripts/ dir.
+SCRIPT_DIR="$(find ~/.claude/skills/autodecision/scripts \
+                    claude-plugin/skills/autodecision/scripts \
+                    .claude/skills/autodecision/scripts \
+                    -name 'md-to-html.py' 2>/dev/null | head -1)"
 
-# Open it
+if [ -n "$SCRIPT_DIR" ] && command -v python3 >/dev/null 2>&1; then
+  python3 "$SCRIPT_DIR" "$SOURCE_MD" "$HTML_PATH" "Decision Brief — $SLUG"
+fi
+```
+
+The orchestrator can also run the script inline: it knows the skill directory path
+and can construct the full path to `scripts/md-to-html.py`. The script takes 3 args:
+`<input.md> <output.html> [title]`.
+
+If the script succeeds, the HTML is ready. Open it and tell the user they can use
+File → Print → Save as PDF for a shareable copy.
+
+If Python is not available OR the script errors, fall through to 2d.
+
+### 2d. pandoc → standalone HTML
+
+If pandoc is available but its PDF engine isn't (and Python failed):
+
+```bash
+pandoc "$SOURCE_MD" -o "$HTML_PATH" --standalone --metadata title="$BASENAME"
+```
+
+This produces rendered HTML via pandoc's markdown parser. Acceptable quality.
+
+### 2e. Raw fallback (last resort)
+
+If nothing else works (no anthropic-skills:pdf, no pandoc, no Python), wrap the
+markdown in basic HTML. This is the worst-case path — raw markdown is readable but
+tables, bold, and headers won't render.
+
+```bash
+{
+  printf '<!doctype html><meta charset="utf-8"><title>%s</title>\n' "$BASENAME"
+  printf '<style>body{font:14px/1.5 -apple-system,system-ui,sans-serif;max-width:780px;margin:2em auto;padding:0 1em}table{border-collapse:collapse;width:100%%}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f5f5f5}pre{white-space:pre-wrap;background:#f8f8f8;padding:1em;border-radius:4px}</style>\n'
+  printf '<pre>\n'
+  sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' "$SOURCE_MD"
+  printf '</pre>\n'
+} > "$HTML_PATH"
+```
+
+### After HTML generation (2c/2d/2e): open and inform
+
+```bash
 case "$(uname -s)" in
   Darwin) open "$HTML_PATH" ;;
   Linux)  xdg-open "$HTML_PATH" ;;
@@ -167,12 +195,25 @@ case "$(uname -s)" in
 esac
 ```
 
-Tell the user: "PDF conversion unavailable. Opened the brief in your browser —
-use File → Print → Save as PDF to produce a PDF."
+Tell the user: "PDF conversion unavailable. Opened the brief in your browser.
+Use File → Print → Save as PDF for a shareable PDF."
 
 Set `PDF_PATH=""` (empty) to signal downstream routing that no PDF exists.
 Destinations that need a PDF (Slack, Drive, email attachment) should fall back
 to sending the markdown or degrade gracefully.
+
+### Priority summary
+
+```
+2a  anthropic-skills:pdf  →  PDF (best)
+2b  pandoc + engine       →  PDF
+2c  python3 md-to-html.py →  styled HTML (tables, headers, print CSS)
+2d  pandoc --standalone   →  rendered HTML (pandoc's markdown parser)
+2e  raw <pre> wrap        →  raw text in HTML (last resort, bad quality)
+```
+
+**The common case on a Mac with Python but no pandoc is 2c.** This produces
+a clean, readable HTML file with proper tables and a "Save as PDF" footer.
 
 ## Step 3: DETECT DESTINATIONS
 
