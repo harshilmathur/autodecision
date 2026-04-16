@@ -8,6 +8,7 @@ runs_in:
   - revise     (re-runs if revision adds new search queries; otherwise re-uses prior ground-data.md)
 reads:
   - ~/.autodecision/runs/{slug}/config.json
+  - ~/.autodecision/runs/{slug}/context-extracted.md (if --context was provided)
 tools:
   - WebSearch (mandatory — never simulate in a vacuum)
   - WebFetch (optional, for sourced citations)
@@ -26,6 +27,7 @@ This is what prevents the system from reasoning in a vacuum.
 
 ## Inputs
 - `config.json` (sub-questions and decision statement)
+- `context-extracted.md` (if `--context` was provided in Phase 0)
 
 ## Outputs
 - `ground-data.md` in the run directory
@@ -54,6 +56,25 @@ This is what prevents the system from reasoning in a vacuum.
    as "UNGROUNDED" for that sub-question. If ALL sub-questions are ungrounded,
    update `config.json` with `"grounding": "UNGROUNDED"` and proceed with
    LLM knowledge only.
+
+## Using Context Extractions to Sharpen Searches
+
+If `context-extracted.md` exists, read it before constructing search queries. The
+document extractions provide domain-specific terms, company names, financial metrics,
+and industry context that make search queries more targeted.
+
+Example: without context, you search "SaaS pricing decrease impact". With a context
+file showing the company is a B2B fintech with $4M ARR, you search "B2B fintech
+SaaS pricing decrease $3-5M ARR impact case study".
+
+**Conflict flagging:** If web search results contradict data from context documents,
+note the conflict explicitly in `ground-data.md`:
+
+```markdown
+**CONFLICT:** [D2] reports gross margin of 72%, but [G3] industry benchmark
+for this segment is 60-65%. Either the user's data is unusually high or the
+benchmark doesn't apply. Flag for ELICIT review.
+```
 
 ## Search Strategy
 

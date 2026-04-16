@@ -9,6 +9,7 @@ runs_in:
 reads:
   - ~/.autodecision/runs/{slug}/config.json
   - ~/.autodecision/runs/{slug}/ground-data.md
+  - ~/.autodecision/runs/{slug}/context-extracted.md (if --context was provided)
   - ~/.autodecision/runs/{slug}/user-inputs.md (if exists)
   - ~/.autodecision/runs/{slug}/iteration-{LATEST}/{effects-chains,sensitivity,adversary,peer-review}.json
   - ~/.autodecision/runs/{slug}/convergence-log.json
@@ -149,7 +150,7 @@ Write `DECISION-BRIEF.md` using the template from `references/output-format.md`.
 **Section order (for human reference — schema is canonical):**
 
 1. **Executive Summary** — 6-line bullet box. Decision, Recommendation (called out), Confidence, Hypotheses explored, Deepest disagreement, Dominant risk, Load-bearing assumption. NOT a standalone memo — a preview of the map with the recommendation visible. Literal header "## Executive Summary" — never "Bottom Line", "Headline", or "Summary".
-2. **Data Foundation** — tag every external fact [G#]/[U#]/[C#:persona] so downstream sections can reuse the tags.
+2. **Data Foundation** — tag every external fact [G#]/[D#]/[U#]/[C#:persona] so downstream sections can reuse the tags. If `context-extracted.md` exists, include `[D#]` tagged items alongside ground data.
 3. **Hypotheses Explored** (table format)
 4. **Effects Map** (High-Confidence / Specialist / Exploratory subsections — top 15 effects by `council_agreement × probability`; the rest go to Appendix C)
 5. **Council Dynamics** (who thought what, where they diverged — the diversity signal, not a footnote. MUST include the persona legend as the first line.)

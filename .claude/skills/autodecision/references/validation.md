@@ -290,6 +290,7 @@ CHECKS:
   - Required content patterns present (e.g. `**Action:**`, `**Confidence:**`)
   - Tables present where the schema requires them
   - No snake_case identifiers in prose (outside code, inline code, links)
+  - Source tags valid: [G#], [D#], [U#], [C#:persona] recognized as valid tag classes
   - Cross-reference coverage: source JSON items traced via trailing
     `<!-- validator-refs: -->` block in the brief (legacy inline `<!-- ref:ID -->`
     also accepted for old briefs)

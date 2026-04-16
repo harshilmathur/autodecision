@@ -24,6 +24,9 @@ Derive `{decision-slug}` from the decision statement (lowercase, hyphens, max 40
 mkdir -p ~/.autodecision/runs
 ```
 
+3. If `--context` flag is present, note the file paths for extraction in Phase 0.
+   See `references/phases/scope.md` "Context File Extraction" for the full protocol.
+
 ## Iteration Modes
 
 The loop supports configurable iteration count:
@@ -56,6 +59,8 @@ OUTER (runs once):
   Phase 0: SCOPE ──────────────→ config.json
            INPUT QUALITY GATE ─→ score 0-4. Not a decision? Reframe or exit before any work.
                                   (runs FIRST in Phase 0, before decomposition; see scope.md)
+           CONTEXT EXTRACTION ──→ context-extracted.md (if --context provided)
+                                  (runs after quality gate, before decomposition; see scope.md)
   Phase 1: GROUND ─────────────→ ground-data.md
   Phase 1.5: ELICIT ───────────→ user-inputs.md (review assumptions, personas, data with user)
                                   (ELICIT runs AFTER GROUND because it shows grounding data to user)
@@ -196,6 +201,7 @@ Contents of `shared-context.md`:
 - Decision statement + sub-questions + constraints (from config.json)
 - Decision tilt (from config.json)
 - User-provided domain knowledge (from user-inputs.md, if any)
+- Document context (from context-extracted.md, if --context was provided — see below)
 - Key data points from ground-data.md (include ALL key findings, not a lossy summary)
 - Hypotheses with expected effect IDs (from hypotheses.json)
 - Persona preamble rules (from persona-preamble.md)
@@ -216,8 +222,27 @@ Contents of `shared-context.md`:
   The effect_id field in JSON is internal only — the description field is what appears
   in the brief. If you write an underscore in any user-facing text, you have made an error."
 
-Target: ~1500 tokens in iter-1, ~2500 tokens in iter-2+ (the previous-iter ID and
-assumption blocks add ~500-1000 tokens but are load-bearing for stability metrics).
+**Document context block (if `--context` was provided).** Include after user-provided
+domain knowledge and before hypotheses:
+
+```
+## Document Context (from user-provided files)
+
+The following data points were extracted from documents the user attached.
+Treat verifiable data (revenue figures, contract terms, dates, headcount) as
+high-confidence, more reliable than web search. Treat projections, estimates,
+and assertions as assumptions to stress-test in your analysis.
+
+- [D1] Revenue: $4.2M ARR as of Q1 2026 (acme-financials.csv, row 12)
+- [D2] Gross margin: 72% (acme-financials.csv, row 15)
+...
+```
+
+Budget: ~300-500 tokens for the document block. Read from `context-extracted.md`.
+
+Target: ~1500 tokens in iter-1 without docs, ~1800-2000 with docs, ~2500-3000
+in iter-2+ with docs (the previous-iter ID and assumption blocks add ~500-1000
+tokens but are load-bearing for stability metrics).
 
 ### Persona Subagent Protocol
 
@@ -401,6 +426,7 @@ This summary is the ONLY prior-iteration context carried forward to iteration N+
 ```
 ~/.autodecision/runs/{decision-slug}/
 ├── config.json                     # Phase 0 output
+├── context-extracted.md            # Phase 0 output (if --context provided)
 ├── ground-data.md                  # Phase 1 output
 ├── user-inputs.md                  # Phase 1.5 output (if ELICIT ran)
 ├── shared-context.md               # Precomputed before Phase 3 (preamble + config + data)

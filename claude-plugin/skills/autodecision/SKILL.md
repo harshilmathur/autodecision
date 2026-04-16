@@ -37,6 +37,7 @@ The output is a **possibility map**: every hypothesis, every first/second-order 
 
 - `/autodecision <decision>` (default 2 iterations) → execute `references/engine-protocol.md` end-to-end
 - `/autodecision --iterations N <decision>` → 1 = medium (council, no convergence), 2 = full default, 3-5 = deep
+- `/autodecision --context file1 [file2 ...] <decision>` → attach context documents (Claude Code only). Files are extracted, tagged `[D#]`, and threaded through the full pipeline. See `references/phases/scope.md` "Context File Extraction".
 - `/autodecision:quick <decision>` → `references/engine-protocol.md` "Quick Mode Protocol" section
 - `/autodecision:compare "A" vs "B"` → quick mode on both, then side-by-side comparison
 - `/autodecision:revise {slug} "{change}"` → `references/phases/revise.md`

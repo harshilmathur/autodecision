@@ -127,6 +127,15 @@ Templates pre-populate sub-questions, constraints, and search queries for common
 /autodecision:review pricing-cut-20pct-full --outcome "Acquisition increased 25%"
 ```
 
+### Attach context documents
+
+```
+/autodecision "Should we take the Series A?" --context term-sheet.pdf
+/autodecision "Should we acquire Acme?" --context financials.csv competitive-analysis.md
+```
+
+Attaches files alongside the decision question. The engine extracts key data points, tags them `[D#]`, and threads them through the full pipeline. Supported: `.md`, `.txt`, `.pdf`, `.csv`, `.json`, images. Claude Code only (requires filesystem access).
+
 ### Skip the user review step
 
 ```
@@ -145,6 +154,7 @@ Skips Phase 0.5 (ELICIT) where the system reviews assumptions, personas, and dat
 |------|---------|
 | `--iterations <N>` | Number of inner loop iterations (default: 2) |
 | `--template <name>` | Use a decision template (pricing, expansion, build-vs-buy, hiring) |
+| `--context <files>` | Attach context documents (term sheets, financials, reports). Claude Code only. Extracted, tagged `[D#]`, and threaded through the pipeline. |
 | `--skip-elicit` | Skip the user review step (Phase 0.5) |
 
 ### Compare (`/autodecision:compare`)
@@ -257,7 +267,7 @@ The output is a **possibility map** — what the exploration surfaced, where the
 ### Full mode — all 16 positions, in order:
 
 1. `## Executive Summary` — 6-line bullet box. Decision, Recommendation (called out), Confidence, Hypotheses explored, Deepest disagreement, Dominant risk, Load-bearing assumption.
-2. `## Data Foundation` — every external fact tagged `[G#]` (ground), `[U#]` (user), or `[C#:persona]` (council). Tags reused downstream.
+2. `## Data Foundation` — every external fact tagged `[G#]` (ground), `[D#]` (document), `[U#]` (user), or `[C#:persona]` (council). Tags reused downstream.
 3. `## Hypotheses Explored` — 4-column table: #, Hypothesis, Status, Key Assumptions.
 4. `## Effects Map` — three subsections: `### High-Confidence Effects`, `### Specialist Insights`, `### Exploratory Effects`. Top 15 by `council_agreement × probability`; rest go to Appendix C.
 5. `## Council Dynamics` — MUST open with the persona legend (verbatim first line). Then 5+ bullets covering strongest/weakest analysis, key disagreement, uncertainty hotspot, consensus surprises, blind spots caught.
@@ -271,7 +281,7 @@ The output is a **possibility map** — what the exploration surfaced, where the
 13. `## Appendix A: Decision Timeline` — 5-column table: When, Action, Depends On, Decision Point, Kill Criteria.
 14. `## Appendix B: Quick Mode vs Full Loop Comparison` — only if a quick run exists for the same slug.
 15. `## Appendix C: Complete Effects Map` — 8-column table for every effect not in section 4's top-15.
-16. `## Sources` — 4-column table: Tag, Type, Claim, Source. Every specific number in the brief needs a `[G#]`/`[U#]`/`[C#:persona]` tag within 120 chars of the number.
+16. `## Sources` — 4-column table: Tag, Type, Claim, Source. Every specific number in the brief needs a `[G#]`/`[D#]`/`[U#]`/`[C#:persona]` tag within 120 chars of the number.
 
 **Medium mode:** drops Convergence Log, Appendix A optional, Appendix B/C same rules.
 **Quick mode:** lighter — see `brief-schema.json` `required_in` / `skip_in` arrays.
@@ -285,7 +295,7 @@ The output is a **possibility map** — what the exploration surfaced, where the
 - Using prose instead of the 7-field `**Action:** / **Confidence:** / ...` Recommendation block.
 - Numbered list instead of the 5-column Key Assumptions table.
 - Skipping Sources; skipping Appendix C when the council produced more than 15 effects.
-- Dollar figures without a `[G#]`/`[U#]`/`[C#:persona]` tag within 120 chars.
+- Dollar figures without a `[G#]`/`[D#]`/`[U#]`/`[C#:persona]` tag within 120 chars.
 
 ---
 
@@ -311,6 +321,7 @@ All decision data lives in `~/.autodecision/` (user-level, never in your repo):
 ├── runs/                         # One directory per decision run
 │   └── {decision-slug}/
 │       ├── config.json           # Phase 0 output
+│       ├── context-extracted.md  # Phase 0 output (if --context provided)
 │       ├── user-inputs.md        # Phase 1.5 output (if ELICIT ran)
 │       ├── ground-data.md        # Phase 1 output
 │       ├── iteration-1/

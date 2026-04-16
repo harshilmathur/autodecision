@@ -275,6 +275,7 @@ OUTER (runs once):
 | Command | What | Time |
 |---------|------|------|
 | `/autodecision` | Full loop — 5 personas, 2 iterations, convergence | ~15 min |
+| `/autodecision --context file.pdf` | Full loop with attached context documents | ~15 min |
 | `/autodecision:quick` | Single-pass, no council | ~2 min |
 | `/autodecision:challenge` | Adversary-only stress test of a proposed action | ~5 min |
 | `/autodecision:compare` | Side-by-side comparison of two decisions | ~5 min |
@@ -292,6 +293,15 @@ OUTER (runs once):
 /autodecision --iterations 3 "decision"     # Deep: up to 3 iterations
 ```
 
+**Attach context documents (Claude Code only):**
+
+```
+/autodecision "Should we take the Series A?" --context term-sheet.pdf
+/autodecision "Should we acquire Acme?" --context financials.csv analysis.md
+```
+
+Supports `.md`, `.txt`, `.pdf`, `.csv`, `.json`, and images. The engine extracts key data points, tags them `[D#]`, and threads them through the full pipeline alongside web-searched ground data. In Cowork, paste document content during ELICIT instead.
+
 ---
 
 ## Decision templates
@@ -303,6 +313,7 @@ Pre-built decompositions for common decision types:
 /autodecision --template expansion "Should we launch in Southeast Asia?"
 /autodecision --template build-vs-buy "Should we build our own auth system?"
 /autodecision --template hiring "Should we hire a VP of Engineering?"
+/autodecision --context term-sheet.pdf "Should we take the Series A at these terms?"
 ```
 
 Templates pre-populate sub-questions, constraints, and search queries. You can modify them or create your own in `references/templates/`.
@@ -318,6 +329,7 @@ All decision data lives in `~/.autodecision/` (user-level, never in your repo):
 ├── runs/                    # One directory per decision run
 │   └── {decision-slug}/
 │       ├── config.json      # Decision scope + constraints
+│       ├── context-extracted.md  # Extracted data from --context files (if any)
 │       ├── ground-data.md   # Web search results
 │       ├── shared-context.md
 │       ├── iteration-1/

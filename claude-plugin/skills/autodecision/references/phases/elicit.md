@@ -9,6 +9,7 @@ runs_in:
 reads:
   - ~/.autodecision/runs/{slug}/config.json
   - ~/.autodecision/runs/{slug}/ground-data.md
+  - ~/.autodecision/runs/{slug}/context-extracted.md (if --context was provided)
   - references/persona-council.md (to display canonical 5 personas to user)
 writes:
   - ~/.autodecision/runs/{slug}/user-inputs.md (or empty placeholder if user declined)
@@ -67,8 +68,15 @@ Present the key findings from ground-data.md and the sub-questions from config.j
 > 2. {sub-question 2}
 > ...
 >
+> {If context-extracted.md exists:}
+> **Data from your documents:**
+> - {top extractions from context-extracted.md, showing [D#] tags}
+> - {note: "N total extractions from M files. Want me to surface specific items I missed?"}
+>
 > **Key data I found (Phase 1 grounding):**
 > - {top 3-5 data points from ground-data.md}
+> {If any conflicts between document data and web data, flag them:}
+> - {CONFLICT: [D2] says X but [G3] says Y — which is correct?}
 >
 > **Does this look right? Anything I'm missing or getting wrong?**
 >
@@ -213,9 +221,18 @@ Ask targeted questions based on the decision type and data gaps:
 > 3. {question about the user's risk tolerance or decision framework}
 >    Example: "Are you optimizing for growth or profitability?" / "Is this reversible if it fails?"
 >
+> **Have documents that would help?** (financial models, term sheets, internal reports)
+>
 > Options:
 > A) Here are my answers: {free text}
-> B) Skip — work with what you have
+> B) Attach files (provide paths — Claude Code only)
+> C) Skip — work with what you have
+
+If user chooses B (attach files): Run the same extraction pipeline from Phase 0
+(see `scope.md` "Context File Extraction"). New extractions continue the `[D#]`
+sequence from any existing context files. Append to `context-extracted.md` and
+update `config.json` context_files array. Then re-present Block 1 briefly so the
+user can see the new extractions alongside existing data.
 
 Generate 3-5 questions based on:
 - Missing data flagged in `ground-data.md`

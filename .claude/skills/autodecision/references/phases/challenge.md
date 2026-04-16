@@ -6,6 +6,7 @@ runs_in:
 reads:
   - User-provided action statement (from command argument)
   - Web search results (Phase 1 grounding only)
+  - Context documents (if --context provided — extracted to context-extracted.md)
 writes:
   - ~/.autodecision/runs/{slug}-challenge/config.json
   - ~/.autodecision/runs/{slug}-challenge/CHALLENGE-BRIEF.md
@@ -36,6 +37,14 @@ Challenge: Sensitivity — assumptions + boundaries       [pending]
 Challenge: Brief — generate Challenge Brief             [pending]
 ```
 
+## Step 0.5: EXTRACT CONTEXT (if --context provided)
+
+If the user passed `--context`, run the extraction pipeline from `scope.md`
+"Context File Extraction" before grounding. Write `context-extracted.md` to the
+run directory. The adversary and sensitivity agents will receive these extractions
+as additional context. Claims and projections from documents become primary
+stress-test targets.
+
 ## Step 1: GROUND (light)
 
 Run 2-3 targeted web searches related to the stated action:
@@ -51,6 +60,7 @@ This is lighter than the full GROUND phase — just enough context for the adver
 Spawn a single adversary agent (foreground). Provide:
 - The stated action (from user input)
 - The grounding data (from step 1)
+- Context document extractions (from step 0.5, if --context was provided)
 
 The adversary produces:
 

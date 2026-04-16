@@ -34,6 +34,9 @@ downstream section of the brief. Three tag classes:
 
 - **[G#]** — Ground data from Phase 1 WebSearch. Number sequentially: [G1], [G2], ...
   Each [G#] gets a URL in the Sources section.
+- **[D#]** — Data from user-provided context documents (via `--context` flag).
+  Numbered sequentially across all files: [D1], [D2], ... File-of-origin goes
+  in the Sources table, not the tag. Example: `[D1] Revenue: $4.2M ARR (financials.csv)`.
 - **[U#]** — User-provided fact from Phase 1.5 ELICIT. Numbered separately: [U1], [U2], ...
 - **[C#:persona]** — Council estimate from Phase 3 personas (e.g., [C1:pessimist]).
   Used downstream when you cite a probability, range, or heuristic the council
@@ -43,6 +46,8 @@ Example:
 
 > - [G1] Competitor X raised $200M Series C in Q3 2025 (source: Crunchbase).
 > - [G2] SaaS price elasticity median -1.2 to -1.8 across B2B studies (source: ProfitWell 2024 report).
+> - [D1] Revenue: $4.2M ARR as of Q1 2026 (acme-financials.csv, row 12).
+> - [D2] Series A terms: $8M at $40M pre-money (term-sheet.pdf, p.1).
 > - [U1] "Our current LTV:CAC is 3.1:1" (provided by user, Apr 2026).
 > - [C1:pessimist] "Volume offset P=0.15 under base elasticity assumption."
 
@@ -307,13 +312,16 @@ prose without the number.
 |-----|------|-------|--------|
 | G1 | Ground | Competitor X raised $200M Series C Q3 2025 | https://www.crunchbase.com/... |
 | G2 | Ground | SaaS price elasticity median −1.2 to −1.8 | ProfitWell 2024 B2B pricing study |
+| D1 | Document | Revenue: $4.2M ARR, Q1 2026 | acme-financials.csv, row 12 |
+| D2 | Document | Series A: $8M at $40M pre | term-sheet.pdf, p.1 |
 | U1 | User | Current LTV:CAC is 3.1:1 | user-inputs.md, provided Apr 2026 |
 | C1:pessimist | Council | Volume offset P=0.15 | iteration-1/council/pessimist.json |
 | C3:competitor | Council | Competitor match within 8 weeks P=0.70 | iteration-2/council/competitor.json |
 
-Required columns: Tag, Type (Ground/User/Council), Claim (short restatement),
-Source (URL for G#, user-inputs.md reference for U#, iteration/persona JSON path
-for C#:persona). Emit one row per tag used anywhere in the brief.
+Required columns: Tag, Type (Ground/Document/User/Council), Claim (short restatement),
+Source (URL for G#, filename + location for D#, user-inputs.md reference for U#,
+iteration/persona JSON path for C#:persona). Emit one row per tag used anywhere
+in the brief.
 
 ---
 

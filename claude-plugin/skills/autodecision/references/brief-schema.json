@@ -259,9 +259,9 @@
 
   "content_checks": {
     "unsourced_dollar_figure": {
-      "description": "Any dollar figure ($10M, $800M, $50/seat) or specific percentage (25%, 88-94%) or multiplier (2x, 3:1) in the brief MUST have an adjacent inline source tag [G#], [U#], or [C#:persona]. Figures without a tag are fabricated — the validator flags them HARD_FAIL.",
+      "description": "Any dollar figure ($10M, $800M, $50/seat) or specific percentage (25%, 88-94%) or multiplier (2x, 3:1) in the brief MUST have an adjacent inline source tag [G#], [D#], [U#], or [C#:persona]. Figures without a tag are fabricated — the validator flags them HARD_FAIL.",
       "regex_for_numbers": "(?:\\$[0-9]+(?:\\.[0-9]+)?[KMB]?|[0-9]+(?:\\.[0-9]+)?%|[0-9]+(?:\\.[0-9]+)?\\s*x(?![a-z])|[0-9]+:[0-9]+)",
-      "regex_for_tag": "\\[(G|U|C)[0-9]+(?::[a-z]+)?\\]",
+      "regex_for_tag": "\\[(G|D|U|C)[0-9]+(?::[a-z]+)?\\]",
       "proximity_chars": 120,
       "exempt_sections": ["## Data Foundation", "## Sources", "## Convergence Log", "## Appendix A: Decision Timeline"],
       "note": "Exempt sections either list raw grounding data, the sources table itself, mechanical scores, or timeline markers like 'Month 3'. Everywhere else, numbers need a tag within 120 chars."

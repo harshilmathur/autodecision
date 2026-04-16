@@ -16,6 +16,7 @@ writes:
 gates:
   - Original run must exist and have a DECISION-BRIEF.md
   - User must specify what changed (assumption, data, tilt, or hypothesis)
+  - If --context provided: extract and add to revised run's context
 -->
 
 # Phase: REVISE
@@ -78,6 +79,7 @@ hypothesis list from hypotheses.json. Use these as the vocabulary to match again
 | "Add hypothesis: {description}" | NEW_HYPOTHESIS | "Add: offer a freemium tier instead" |
 | "Remove/eliminate/drop H{N}" | REMOVE_HYPOTHESIS | "Eliminate H2, it's off the table" |
 | "New data: {fact}" | NEW_DATA | "Competitor just hired 5 senior engineers from us" |
+| `--context {file}` | NEW_CONTEXT | New document files to add to the analysis |
 | "Change tilt to {tilt}" | TILT_CHANGE | "Change tilt to risk minimization" |
 | "{constraint} changed to {value}" | CONSTRAINT_CHANGE | "IPO is now in 3 months" |
 | Multiple statements | COMBINED | "What if acquisition is only 10% AND competitor matches in 6 months" |
@@ -90,6 +92,7 @@ hypothesis list from hypotheses.json. Use these as the vocabulary to match again
 | NEW_HYPOTHESIS | Phase 2 (HYPOTHESIZE) | config, ground-data |
 | REMOVE_HYPOTHESIS | Phase 2 (HYPOTHESIZE) | config, ground-data |
 | NEW_DATA | Phase 1 (GROUND) — append to ground-data | config |
+| NEW_CONTEXT | Phase 3 (SIMULATE) — extract and add to context | config, ground-data, hypotheses |
 | TILT_CHANGE | Phase 3 (SIMULATE) | config (with new tilt), ground-data, hypotheses |
 | CONSTRAINT_CHANGE | Phase 2 (HYPOTHESIZE) | config (with new constraints), ground-data |
 | COMBINED | Earliest of individual types | Everything before that phase |
@@ -139,6 +142,11 @@ Modify copied files to reflect the changes:
 - **TILT_CHANGE:** Update config.json tilt field.
 - **CONSTRAINT_CHANGE:** Update config.json constraints.
 - **NEW_DATA:** Append to ground-data.md under a "## Revision Data" section.
+- **NEW_CONTEXT:** Run the extraction pipeline from `scope.md` "Context File Extraction"
+  on the new files. If the original run had `context-extracted.md`, copy it first and
+  append new extractions (continuing the `[D#]` sequence). Otherwise create a new
+  `context-extracted.md`. Update config.json context_files array. The revision header
+  notes "Added context: {filenames}".
 
 ## Step 5: EXECUTE
 

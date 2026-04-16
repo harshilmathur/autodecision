@@ -9,6 +9,7 @@ runs_in:
 reads:
   - ~/.autodecision/runs/{slug}/shared-context.md (precomputed by orchestrator)
   - ~/.autodecision/runs/{slug}/iteration-{N}/hypotheses.json
+  - ~/.autodecision/runs/{slug}/context-extracted.md (if --context was provided — included in shared-context.md)
   - references/persona-council.md
   - references/persona-preamble.md
   - references/effects-chain-spec.md

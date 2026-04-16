@@ -9,9 +9,11 @@ runs_in:
 reads:
   - user decision statement (from /autodecision invocation)
   - optional: --template flag (pricing | expansion | build-vs-buy | hiring)
+  - optional: --context flag (one or more file paths, resolved relative to cwd)
   - if template: references/templates/{template}.md
 writes:
   - ~/.autodecision/runs/{slug}/config.json
+  - ~/.autodecision/runs/{slug}/context-extracted.md (if --context provided)
 gates:
   - Input quality gate passes (decision clarity + scope fit)
   - At least 2 sub-questions identified
@@ -26,9 +28,11 @@ that all subsequent phases build on.
 
 ## Inputs
 - User's decision statement (from the command invocation)
+- Optional: `--context file1 [file2 ...]` (paths to context documents)
 
 ## Outputs
 - `config.json` in the run directory
+- `context-extracted.md` in the run directory (if `--context` provided)
 
 ## Input Quality Gate (MANDATORY — runs before anything else)
 
@@ -113,6 +117,92 @@ Write to `config.json` before decomposition:
   }
 }
 ```
+
+## Context File Extraction (runs after quality gate, before decomposition)
+
+If the user passed `--context`, extract key data points from each file before
+decomposing into sub-questions. This makes decomposition sharper because you
+know what's actually in the documents.
+
+**Platform requirement:** `--context` requires filesystem access (Claude Code only).
+If running in Cowork or another environment without filesystem access, print:
+"File attachments require Claude Code (filesystem access). In Cowork, paste the
+relevant content into the conversation and it will be picked up during ELICIT."
+
+### Step A: Validate files
+
+For each path after `--context`:
+1. Resolve relative to cwd
+2. Check the file exists. If missing: warn ("File not found: {path}, skipping") and continue.
+3. Check extension is supported: `.md`, `.txt`, `.pdf`, `.csv`, `.json`, `.png`, `.jpg`, `.jpeg`.
+   If unsupported: warn ("Unsupported file type: {ext}. Export to PDF or CSV for best results.") and skip.
+
+### Step B: Read and extract
+
+For each valid file, read the content and extract key data points into a structured
+list. Each extraction gets a sequential `[D#]` tag (flat numbering across all files):
+
+```
+- [D1] Revenue: $4.2M ARR as of Q1 2026 (acme-financials.csv, row 12)
+- [D2] Gross margin: 72% (acme-financials.csv, row 15)
+- [D3] TAM estimate: $2.1B by 2028 (acme-financials.csv, row 24)
+- [D4] Series A terms: $8M at $40M pre-money (term-sheet.pdf, p.1)
+- [D5] Liquidation preference: 1x non-participating (term-sheet.pdf, p.3)
+- [D6] Projected 18-month runway at current burn (term-sheet.pdf, p.5)
+```
+
+**Extraction rules:**
+- Priority: numbers, dates, terms, and concrete claims over narrative text
+- Each extraction: one data point, with source file + location in parentheses
+- Per-file cap: max 15 extractions, ~500 tokens
+- Total cap across all files: 800 tokens. Prioritize by file order (user listed most important first).
+- If a file exceeds its cap: keep the highest-signal items and note: "N additional
+  data points in {filename}. Ask during ELICIT to surface specific items."
+
+### Step C: Write outputs
+
+Write `context-extracted.md` to the run directory:
+
+```markdown
+# Context Extractions
+
+Source files: {filename1}, {filename2}, ...
+
+- [D1] Revenue: $4.2M ARR as of Q1 2026 (acme-financials.csv, row 12)
+- [D2] Gross margin: 72% (acme-financials.csv, row 15)
+...
+```
+
+Add context file metadata to `config.json`:
+
+```json
+{
+  "context_files": [
+    {
+      "filename": "acme-financials.csv",
+      "original_path": "/Users/foo/deals/acme-financials.csv",
+      "type": "csv",
+      "extractions": 3
+    }
+  ],
+  "has_context_docs": true
+}
+```
+
+**Storage:** No file copies. Store `original_path` as a reference. Originals stay
+where the user put them. Only copy into the run directory if the source is a temp
+file (path starts with `/tmp/` or OS temp directory), since it'll be cleaned up.
+Copies on export are handled by `/autodecision:export`.
+
+### Quality gate interaction
+
+File presence is a positive signal for the input quality gate. A weak decision
+statement (score 1) with strong context documents can score higher because the
+documents provide the specificity the statement lacks. Add +1 to the quality gate
+score if `--context` files are present and at least 3 extractions were produced.
+Cap total score at 4.
+
+---
 
 ## Process
 

@@ -748,7 +748,7 @@ def check_unsourced_numbers(md: str, schema: dict, positions: dict, report: Repo
     """
     Enforce content_checks.unsourced_dollar_figure: every dollar figure,
     percentage, multiplier, or ratio in prose must have a source tag
-    [G#]/[U#]/[C#:persona] within 120 chars. Exempt sections from the schema.
+    [G#]/[D#]/[U#]/[C#:persona] within 120 chars. Exempt sections from the schema.
     """
     content_checks = schema.get("content_checks", {})
     cfg = content_checks.get("unsourced_dollar_figure")
@@ -803,7 +803,7 @@ def check_unsourced_numbers(md: str, schema: dict, positions: dict, report: Repo
         report.add(
             "unsourced_dollar_figure",
             "FAIL", "HARD_FAIL",
-            f"{len(violations)} numeric claim(s) lack a source tag [G#]/[U#]/[C#:persona] within {proximity} chars. Examples: {examples}. Either add the source or rewrite the claim qualitatively.",
+            f"{len(violations)} numeric claim(s) lack a source tag [G#]/[D#]/[U#]/[C#:persona] within {proximity} chars. Examples: {examples}. Either add the source or rewrite the claim qualitatively.",
             count=len(violations),
         )
     else:
