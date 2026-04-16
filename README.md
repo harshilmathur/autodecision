@@ -263,10 +263,15 @@ INNER (iterates until convergence, default 2x):
   └──────────────────────────────────────────────────────┘
 
 OUTER (runs once):
-  Phase 8    DECIDE     Produce Decision Brief
+  Phase 8    DECIDE          Produce Decision Brief
+  Phase 8.5  VALIDATE-BRIEF  Enforce schema — HARD_FAIL on deviation
 ```
 
 **Convergence** uses a weighted composite: contradictions decreasing + assumption stability > 80% are the primary signals. Effects delta and ranking flips are warnings, not gates. A high effects delta WITH decreasing contradictions means productive refinement, not instability.
+
+**Extension offer.** If the default iterations hit the cap without convergence, the orchestrator pauses, shows the Judge scores, and asks if you want to run another iteration (one-at-a-time, cap 5 total). Never silently exits with "NOT REACHED."
+
+**Structural gates.** Before the Decision Brief can be written, the run directory must contain `config.json`, `ground-data.md`, `iteration-1/effects-chains.json`, and `convergence-log.json`. Missing files = the loop didn't run. Prevents the engine from improvising a consulting memo when skill files aren't installed.
 
 ---
 
@@ -292,6 +297,14 @@ OUTER (runs once):
 /autodecision --iterations 1 "decision"     # Medium: council, 1 pass
 /autodecision --iterations 3 "decision"     # Deep: up to 3 iterations
 ```
+
+**Skip the user review step:**
+
+```
+/autodecision --skip-elicit "decision"
+```
+
+Skips Phase 1.5 (ELICIT) where the system reviews assumptions, personas, and data with you before simulating. Use when you want the system to just run without interaction.
 
 **Attach context documents (Claude Code only):**
 
