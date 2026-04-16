@@ -1,0 +1,275 @@
+{
+  "schema_version": "1.1",
+  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1 additions: positions 15 (Appendix C: Complete Effects Map) and 16 (Sources), content_checks block (unsourced numbers + depends-on mirror), trailing-block ref format, legacy inline ref fallback.",
+
+  "sections": [
+    {
+      "position": 1,
+      "header": "## Executive Summary",
+      "required_in": ["full", "medium"],
+      "optional_in": ["quick"],
+      "min_lines": 6,
+      "required_content": [
+        { "pattern": "\\*\\*Decision:\\*\\*",            "desc": "Decision: line" },
+        { "pattern": "\\*\\*Recommendation:\\*\\*",      "desc": "Recommendation: line (recommendation is called out here but full block is at section 12)" },
+        { "pattern": "\\*\\*Hypotheses explored:\\*\\*", "desc": "Hypotheses explored: line" },
+        { "pattern": "\\*\\*Deepest disagreement:\\*\\*","desc": "Deepest disagreement: line" },
+        { "pattern": "\\*\\*Dominant risk:\\*\\*",       "desc": "Dominant risk: line" },
+        { "pattern": "\\*\\*Load-bearing assumption:\\*\\*","desc": "Load-bearing assumption: line" }
+      ]
+    },
+    {
+      "position": 2,
+      "header": "## Data Foundation",
+      "required_in": ["full", "medium", "quick"],
+      "min_lines": 3
+    },
+    {
+      "position": 3,
+      "header": "## Hypotheses Explored",
+      "required_in": ["full", "medium"],
+      "optional_in": ["quick"],
+      "requires_table": true,
+      "table_columns": ["#", "Hypothesis", "Status", "Key Assumptions"]
+    },
+    {
+      "position": 4,
+      "header": "## Effects Map",
+      "required_in": ["full", "medium", "quick"],
+      "required_subsections_in": {
+        "full":   ["### High-Confidence Effects", "### Specialist Insights", "### Exploratory Effects"],
+        "medium": ["### High-Confidence Effects", "### Specialist Insights", "### Exploratory Effects"],
+        "quick":  ["### First-Order", "### Second-Order"]
+      }
+    },
+    {
+      "position": 5,
+      "header": "## Council Dynamics",
+      "required_in": ["full", "medium"],
+      "optional_in": ["quick"],
+      "min_bullets": 5,
+      "description": "Must cover 5+ of: strongest analysis, weakest analysis, key disagreement, uncertainty hotspot, consensus surprises, blind spots caught"
+    },
+    {
+      "position": 6,
+      "header": "## Minority-View Winners",
+      "required_in": [],
+      "optional_in": ["full", "medium"],
+      "description": "Only include if a single-persona insight became the recommendation"
+    },
+    {
+      "position": 7,
+      "header": "## Stable Insights",
+      "required_in": ["full", "medium"],
+      "optional_in": ["quick"]
+    },
+    {
+      "position": 8,
+      "header": "## Fragile Insights",
+      "required_in": ["full", "medium"],
+      "optional_in": ["quick"]
+    },
+    {
+      "position": 9,
+      "header": "## Adversarial Scenarios",
+      "required_in": ["full", "medium"],
+      "optional_in": ["quick"],
+      "required_subsections_in": {
+        "full":   ["### Worst Cases", "### Black Swans", "### Irrational Actors"],
+        "medium": ["### Worst Cases", "### Black Swans", "### Irrational Actors"]
+      },
+      "cross_references": [
+        {
+          "name": "worst_cases_preserved",
+          "source_file": "iteration-{latest}/adversary.json",
+          "source_jq": ".worst_cases[].scenario_id",
+          "brief_subsection": "### Worst Cases",
+          "ref_prefix": "wc",
+          "min_coverage_pct": 60,
+          "description": "At least 60% of worst_cases scenario_ids in source JSON must appear as ref comments in the brief's Worst Cases subsection"
+        },
+        {
+          "name": "black_swans_preserved",
+          "source_file": "iteration-{latest}/adversary.json",
+          "source_jq": ".black_swans | length",
+          "brief_subsection": "### Black Swans",
+          "match_mode": "count_min",
+          "description": "The Black Swans subsection must contain at least as many paragraphs/bullets as the source JSON has entries. Use count if IDs absent."
+        },
+        {
+          "name": "irrational_actors_preserved",
+          "source_file": "iteration-{latest}/adversary.json",
+          "source_jq": ".irrational_actors | length",
+          "brief_subsection": "### Irrational Actors",
+          "match_mode": "count_min",
+          "description": "At least one irrational actor scenario must be present. Count-based because legacy runs lack IDs."
+        }
+      ]
+    },
+    {
+      "position": 10,
+      "header": "## Key Assumptions",
+      "required_in": ["full", "medium", "quick"],
+      "requires_table_in": ["full", "medium"],
+      "table_columns": ["Rank", "Assumption", "Sensitivity", "Effects Impacted", "Fragility"]
+    },
+    {
+      "position": 11,
+      "header": "## Convergence Log",
+      "required_in": ["full"],
+      "skip_in": ["medium", "quick"],
+      "requires_table": true,
+      "table_columns": ["Iteration", "Effects Delta", "Assumption Stability", "Ranking Flips", "Contradictions", "Converged"],
+      "cross_references": [
+        {
+          "name": "convergence_iterations_present",
+          "source_file": "convergence-log.json",
+          "source_jq": ". | length",
+          "brief_subsection": "## Convergence Log",
+          "match_mode": "count_exact",
+          "description": "Table must have one row per iteration in convergence-log.json"
+        }
+      ]
+    },
+    {
+      "position": 12,
+      "header": "## Recommendation",
+      "required_in": ["full", "medium", "quick"],
+      "position_enforced": true,
+      "must_not_appear_before_position": 12,
+      "required_content_in": {
+        "full": [
+          { "pattern": "\\*\\*Action:\\*\\*",              "desc": "Action bullet" },
+          { "pattern": "\\*\\*Confidence:\\*\\*",          "desc": "Confidence level (HIGH/MEDIUM/LOW)" },
+          { "pattern": "\\*\\*Confidence reasoning:\\*\\*","desc": "Confidence reasoning" },
+          { "pattern": "\\*\\*Depends on:\\*\\*",          "desc": "Load-bearing assumptions" },
+          { "pattern": "\\*\\*Monitor:\\*\\*",             "desc": "Monitoring signals" },
+          { "pattern": "\\*\\*Pre-mortem:\\*\\*",          "desc": "Pre-mortem failure modes" },
+          { "pattern": "\\*\\*Review trigger:\\*\\*",      "desc": "Review trigger (date or metric)" }
+        ],
+        "medium": [
+          { "pattern": "\\*\\*Action:\\*\\*",       "desc": "Action bullet" },
+          { "pattern": "\\*\\*Confidence:\\*\\*",   "desc": "Confidence level" },
+          { "pattern": "\\*\\*Depends on:\\*\\*",   "desc": "Load-bearing assumptions" },
+          { "pattern": "\\*\\*Monitor:\\*\\*",      "desc": "Monitoring signals" }
+        ],
+        "quick": [
+          { "pattern": "\\*\\*Action:\\*\\*",     "desc": "Action bullet" },
+          { "pattern": "\\*\\*Confidence:\\*\\*", "desc": "Confidence level" }
+        ]
+      }
+    },
+    {
+      "position": 13,
+      "header": "## Appendix A: Decision Timeline",
+      "required_in": ["full"],
+      "optional_in": ["medium"],
+      "skip_in": ["quick"],
+      "requires_table": true,
+      "table_columns": ["When", "Action", "Depends On", "Decision Point", "Kill Criteria"]
+    },
+    {
+      "position": 14,
+      "header": "## Appendix B: Quick Mode vs Full Loop Comparison",
+      "required_in": [],
+      "optional_in": ["full"],
+      "skip_in": ["medium", "quick"],
+      "description": "Only emitted when a quick mode run exists for the same decision slug. Summarizes what the full loop surfaced that the quick run missed (additional hypotheses, joint probabilities, irrational actor analysis). Independent COMPARISON-VS-QUICK.md file is a separate artifact, not part of the brief."
+    },
+    {
+      "position": 15,
+      "header": "## Appendix C: Complete Effects Map",
+      "required_in": ["full", "medium"],
+      "optional_in": [],
+      "skip_in": ["quick"],
+      "description": "All effects beyond the top 15 by council_agreement × probability shown in section 4 (Effects Map) go here. Keeps the main body scannable while preserving the full possibility map as a machine-readable artifact. One table covering every effect_id not already in section 4.",
+      "requires_table": true,
+      "table_columns": ["Effect", "Order", "Hypotheses", "Probability", "Range", "Agreement", "Source Personas", "Key Assumptions"]
+    },
+    {
+      "position": 16,
+      "header": "## Sources",
+      "required_in": ["full", "medium"],
+      "optional_in": ["quick"],
+      "description": "Every dollar figure, percentage, elasticity estimate, market size, or other specific numeric claim made anywhere in the brief must trace to either: (a) a ground-data.md citation [G#], (b) a user-inputs.md claim [U#], or (c) a council estimate with persona tag [C#:persona]. Missing sourcing = HARD_FAIL. Claims without any of those three must be rewritten as qualitative ('acquisition likely increases meaningfully') instead of quoting a fake number.",
+      "requires_table": true,
+      "table_columns": ["Tag", "Type", "Claim", "Source"],
+      "source_tags": {
+        "G": "Ground data (from Phase 1 WebSearch) — link to URL from ground-data.md",
+        "U": "User-provided (from Phase 1.5 ELICIT) — reference user-inputs.md",
+        "C": "Council estimate (from Phase 3 personas) — must name the persona and iteration"
+      }
+    }
+  ],
+
+  "prohibited_patterns": [
+    {
+      "name": "snake_case_in_prose",
+      "regex": "\\b[a-z][a-z0-9]+_[a-z0-9_]+\\b",
+      "description": "Snake_case identifier appearing outside code blocks, inline code, tables, or links. Use the description field from source JSON, not the key.",
+      "exempt_in_code_blocks": true,
+      "exempt_in_inline_code": true,
+      "exempt_in_tables": false,
+      "exempt_in_links": true,
+      "exempt_urls": true
+    },
+    {
+      "name": "raw_effect_id_in_prose",
+      "regex": "`[a-z][a-z0-9_]+`",
+      "description": "Backticked raw effect_id or assumption_key. Always use the human description.",
+      "exempt_in_code_blocks": true,
+      "severity": "WARN"
+    }
+  ],
+
+  "reference_comment_pattern": {
+    "primary_format": {
+      "name": "trailing_block",
+      "example": "<!-- validator-refs:\nworst_cases: wc1_a, wc2_b\nblack_swans: bs1_c\nirrational_actors: ia1_d\neffects: acq_increase, churn_reduction\n-->",
+      "block_regex": "<!--\\s*validator-refs:\\s*(.*?)-->",
+      "line_regex": "^\\s*(worst_cases|black_swans|irrational_actors|effects)\\s*:\\s*(.*)$",
+      "id_regex": "[a-z][a-z0-9_]*",
+      "location": "Single occurrence at the end of DECISION-BRIEF.md. One category per line. IDs comma-separated, exactly as they appear in source JSON."
+    },
+    "legacy_format": {
+      "name": "inline_comment",
+      "example": "<!-- ref:wc1_compound_negative -->",
+      "regex": "<!--\\s*ref:([a-z][a-z0-9_]+)\\s*-->",
+      "description": "Legacy inline format. Validator still parses it for backward compatibility. New briefs MUST use the trailing block."
+    },
+    "description": "The validator confirms which items from adversary.json, effects-chains.json, etc. made it into the brief by reading either the trailing <!-- validator-refs: ... --> block (new briefs) or inline <!-- ref:ID --> comments (legacy briefs). Both are HTML comments, invisible in rendered markdown."
+  },
+
+  "severity_on_fail": {
+    "structural_section_missing":  "HARD_FAIL",
+    "section_out_of_order":        "HARD_FAIL",
+    "subsection_missing":          "HARD_FAIL",
+    "required_content_missing":    "HARD_FAIL",
+    "table_missing":               "HARD_FAIL",
+    "table_columns_mismatch":      "WARN",
+    "snake_case_leak":             "HARD_FAIL",
+    "raw_effect_id_in_prose":      "WARN",
+    "min_bullets_unmet":           "WARN",
+    "cross_ref_coverage_below":    "HARD_FAIL",
+    "recommendation_before_pos_12":"HARD_FAIL",
+    "unsourced_dollar_figure":     "HARD_FAIL",
+    "unsourced_numeric_claim":     "WARN",
+    "depends_on_missing_assumption":"HARD_FAIL"
+  },
+
+  "content_checks": {
+    "unsourced_dollar_figure": {
+      "description": "Any dollar figure ($10M, $800M, $50/seat) or specific percentage (25%, 88-94%) or multiplier (2x, 3:1) in the brief MUST have an adjacent inline source tag [G#], [U#], or [C#:persona]. Figures without a tag are fabricated — the validator flags them HARD_FAIL.",
+      "regex_for_numbers": "(?:\\$[0-9]+(?:\\.[0-9]+)?[KMB]?|[0-9]+(?:\\.[0-9]+)?%|[0-9]+(?:\\.[0-9]+)?\\s*x(?![a-z])|[0-9]+:[0-9]+)",
+      "regex_for_tag": "\\[(G|U|C)[0-9]+(?::[a-z]+)?\\]",
+      "proximity_chars": 120,
+      "exempt_sections": ["## Data Foundation", "## Sources", "## Convergence Log", "## Appendix A: Decision Timeline"],
+      "note": "Exempt sections either list raw grounding data, the sources table itself, mechanical scores, or timeline markers like 'Month 3'. Everywhere else, numbers need a tag within 120 chars."
+    },
+    "depends_on_missing_assumption": {
+      "description": "Every bullet in the Recommendation section's 'Depends on:' line must correspond to an assumption row in Key Assumptions (position 10). If the Recommendation names an assumption that doesn't appear in the table, either the table is missing a load-bearing assumption (add it) or the Recommendation is citing a phantom (rewrite).",
+      "match_mode": "substring_presence",
+      "threshold": "every depends-on item must match at least one Key Assumptions description via substring or semantic token overlap > 60%"
+    }
+  }
+}

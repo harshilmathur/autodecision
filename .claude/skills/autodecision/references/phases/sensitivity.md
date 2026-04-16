@@ -1,3 +1,23 @@
+<!--
+phase: 6
+phase_name: SENSITIVITY
+runs_in:
+  - full.iteration-1     (runs after CRITIQUE + ADVERSARY complete)
+  - full.iteration-2+    (SKIPPED in LIGHT mode; carries forward unless convergence FAILS)
+  - medium.iteration-1   (one sensitivity pass)
+  - quick                (SKIPPED — quick mode does not analyze sensitivity)
+reads:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/effects-chains.json
+  - ~/.autodecision/runs/{slug}/iteration-{N}/adversary.json
+writes:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/sensitivity.json
+spawns:
+  - 1 dedicated sensitivity agent (runs concurrently with the inline Judge)
+gates:
+  - Top 3-5 assumptions identified with HIGH/MEDIUM/LOW sensitivity ranking
+  - Each HIGH-sensitivity assumption has an explicit decision boundary (numeric threshold or named event)
+-->
+
 # Phase 6: SENSITIVITY
 
 ## Purpose

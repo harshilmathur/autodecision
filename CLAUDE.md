@@ -59,6 +59,7 @@ Download `autodecision-<version>.zip` from the [latest release](https://github.c
 | `/autodecision:revise` | Revise a previous run with changed assumptions/data/tilt | ~8-10 min |
 | `/autodecision:challenge` | Stress-test a proposed action (adversary-only, no full loop) | ~5 min |
 | `/autodecision:summarize` | Compress a brief into a shareable one-page summary | ~1 min |
+| `/autodecision:publish` | Ship a brief as PDF → Notion, email draft, gist, Slack, Drive, or Local | ~1 min |
 | `/autodecision:plan` | Interactive setup wizard (scope only) | ~2 min |
 | `/autodecision:review` | Review past decisions, compare predictions vs outcomes | ~1 min |
 | `/autodecision:export` | Bundle journal + assumptions into portable archive | ~1 min |
@@ -218,7 +219,7 @@ The Judge measures 4 parameters after each iteration:
 | Ranking flips | <= 1 | Pairwise ordering reversals in peer review vs previous iteration |
 | Contradictions | <= 1 | Directly contradicting effects with council agreement >= 2 |
 
-Convergence uses a weighted composite: contradictions decreasing + assumption stability > 80% are the primary signals (must pass). Effects delta and ranking flips are warnings, not gates. A high effects delta WITH decreasing contradictions = productive refinement. See `converge.md` for full logic including partial convergence escalation.
+Convergence uses a weighted composite with a delta cap: contradictions decreasing + assumption stability > 80% are the primary signals (must pass). `effective_delta` (effects delta minus effects attributable to hypotheses flagged `new_in_iter_N`) over 50 is a hard cap — if the map is still rewriting itself that large, it isn't converged regardless of other signals. Ranking flips are warnings, not gates. Iteration 2 is default; iterations 3, 4, 5 require explicit user confirmation before running. See `converge.md` for full logic including partial convergence escalation.
 
 ---
 
@@ -249,18 +250,42 @@ Every effect is structured JSON with stable IDs for mechanical comparison:
 
 ## Decision Brief Output
 
-The final output includes:
+The output is a **possibility map** — what the exploration surfaced, where the council diverged, what held up under pressure — with a recommendation synthesized at the end.
 
-- **Data Foundation** with sourced citations
-- **High-Confidence Effects** (3+ personas agree) vs **Exploratory Effects** (1-2 personas)
-- **Stable Insights** that survived adversarial pressure across iterations
-- **Fragile Insights** with exact decision boundaries
-- **Assumptions ranked by sensitivity** (HIGH/MEDIUM/LOW)
-- **Adversarial Scenarios** (worst cases, black swans, irrational actors)
-- **Recommendation** with confidence, dependencies, monitoring signals, pre-mortem
-- **Council Dynamics** (agreement patterns, biggest disagreement, peer review rankings)
-- **Convergence Log** (iteration-by-iteration parameter values)
-- **Appendix: Decision Timeline** (month-by-month effects cascade)
+**Structure is defined by `skills/autodecision/references/brief-schema.json` (v1.1) and is MANDATORY. The writer MUST emit all required H2 headers in order, verbatim, per mode.** Deviating from the schema (renaming, merging, skipping mandatory sections) is a HARD_FAIL enforced by the Phase 8.5 validator.
+
+### Full mode — all 16 positions, in order:
+
+1. `## Executive Summary` — 6-line bullet box. Decision, Recommendation (called out), Confidence, Hypotheses explored, Deepest disagreement, Dominant risk, Load-bearing assumption.
+2. `## Data Foundation` — every external fact tagged `[G#]` (ground), `[U#]` (user), or `[C#:persona]` (council). Tags reused downstream.
+3. `## Hypotheses Explored` — 4-column table: #, Hypothesis, Status, Key Assumptions.
+4. `## Effects Map` — three subsections: `### High-Confidence Effects`, `### Specialist Insights`, `### Exploratory Effects`. Top 15 by `council_agreement × probability`; rest go to Appendix C.
+5. `## Council Dynamics` — MUST open with the persona legend (verbatim first line). Then 5+ bullets covering strongest/weakest analysis, key disagreement, uncertainty hotspot, consensus surprises, blind spots caught.
+6. `## Minority-View Winners` — OPTIONAL. Only if a single-persona insight became the recommendation.
+7. `## Stable Insights` — what survived adversarial pressure across iterations.
+8. `## Fragile Insights` — with exact decision boundaries.
+9. `## Adversarial Scenarios` — three subsections (required when source JSON has them): `### Worst Cases`, `### Black Swans`, `### Irrational Actors`. Literal header — NOT "Adversary Findings" or similar.
+10. `## Key Assumptions` — 5-column table: Rank, Assumption, Sensitivity, Effects Impacted, Fragility.
+11. `## Convergence Log` — 6-column table, one row per iteration: Iteration, Effects Delta, Assumption Stability, Ranking Flips, Contradictions, Converged.
+12. `## Recommendation` — 7-field block with literal bold labels: `**Action:**`, `**Confidence:**`, `**Confidence reasoning:**`, `**Depends on:**`, `**Monitor:**`, `**Pre-mortem:**`, `**Review trigger:**`. Every `Depends on:` item must mirror a row in Key Assumptions (validator-enforced).
+13. `## Appendix A: Decision Timeline` — 5-column table: When, Action, Depends On, Decision Point, Kill Criteria.
+14. `## Appendix B: Quick Mode vs Full Loop Comparison` — only if a quick run exists for the same slug.
+15. `## Appendix C: Complete Effects Map` — 8-column table for every effect not in section 4's top-15.
+16. `## Sources` — 4-column table: Tag, Type, Claim, Source. Every specific number in the brief needs a `[G#]`/`[U#]`/`[C#:persona]` tag within 120 chars of the number.
+
+**Medium mode:** drops Convergence Log, Appendix A optional, Appendix B/C same rules.
+**Quick mode:** lighter — see `brief-schema.json` `required_in` / `skip_in` arrays.
+
+**Exploration first, synthesis last. The map is the product.**
+
+**Common failures (all HARD_FAIL):**
+- Using "Bottom Line", "Headline", "Summary" instead of literal `## Executive Summary`.
+- Using "Adversary Findings" instead of `## Adversarial Scenarios`; skipping `### Irrational Actors`.
+- Collapsing Council Dynamics to a table; skipping the mandatory persona legend first line.
+- Using prose instead of the 7-field `**Action:** / **Confidence:** / ...` Recommendation block.
+- Numbered list instead of the 5-column Key Assumptions table.
+- Skipping Sources; skipping Appendix C when the council produced more than 15 effects.
+- Dollar figures without a `[G#]`/`[U#]`/`[C#:persona]` tag within 120 chars.
 
 ---
 
@@ -355,7 +380,7 @@ claude-plugin/                        # CANONICAL — edit here
 │   ├── autodecision.md               # → /autodecision:autodecision (full loop)
 │   ├── quick.md                      # → /autodecision:quick
 │   ├── compare.md, revise.md, challenge.md, summarize.md,
-│   ├── plan.md, review.md, export.md
+│   ├── publish.md, plan.md, review.md, export.md
 └── skills/autodecision/
     ├── SKILL.md                      # Core routing + key rules
     └── references/

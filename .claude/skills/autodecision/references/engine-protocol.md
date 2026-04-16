@@ -5,56 +5,9 @@ structure, sequencing rules, and convergence logic.
 
 ## Progress Tracking (Mandatory)
 
-Use the TodoWrite tool to show the user a live progress tracker throughout the run.
-This is NOT optional — the loop has many steps and the user needs to see where things
-stand. Update the todo list at EVERY phase transition.
+Use the `TodoWrite` tool to surface a live progress tracker. Initialize at run start, mark `in_progress` when entering each phase, mark `completed` on exit. One `in_progress` at a time.
 
-### Full Loop Progress Template
-
-Initialize this at the start of every full loop run:
-
-```
-Phase 0: Scope — decompose decision              [pending]
-Phase 1: Ground — web search for data             [pending]
-Phase 1.5: Elicit — review with user              [pending]
-Phase 2: Hypothesize — generate competing paths   [pending]
-Phase 3: Simulate — 5 persona council (parallel)  [pending]
-Phase 3b: Synthesis — merge persona outputs       [pending]
-Phase 4+5: Critique + Adversary (parallel)        [pending]
-Phase 6: Sensitivity — find decision boundaries   [pending]
-Phase 7: Converge — judge stability               [pending]
-Iteration 2: Refine — light-mode re-simulation    [pending]
-Phase 8: Decide — generate Decision Brief         [pending]
-Persist — journal + assumption library            [pending]
-```
-
-Mark each item `in_progress` when you START it and `completed` when you FINISH it.
-Only ONE item should be `in_progress` at a time. The user sees a live checklist
-that tells them exactly where the analysis stands.
-
-### Quick Mode Progress Template
-
-```
-Phase 0: Scope — decompose decision              [pending]
-Phase 1: Ground — web search for data             [pending]
-Phase 3: Simulate — single-pass analysis          [pending]
-Phase 8: Decide — generate Quick Brief            [pending]
-```
-
-### Medium Mode Progress Template (--iterations 1)
-
-```
-Phase 0: Scope — decompose decision              [pending]
-Phase 1: Ground — web search for data             [pending]
-Phase 1.5: Elicit — review with user              [pending]
-Phase 2: Hypothesize — generate competing paths   [pending]
-Phase 3: Simulate — 5 persona council (parallel)  [pending]
-Phase 3b: Synthesis — merge persona outputs       [pending]
-Phase 4+5: Critique + Adversary (parallel)        [pending]
-Phase 6: Sensitivity — find decision boundaries   [pending]
-Phase 8: Decide — generate Decision Brief         [pending]
-Persist — journal + assumption library            [pending]
-```
+**Templates live in `references/progress-templates.md`** — pick the one for the active mode (full / medium / quick / revise / challenge) and instantiate.
 
 ## Prerequisites
 
@@ -117,11 +70,19 @@ INNER (max {iterations} times, default 2):
                                   convergence-log.json (append)
          │
          ├── converged? → yes → exit inner loop
-         ├── not converged AND iteration < max → loop back to Phase 2
+         ├── not converged AND iteration < max AND next_iter >= 3 →
+         │     AskUserQuestion "Run iter-N or stop?" (see converge.md)
+         │     user picks A (continue) → loop back to Phase 2
+         │     user picks B (stop, NOT REACHED) → exit inner loop
+         │     user picks C (downgrade to medium) → exit, mark "N/A (user stopped)"
+         ├── not converged AND iteration < max AND next_iter == 2 →
+         │     loop back to Phase 2 (iter-2 is the default, no confirmation needed)
          └── iterations = 1 (medium mode)? → skip Phase 7, go to Phase 8
 
 OUTER (runs once):
-  Phase 8: DECIDE ─────────────→ DECISION-BRIEF.md
+  Phase 8:   DECIDE ───────────→ DECISION-BRIEF.md
+  Phase 8.5: VALIDATE-BRIEF ───→ validation-report.json
+                                  (on hard_fail, re-prompts DECIDE once)
 ```
 
 ## CRITICAL: Orchestration Model
@@ -236,6 +197,16 @@ Contents of `shared-context.md`:
 - Key data points from ground-data.md (include ALL key findings, not a lossy summary)
 - Hypotheses with expected effect IDs (from hypotheses.json)
 - Persona preamble rules (from persona-preamble.md)
+- **FOR ITERATION 2+ ONLY** — append these two blocks before spawning:
+  - **Previous iteration effect_ids:** the full list of `effect_id` values from
+    `iteration-{N-1}/effects-chains.json > effects[].effect_id` with the rule
+    "reuse these IDs for conceptually identical effects, only create new IDs for
+    genuinely new effects."
+  - **Previous iteration all_assumptions map:** the full `key: description` pairs
+    from `iteration-{N-1}/effects-chains.json > all_assumptions` with the rule
+    "reuse keys verbatim for conceptually identical assumptions, only create new
+    keys for genuinely new assumptions. Do NOT rename for style or phrasing
+    preference — that fakes instability and breaks the Judge."
 - **OUTPUT FORMATTING RULE (mandatory, include verbatim):**
   "CRITICAL: All output that will appear in the Decision Brief must use human-readable
   language, NEVER snake_case identifiers. Write 'Merchant friction persists' not
@@ -243,8 +214,8 @@ Contents of `shared-context.md`:
   The effect_id field in JSON is internal only — the description field is what appears
   in the brief. If you write an underscore in any user-facing text, you have made an error."
 
-Target: ~1500 tokens. Each persona reads this ONE file instead of 3-4 files +
-inline preamble. Cuts spawn time and input tokens significantly.
+Target: ~1500 tokens in iter-1, ~2500 tokens in iter-2+ (the previous-iter ID and
+assumption blocks add ~500-1000 tokens but are load-bearing for stability metrics).
 
 ### Persona Subagent Protocol
 
@@ -389,13 +360,17 @@ Phase 7 (CONVERGE) runs the Judge. The Judge:
 | Ranking flip count | ≤ 1 | In peer review, each persona ranks the other 4 analyses. A "flip" = any pairwise ordering reversal vs previous iteration. |
 | Contradiction count | ≤ 1 | Effects where one persona's 1st-order effect directly contradicts another's (e.g., "revenue increases" vs "revenue decreases"). |
 
-4. **Convergence uses a weighted composite** (see `references/phases/converge.md` for full logic):
+4. **Convergence uses a weighted composite with a delta-weighted cap** (see `references/phases/converge.md` for full logic):
    - PRIMARY signals (must pass): contradiction_count decreasing or ≤ 1, assumption stability > 80%
-   - SECONDARY signals (warn but don't gate): effects_delta, ranking flips
-   - A high effects_delta WITH decreasing contradictions = productive refinement, not instability
-5. **Not converged** = primary signals violated. If iteration < max, loop back to Phase 2.
+   - SECONDARY signals: effects_delta, ranking flips — but `effective_delta > 50` is a hard cap (NOT converged regardless of other signals). `effective_delta = effects_delta - effects attributable to any hypothesis flagged new_in_iter_N`.
+   - A moderate effective_delta (5-50) WITH decreasing contradictions = productive refinement.
+5. **Not converged** = primary signals violated or effective_delta > 50. If iteration < max, loop back to Phase 2.
    Partial convergence triggers targeted escalation per the failing dimension.
-6. **Max iterations reached** = exit anyway. Phase 8 runs with a `Convergence: NOT REACHED`
+6. **User confirmation before iter-3+.** If about to start iteration 3, 4, or 5, the
+   orchestrator MUST pause and AskUserQuestion — running additional iterations is a
+   user decision, not a Judge decision. iter-2 does not require confirmation. See
+   `converge.md` "User Confirmation Before Iteration 3+" for the exact question and options.
+7. **Max iterations reached** = exit anyway. Phase 8 runs with a `Convergence: NOT REACHED`
    warning in the Decision Brief.
 
 ### Iteration 1 Special Case
@@ -445,7 +420,8 @@ This summary is the ONLY prior-iteration context carried forward to iteration N+
 ├── iteration-2/
 │   └── ...                         # Same structure
 ├── convergence-log.json            # Append-only log of all judge scores
-└── DECISION-BRIEF.md               # Phase 8 output
+├── DECISION-BRIEF.md               # Phase 8 output
+└── validation-report.json          # Phase 8.5 output (mechanical brief checks)
 ```
 
 ## Quick Mode Protocol
@@ -460,6 +436,10 @@ Quick mode (`/autodecision:quick`) skips ELICIT, the council, and iteration (spe
 4. **Phase 8: DECIDE** — lighter brief. No convergence data, no council agreement,
    no sensitivity analysis. Just: hypotheses, effects with probabilities, assumptions,
    recommendation.
+5. **Phase 8.5: VALIDATE-BRIEF** — runs in `--mode quick`. Reduced section set
+   (Data Foundation, Effects Map with First-Order/Second-Order, Key Assumptions,
+   Recommendation with Action + Confidence). Still enforces no-snake-case-in-prose
+   and recommendation-position rules.
 
 Quick mode writes to the same `~/.autodecision/runs/{slug}/` structure but with no
 `iteration-*/council/` subdirectories and no convergence log.

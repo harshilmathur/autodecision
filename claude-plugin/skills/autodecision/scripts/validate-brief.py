@@ -1,0 +1,974 @@
+#!/usr/bin/env python3
+"""
+validate-brief.py — Mechanical validator for Decision Brief.
+
+Reads DECISION-BRIEF.md + brief-schema.json + upstream JSON sources,
+checks structure (section order, presence, subsections, tables, required
+content), checks snake_case leaks in prose, checks cross-references via
+HTML ref comments.
+
+Exit codes:
+  0 — all checks passed
+  1 — soft warnings only (non-blocking)
+  2 — hard fail (brief fails validation; orchestrator re-prompts DECIDE)
+  3 — usage / script error
+
+Outputs:
+  {run_dir}/validation-report.json — machine-readable check results
+  stdout — human-readable summary
+
+Usage:
+  validate-brief.py --run-dir ~/.autodecision/runs/{slug} \
+                    --schema  {skill_dir}/references/brief-schema.json \
+                    [--mode full|medium|quick]
+
+The orchestrator reads validation-report.json after this script runs and
+decides whether to re-prompt DECIDE based on severity_on_fail in the schema.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+
+# ----------------------------------------------------------------------
+# utilities
+# ----------------------------------------------------------------------
+
+def log(msg: str) -> None:
+    print(msg, file=sys.stderr)
+
+
+def die(msg: str, code: int = 3) -> None:
+    log(f"ERROR: {msg}")
+    sys.exit(code)
+
+
+def latest_iteration(run_dir: Path) -> Path | None:
+    iters = sorted([p for p in run_dir.glob("iteration-*") if p.is_dir()])
+    return iters[-1] if iters else None
+
+
+def resolve_iteration_source(run_dir: Path, rel_path: str) -> Path | None:
+    """Resolve `iteration-{latest}/{file}` against the newest iteration that
+    actually contains the file. The LIGHT-mode iterations 2+ re-run only
+    simulate + converge, so adversary.json / sensitivity.json / critique.json
+    live in iteration-1. Walk newest → oldest; use the first hit."""
+    iters = sorted([p for p in run_dir.glob("iteration-*") if p.is_dir()], reverse=True)
+    for it in iters:
+        candidate = run_dir / rel_path.replace("iteration-{latest}", it.name)
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def strip_code_blocks(md: str) -> str:
+    """Remove fenced code blocks and inline code from markdown so regex
+    checks can scan prose without false-positive hits inside ```...``` or
+    `foo_bar`. Preserves line positions for accurate line numbers."""
+    out_lines = []
+    in_fence = False
+    for line in md.split("\n"):
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            out_lines.append("")
+            continue
+        if in_fence:
+            out_lines.append("")
+            continue
+        # strip inline `code`
+        out_lines.append(re.sub(r"`[^`]*`", "", line))
+    return "\n".join(out_lines)
+
+
+def strip_html_comments(md: str) -> str:
+    """Remove <!-- ... --> blocks. Preserves line count."""
+    return re.sub(r"<!--.*?-->", "", md, flags=re.DOTALL)
+
+
+def strip_markdown_links(md: str) -> str:
+    """Remove [text](url) linking — keep the text, drop the url — so
+    URL paths don't trigger snake_case checks."""
+    return re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", md)
+
+
+def extract_h2_sections(md: str) -> list[tuple[int, str]]:
+    """Return list of (1-indexed line number, header_text) for '## ' headers,
+    ignoring headers inside code fences."""
+    found: list[tuple[int, str]] = []
+    in_fence = False
+    for i, line in enumerate(md.split("\n"), start=1):
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if line.startswith("## ") and not line.startswith("## #"):
+            found.append((i, line.rstrip()))
+    return found
+
+
+def extract_subsections_between(md: str, start_line: int, end_line: int) -> list[tuple[int, str]]:
+    """Return '### ' headers between start_line (exclusive) and end_line
+    (exclusive). 1-indexed."""
+    lines = md.split("\n")
+    found: list[tuple[int, str]] = []
+    in_fence = False
+    for i in range(start_line, min(end_line, len(lines) + 1)):
+        line = lines[i - 1]
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if line.startswith("### "):
+            found.append((i, line.rstrip()))
+    return found
+
+
+def section_body(md: str, start_line: int, end_line: int) -> str:
+    lines = md.split("\n")
+    return "\n".join(lines[start_line:end_line - 1]) if end_line > start_line else ""
+
+
+def has_markdown_table(text: str) -> bool:
+    """Detect a markdown table: at least one | row followed by a separator
+    row of the form |---|---|..."""
+    lines = text.split("\n")
+    for i in range(len(lines) - 1):
+        if "|" in lines[i] and re.match(r"^\s*\|?\s*:?-+", lines[i + 1].strip()):
+            return True
+    return False
+
+
+def table_columns(text: str) -> list[str]:
+    """Return column headers from the first markdown table in text."""
+    lines = text.split("\n")
+    for i in range(len(lines) - 1):
+        if "|" in lines[i] and re.match(r"^\s*\|?\s*:?-+", lines[i + 1].strip()):
+            cells = [c.strip() for c in lines[i].strip("|").split("|")]
+            return [c for c in cells if c]
+    return []
+
+
+def count_bullets(text: str) -> int:
+    return sum(1 for line in text.split("\n") if re.match(r"^\s*[-*]\s+\S", line))
+
+
+def extract_refs(md: str) -> list[str]:
+    """
+    Return a flat list of all ref IDs preserved in the brief.
+
+    New format (primary) — one trailing block at end of brief:
+
+        <!-- validator-refs:
+        worst_cases: wc1_a, wc2_b
+        black_swans: bs1_c
+        irrational_actors: ia1_d
+        effects: acq_increase, churn_reduction
+        -->
+
+    Legacy format (fallback) — inline per item:
+
+        - something ... <!-- ref:wc1_a -->
+
+    Both formats are merged into one list. Downstream coverage checks
+    test presence by membership, so dedup isn't required but is cheap.
+    """
+    ids: list[str] = []
+
+    # Trailing block: capture everything between <!-- validator-refs: and -->
+    block_match = re.search(
+        r"<!--\s*validator-refs:\s*(.*?)-->",
+        md,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    if block_match:
+        body = block_match.group(1)
+        # Each line is "category: id1, id2, id3"
+        for line in body.splitlines():
+            line = line.strip()
+            if not line or ":" not in line:
+                continue
+            _, _, values = line.partition(":")
+            for token in values.split(","):
+                token = token.strip()
+                if re.fullmatch(r"[a-z][a-z0-9_]*", token):
+                    ids.append(token)
+
+    # Legacy inline comments (backward compat)
+    ids.extend(re.findall(r"<!--\s*ref:([a-z][a-z0-9_]+)\s*-->", md))
+
+    return ids
+
+
+def extract_refs_by_category(md: str) -> dict[str, set[str]]:
+    """
+    Parse the trailing <!-- validator-refs: --> block into categories.
+    Returns {} if the block is absent (legacy briefs).
+    Known keys: worst_cases, black_swans, irrational_actors, effects.
+    """
+    out: dict[str, set[str]] = {}
+    block_match = re.search(
+        r"<!--\s*validator-refs:\s*(.*?)-->",
+        md,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    if not block_match:
+        return out
+    for line in block_match.group(1).splitlines():
+        line = line.strip()
+        if not line or ":" not in line:
+            continue
+        key, _, values = line.partition(":")
+        key = key.strip().lower()
+        bucket = {
+            t.strip()
+            for t in values.split(",")
+            if re.fullmatch(r"[a-z][a-z0-9_]*", t.strip())
+        }
+        if bucket:
+            out[key] = bucket
+    return out
+
+
+# ----------------------------------------------------------------------
+# check results
+# ----------------------------------------------------------------------
+
+class Report:
+    def __init__(self, schema: dict):
+        self.schema = schema
+        self.checks: list[dict] = []
+
+    def add(self, name: str, status: str, severity: str, detail: str, **extra) -> None:
+        self.checks.append(
+            {"name": name, "status": status, "severity": severity, "detail": detail, **extra}
+        )
+
+    def severities_present(self) -> set[str]:
+        return {c["severity"] for c in self.checks if c["status"] == "FAIL"}
+
+    def exit_code(self) -> int:
+        sev = self.severities_present()
+        if "HARD_FAIL" in sev:
+            return 2
+        if "WARN" in sev:
+            return 1
+        return 0
+
+    def as_dict(self) -> dict:
+        passes = sum(1 for c in self.checks if c["status"] == "PASS")
+        fails = sum(1 for c in self.checks if c["status"] == "FAIL")
+        return {
+            "schema_version": self.schema.get("schema_version"),
+            "summary": {"passed": passes, "failed": fails, "total": len(self.checks)},
+            "exit_code": self.exit_code(),
+            "severities_failed": sorted(self.severities_present()),
+            "checks": self.checks,
+        }
+
+
+# ----------------------------------------------------------------------
+# checks
+# ----------------------------------------------------------------------
+
+def required_in_mode(section: dict, mode: str) -> bool:
+    return mode in section.get("required_in", [])
+
+
+def optional_in_mode(section: dict, mode: str) -> bool:
+    return mode in section.get("optional_in", [])
+
+
+def skipped_in_mode(section: dict, mode: str) -> bool:
+    return mode in section.get("skip_in", [])
+
+
+def check_section_order_and_presence(md: str, schema: dict, mode: str, report: Report) -> dict:
+    """Return {position: (start_line, end_line)} for every section found."""
+    found_h2 = extract_h2_sections(md)
+    # Build a map of header_text -> line_number
+    found_by_header = {h: ln for ln, h in found_h2}
+    positions: dict[int, tuple[int, int]] = {}
+
+    # Compute end-of-each-found-header
+    sorted_found = sorted(found_h2, key=lambda t: t[0])
+    total_lines = len(md.split("\n"))
+    header_spans: dict[str, tuple[int, int]] = {}
+    for idx, (ln, h) in enumerate(sorted_found):
+        end = sorted_found[idx + 1][0] if idx + 1 < len(sorted_found) else total_lines + 1
+        header_spans[h] = (ln, end)
+
+    last_found_line = 0
+    for sec in schema["sections"]:
+        pos = sec["position"]
+        header = sec["header"]
+        required = required_in_mode(sec, mode)
+        optional = optional_in_mode(sec, mode)
+        skipped = skipped_in_mode(sec, mode)
+
+        if header in found_by_header:
+            line = found_by_header[header]
+            span = header_spans[header]
+            positions[pos] = span
+            # Order check: must appear after the previous found section
+            if line < last_found_line:
+                report.add(
+                    f"section_order[{pos}:{header}]",
+                    "FAIL", "HARD_FAIL",
+                    f"Section '{header}' appears at line {line}, but a later section appeared at line {last_found_line}. Sections must be in schema order.",
+                )
+            else:
+                report.add(
+                    f"section_order[{pos}:{header}]",
+                    "PASS", "INFO",
+                    f"Section '{header}' at line {line}",
+                )
+            last_found_line = max(last_found_line, line)
+        else:
+            if required:
+                report.add(
+                    f"section_missing[{pos}:{header}]",
+                    "FAIL", "HARD_FAIL",
+                    f"Required section '{header}' not found (mode={mode}).",
+                )
+            elif skipped:
+                report.add(
+                    f"section_skipped[{pos}:{header}]",
+                    "PASS", "INFO",
+                    f"Section '{header}' correctly omitted in {mode} mode.",
+                )
+            elif optional:
+                report.add(
+                    f"section_optional[{pos}:{header}]",
+                    "PASS", "INFO",
+                    f"Optional section '{header}' omitted (allowed in {mode} mode).",
+                )
+
+    # Recommendation-position check: must not appear before position 12
+    rec_header = "## Recommendation"
+    if rec_header in found_by_header:
+        rec_line = found_by_header[rec_header]
+        # Find what H2s came before it
+        earlier = [h for ln, h in sorted_found if ln < rec_line and h != rec_header]
+        if len(earlier) < 5:  # heuristic: at least 5 H2s before Recommendation
+            report.add(
+                "recommendation_position",
+                "FAIL", "HARD_FAIL",
+                f"Section 'Recommendation' appears at line {rec_line} with only {len(earlier)} section(s) before it. "
+                f"Recommendation MUST be section 12 — the full possibility map (Data Foundation through Convergence Log) "
+                f"must precede it. Move it to after Convergence Log.",
+            )
+        else:
+            report.add(
+                "recommendation_position",
+                "PASS", "INFO",
+                f"Recommendation at line {rec_line} with {len(earlier)} preceding sections.",
+            )
+
+    return positions
+
+
+def check_section_content(md: str, schema: dict, positions: dict, mode: str, report: Report) -> None:
+    md_plain = strip_code_blocks(strip_html_comments(md))
+    lines = md.split("\n")
+    for sec in schema["sections"]:
+        pos = sec["position"]
+        header = sec["header"]
+        if pos not in positions:
+            continue
+        start, end = positions[pos]
+        body_lines = lines[start:end - 1]
+        body = "\n".join(body_lines)
+        body_plain = "\n".join(md_plain.split("\n")[start:end - 1])
+
+        # min_lines (WARN — the section is present; it's just thin. HARD_FAIL is reserved for structural problems.)
+        if "min_lines" in sec:
+            nonblank = sum(1 for l in body_lines if l.strip())
+            if nonblank < sec["min_lines"]:
+                report.add(
+                    f"min_lines[{pos}:{header}]",
+                    "FAIL", "WARN",
+                    f"Section '{header}' has {nonblank} non-blank lines; schema requires >= {sec['min_lines']}.",
+                )
+            else:
+                report.add(
+                    f"min_lines[{pos}:{header}]",
+                    "PASS", "INFO",
+                    f"{nonblank} non-blank lines.",
+                )
+
+        # min_bullets
+        if "min_bullets" in sec:
+            n = count_bullets(body)
+            if n < sec["min_bullets"]:
+                report.add(
+                    f"min_bullets[{pos}:{header}]",
+                    "FAIL", "WARN",
+                    f"Section '{header}' has {n} bullets; schema requires >= {sec['min_bullets']}. "
+                    f"This section should cover multiple dimensions (strongest analysis, weakest analysis, "
+                    f"key disagreement, uncertainty hotspot, etc.), not be compressed to a one-liner.",
+                )
+            else:
+                report.add(
+                    f"min_bullets[{pos}:{header}]",
+                    "PASS", "INFO",
+                    f"{n} bullets.",
+                )
+
+        # required_content (mode-specific or flat)
+        required_content = sec.get("required_content", []) or \
+                           sec.get("required_content_in", {}).get(mode, [])
+        for rc in required_content:
+            pat = rc["pattern"]
+            if re.search(pat, body):
+                report.add(
+                    f"required_content[{pos}:{rc['desc']}]",
+                    "PASS", "INFO",
+                    f"Found: {rc['desc']}",
+                )
+            else:
+                report.add(
+                    f"required_content[{pos}:{rc['desc']}]",
+                    "FAIL", "HARD_FAIL",
+                    f"Section '{header}' missing required content: {rc['desc']} (pattern: {pat}).",
+                )
+
+        # requires_table (flat or mode-specific)
+        needs_table = sec.get("requires_table", False) or \
+                      (mode in sec.get("requires_table_in", []))
+        if needs_table:
+            if has_markdown_table(body):
+                # Column check if specified
+                if "table_columns" in sec:
+                    actual = table_columns(body)
+                    expected = sec["table_columns"]
+                    missing = [c for c in expected if c not in actual]
+                    if missing:
+                        report.add(
+                            f"table_columns[{pos}:{header}]",
+                            "FAIL", "WARN",
+                            f"Table missing columns: {missing}. Expected: {expected}. Actual: {actual}.",
+                        )
+                    else:
+                        report.add(
+                            f"table_columns[{pos}:{header}]",
+                            "PASS", "INFO",
+                            f"Table has expected columns: {expected}",
+                        )
+                else:
+                    report.add(
+                        f"table_present[{pos}:{header}]",
+                        "PASS", "INFO",
+                        "Table present.",
+                    )
+            else:
+                report.add(
+                    f"table_missing[{pos}:{header}]",
+                    "FAIL", "HARD_FAIL",
+                    f"Section '{header}' requires a markdown table but none was found.",
+                )
+
+        # required_subsections (mode-specific or flat)
+        required_subs = sec.get("required_subsections", []) or \
+                        sec.get("required_subsections_in", {}).get(mode, [])
+        if required_subs:
+            found_subs = [h for _, h in extract_subsections_between(md, start + 1, end)]
+            for sub in required_subs:
+                if any(s.startswith(sub) for s in found_subs):
+                    report.add(
+                        f"subsection[{pos}:{sub}]",
+                        "PASS", "INFO",
+                        f"Subsection present: {sub}",
+                    )
+                else:
+                    report.add(
+                        f"subsection_missing[{pos}:{sub}]",
+                        "FAIL", "HARD_FAIL",
+                        f"Section '{header}' is missing required subsection '{sub}' (mode={mode}).",
+                    )
+
+
+def check_cross_references(md: str, schema: dict, run_dir: Path, positions: dict, report: Report) -> None:
+    refs_found = set(extract_refs(md))
+    for sec in schema["sections"]:
+        for xref in sec.get("cross_references", []):
+            name = xref["name"]
+            src_template = xref["source_file"]
+            # Resolve against the newest iteration that contains the file.
+            # Iteration 2+ in LIGHT mode does NOT re-emit adversary.json / etc.,
+            # so those files live in iteration-1. Walk newest → oldest.
+            if "iteration-{latest}" in src_template:
+                src_path = resolve_iteration_source(run_dir, src_template)
+                display_path = src_path if src_path else (run_dir / src_template.replace("iteration-{latest}", "iteration-*"))
+            else:
+                src_path_resolved = run_dir / src_template
+                src_path = src_path_resolved if src_path_resolved.exists() else None
+                display_path = src_path_resolved
+            if src_path is None:
+                report.add(
+                    f"xref_source_missing[{name}]",
+                    "FAIL", "WARN",
+                    f"Cross-reference source not found: {display_path}.",
+                )
+                continue
+            try:
+                src_data = json.loads(src_path.read_text())
+            except json.JSONDecodeError as e:
+                report.add(
+                    f"xref_source_unparseable[{name}]",
+                    "FAIL", "WARN",
+                    f"Cross-reference source {src_path.name} failed to parse: {e}.",
+                )
+                continue
+
+            jq_path = xref.get("source_jq", "")
+            # Tiny jq-like evaluator — supports .foo[].bar and .foo | length
+            src_ids_or_count = eval_jq(src_data, jq_path)
+
+            match_mode = xref.get("match_mode", "id_coverage")
+            if match_mode == "count_min":
+                expected_count = src_ids_or_count if isinstance(src_ids_or_count, int) else 0
+                sub_header = xref.get("brief_subsection", "")
+                if sub_header:
+                    actual = count_items_in_subsection(md, sub_header)
+                else:
+                    actual = 0
+                if actual >= expected_count and expected_count > 0:
+                    report.add(
+                        f"xref[{name}]",
+                        "PASS", "INFO",
+                        f"Subsection '{sub_header}' has {actual} items (source has {expected_count}).",
+                    )
+                elif expected_count == 0:
+                    report.add(
+                        f"xref[{name}]",
+                        "PASS", "INFO",
+                        f"Source has 0 items; nothing to preserve.",
+                    )
+                else:
+                    report.add(
+                        f"xref[{name}]",
+                        "FAIL", "HARD_FAIL",
+                        f"Subsection '{sub_header}' has {actual} items; source {src_path.name} has {expected_count}. "
+                        f"Every item in the source JSON must be represented in the brief.",
+                    )
+            elif match_mode == "count_exact":
+                expected_count = src_ids_or_count if isinstance(src_ids_or_count, int) else 0
+                sub_header = xref.get("brief_subsection", "")
+                actual_rows = count_table_rows_in_section(md, sub_header)
+                if actual_rows == expected_count:
+                    report.add(
+                        f"xref[{name}]",
+                        "PASS", "INFO",
+                        f"Table in '{sub_header}' has {actual_rows} rows, matching source count {expected_count}.",
+                    )
+                else:
+                    report.add(
+                        f"xref[{name}]",
+                        "FAIL", "HARD_FAIL",
+                        f"Table in '{sub_header}' has {actual_rows} rows; source {src_path.name} has {expected_count} iterations. Must match exactly.",
+                    )
+            else:
+                # id_coverage: refs in brief must cover >= min_coverage_pct of source IDs
+                source_ids = set(src_ids_or_count) if isinstance(src_ids_or_count, list) else set()
+                covered = source_ids & refs_found
+                if not source_ids:
+                    report.add(
+                        f"xref[{name}]",
+                        "PASS", "INFO",
+                        f"Source has 0 IDs.",
+                    )
+                    continue
+                pct = 100.0 * len(covered) / len(source_ids)
+                need_pct = xref.get("min_coverage_pct", 100)
+                if pct >= need_pct:
+                    report.add(
+                        f"xref[{name}]",
+                        "PASS", "INFO",
+                        f"{len(covered)}/{len(source_ids)} source IDs referenced ({pct:.0f}%, need >= {need_pct}%).",
+                    )
+                else:
+                    missing = sorted(source_ids - covered)
+                    report.add(
+                        f"xref[{name}]",
+                        "FAIL", "HARD_FAIL",
+                        f"Only {len(covered)}/{len(source_ids)} source IDs referenced ({pct:.0f}%, need >= {need_pct}%). "
+                        f"Missing refs for: {missing[:5]}{'...' if len(missing) > 5 else ''}. "
+                        f"Add <!-- ref:ID --> comments next to items preserved from the source JSON.",
+                    )
+
+
+def eval_jq(data, path: str):
+    """Minimal jq evaluator supporting:
+       .a.b.c         — nested field access
+       .a[].b         — flatmap over array
+       . | length     — length of current value
+       Returns a list for [] expansions, an int for length, or scalar."""
+    if not path or path == ".":
+        return data
+    if "|" in path:
+        left, right = (p.strip() for p in path.split("|", 1))
+        left_val = eval_jq(data, left)
+        if right == "length":
+            return len(left_val) if hasattr(left_val, "__len__") else 0
+        return eval_jq(left_val, right)
+    # tokenize
+    tokens = re.findall(r"\.[a-zA-Z_][a-zA-Z_0-9]*|\[\]", path)
+    cur = [data]
+    flat = False
+    for tok in tokens:
+        if tok == "[]":
+            new = []
+            for item in cur:
+                if isinstance(item, list):
+                    new.extend(item)
+            cur = new
+            flat = True
+        else:
+            key = tok[1:]
+            cur = [item[key] for item in cur if isinstance(item, dict) and key in item]
+    return cur if flat else (cur[0] if cur else None)
+
+
+def count_items_in_subsection(md: str, sub_header: str) -> int:
+    """Count bullets OR paragraph entries in a ### subsection."""
+    lines = md.split("\n")
+    start = None
+    for i, line in enumerate(lines):
+        if line.strip() == sub_header or line.startswith(sub_header + " "):
+            start = i + 1
+            break
+    if start is None:
+        return 0
+    # end at next ## or ### header
+    end = len(lines)
+    for i in range(start, len(lines)):
+        if lines[i].startswith("## ") or lines[i].startswith("### "):
+            end = i
+            break
+    body = "\n".join(lines[start:end])
+    bullet_count = count_bullets(body)
+    # paragraph count — non-empty blocks separated by blank lines, excluding the header
+    paragraphs = [p for p in re.split(r"\n\s*\n", body.strip()) if p.strip() and not p.strip().startswith("#")]
+    # Use whichever is larger — bullets OR paragraphs (some briefs use each for black swans)
+    return max(bullet_count, len(paragraphs))
+
+
+def count_table_rows_in_section(md: str, header: str) -> int:
+    """Count data rows in the first markdown table under the given ## header."""
+    lines = md.split("\n")
+    start = None
+    for i, line in enumerate(lines):
+        if line.strip() == header or line.startswith(header + " ") or line.startswith(header):
+            start = i + 1
+            break
+    if start is None:
+        return 0
+    end = len(lines)
+    for i in range(start, len(lines)):
+        if lines[i].startswith("## ") and not lines[i].startswith(header):
+            end = i
+            break
+    body = "\n".join(lines[start:end])
+    body_lines = body.split("\n")
+    rows = 0
+    in_table = False
+    for i, line in enumerate(body_lines):
+        if "|" in line and i + 1 < len(body_lines) and re.match(r"^\s*\|?\s*:?-+", body_lines[i + 1].strip()):
+            in_table = True
+            continue  # header row
+        if in_table:
+            if "|" in line and not re.match(r"^\s*\|?\s*:?-+", line.strip()):
+                rows += 1
+            elif not line.strip() or line.startswith("#"):
+                break
+    return rows
+
+
+def check_prohibited_patterns(md: str, schema: dict, report: Report) -> None:
+    md_clean = strip_html_comments(md)
+    md_clean = strip_markdown_links(md_clean)
+    md_plain = strip_code_blocks(md_clean)
+    for pat in schema.get("prohibited_patterns", []):
+        name = pat["name"]
+        regex = pat["regex"]
+        sev = pat.get("severity", schema["severity_on_fail"].get(name, "HARD_FAIL"))
+        # For "raw_effect_id_in_prose", only match OUTSIDE code blocks — so scan md_clean (keeps inline backticks)
+        # For "snake_case_in_prose", match in md_plain (no code)
+        scan_target = md_clean if pat.get("exempt_in_inline_code") is False else md_plain
+        hits = []
+        for i, line in enumerate(scan_target.split("\n"), start=1):
+            if line.startswith("|") and pat.get("exempt_in_tables", True):
+                continue
+            if line.startswith("#"):
+                continue
+            for m in re.finditer(regex, line):
+                hits.append((i, m.group(0), line.strip()[:120]))
+        # Filter: snake_case matches that are entirely in URL-looking tokens, emails, or markdown table header rows
+        hits = [h for h in hits if not re.fullmatch(r"https?://\S+|[A-Za-z0-9_.+-]+@[A-Za-z0-9.-]+", h[1])]
+        if hits:
+            sample = [f"line {ln}: {tok} (\"{ctx[:60]}...\")" for ln, tok, ctx in hits[:5]]
+            report.add(
+                f"prohibited[{name}]",
+                "FAIL", sev,
+                f"{len(hits)} occurrence(s) of '{name}'. First: " + "; ".join(sample),
+                hits=[{"line": ln, "token": tok, "context": ctx} for ln, tok, ctx in hits[:20]],
+            )
+        else:
+            report.add(
+                f"prohibited[{name}]",
+                "PASS", "INFO",
+                f"No occurrences of '{name}'.",
+            )
+
+
+# ----------------------------------------------------------------------
+# main
+# ----------------------------------------------------------------------
+
+def _header_line_map(md: str) -> dict[str, tuple[int, int]]:
+    """Return {header: (start_line, end_line)} for every H2 in the brief."""
+    sorted_found = sorted(extract_h2_sections(md), key=lambda t: t[0])
+    total_lines = len(md.split("\n"))
+    spans: dict[str, tuple[int, int]] = {}
+    for idx, (ln, h) in enumerate(sorted_found):
+        end = sorted_found[idx + 1][0] if idx + 1 < len(sorted_found) else total_lines + 1
+        spans[h] = (ln, end)
+    return spans
+
+
+def check_unsourced_numbers(md: str, schema: dict, positions: dict, report: Report) -> None:
+    """
+    Enforce content_checks.unsourced_dollar_figure: every dollar figure,
+    percentage, multiplier, or ratio in prose must have a source tag
+    [G#]/[U#]/[C#:persona] within 120 chars. Exempt sections from the schema.
+    """
+    content_checks = schema.get("content_checks", {})
+    cfg = content_checks.get("unsourced_dollar_figure")
+    if not cfg:
+        return
+
+    num_regex = cfg["regex_for_numbers"]
+    tag_regex = cfg["regex_for_tag"]
+    proximity = cfg.get("proximity_chars", 120)
+    exempt_headers = set(cfg.get("exempt_sections", []))
+
+    # Build a set of (start, end) byte ranges for exempt sections
+    exempt_ranges: list[tuple[int, int]] = []
+    headers = extract_h2_sections(md)
+    header_positions = [(ln, h, sum(len(l) + 1 for l in md.split("\n")[:ln])) for ln, h in headers]
+    lines = md.split("\n")
+
+    def line_to_char(ln: int) -> int:
+        return sum(len(l) + 1 for l in lines[:ln])
+
+    for i, (ln, header) in enumerate(headers):
+        if header in exempt_headers:
+            start = line_to_char(ln)
+            if i + 1 < len(headers):
+                end = line_to_char(headers[i + 1][0])
+            else:
+                end = len(md)
+            exempt_ranges.append((start, end))
+
+    # Also exempt code blocks entirely (strip them from the scanning text)
+    scan_text = strip_code_blocks(md)
+
+    # Find all numeric claims
+    violations: list[tuple[int, str]] = []
+    for m in re.finditer(num_regex, scan_text):
+        start = m.start()
+        # Skip if in exempt section
+        if any(lo <= start < hi for lo, hi in exempt_ranges):
+            continue
+        # Look in a window [start-proximity, start+proximity+len(match)] for a tag
+        window_start = max(0, start - proximity)
+        window_end = min(len(scan_text), m.end() + proximity)
+        window = scan_text[window_start:window_end]
+        if re.search(tag_regex, window):
+            continue
+        # Exempt simple percent/dollar ranges inside table probability ranges
+        # (those are council estimates but the validator tolerates "[0.5-0.8]" form)
+        violations.append((start, m.group(0)))
+
+    if violations:
+        examples = ", ".join(f"'{v[1]}'" for v in violations[:5])
+        report.add(
+            "unsourced_dollar_figure",
+            "FAIL", "HARD_FAIL",
+            f"{len(violations)} numeric claim(s) lack a source tag [G#]/[U#]/[C#:persona] within {proximity} chars. Examples: {examples}. Either add the source or rewrite the claim qualitatively.",
+            count=len(violations),
+        )
+    else:
+        report.add(
+            "unsourced_dollar_figure",
+            "PASS", "INFO",
+            "All numeric claims carry a source tag or appear in an exempt section.",
+        )
+
+
+def check_depends_on_mirrors_assumptions(md: str, schema: dict, positions: dict, report: Report) -> None:
+    """
+    Enforce content_checks.depends_on_missing_assumption: every bullet in the
+    Recommendation's 'Depends on:' line must correspond to a Key Assumptions row.
+    """
+    content_checks = schema.get("content_checks", {})
+    if "depends_on_missing_assumption" not in content_checks:
+        return
+
+    # Locate Recommendation section (position 12) and Key Assumptions (position 10)
+    header_spans = _header_line_map(md)
+    rec_range = header_spans.get("## Recommendation")
+    assump_range = header_spans.get("## Key Assumptions")
+    if not rec_range or not assump_range:
+        # Either section missing — a different check already flagged it
+        return
+
+    rec_body = section_body(md, rec_range[0], rec_range[1])
+    assump_body = section_body(md, assump_range[0], assump_range[1])
+
+    # Extract "Depends on:" content — can be a line or bullet list
+    depends_match = re.search(
+        r"\*\*Depends on:\*\*\s*(.+?)(?=\n\s*-\s*\*\*|\n\s*\n|$)",
+        rec_body,
+        flags=re.DOTALL,
+    )
+    if not depends_match:
+        return  # required_content check handles missing "Depends on:"
+    depends_text = depends_match.group(1).strip()
+
+    # Collect candidate items: split by commas and "and" for inline lists,
+    # or take sub-bullets if present.
+    candidates = [c.strip() for c in re.split(r",|\band\b", depends_text) if c.strip()]
+    if not candidates:
+        return
+
+    # Extract assumption descriptions from the Key Assumptions table
+    assump_descriptions: list[str] = []
+    in_table = False
+    for line in assump_body.split("\n"):
+        if "|" in line and re.search(r"\|\s*-+\s*\|", line):
+            in_table = True
+            continue
+        if in_table and line.strip().startswith("|"):
+            cells = parse_table_row(line)
+            # Columns: Rank | Assumption | Sensitivity | Effects Impacted | Fragility
+            if len(cells) >= 2:
+                assump_descriptions.append(cells[1].lower())
+
+    if not assump_descriptions:
+        return  # table check handles missing rows
+
+    # For each candidate, check substring or token-overlap > 60%
+    missing: list[str] = []
+    for cand in candidates:
+        cand_norm = cand.lower().strip("*`_ ")
+        if not cand_norm:
+            continue
+        cand_tokens = set(re.findall(r"\w+", cand_norm))
+        # Remove stop tokens
+        cand_tokens -= {"the", "a", "an", "of", "to", "in", "on", "for", "is", "and", "or"}
+        if not cand_tokens:
+            continue
+        matched = False
+        for desc in assump_descriptions:
+            if cand_norm in desc or desc in cand_norm:
+                matched = True
+                break
+            desc_tokens = set(re.findall(r"\w+", desc))
+            desc_tokens -= {"the", "a", "an", "of", "to", "in", "on", "for", "is", "and", "or"}
+            if not desc_tokens:
+                continue
+            overlap = len(cand_tokens & desc_tokens) / max(len(cand_tokens), 1)
+            if overlap > 0.6:
+                matched = True
+                break
+        if not matched:
+            missing.append(cand[:80])
+
+    if missing:
+        report.add(
+            "depends_on_missing_assumption",
+            "FAIL", "HARD_FAIL",
+            f"Recommendation cites {len(missing)} assumption(s) that don't mirror Key Assumptions rows: {missing}. Either add to Key Assumptions or rewrite the Recommendation.",
+            missing=missing,
+        )
+    else:
+        report.add(
+            "depends_on_missing_assumption",
+            "PASS", "INFO",
+            "All 'Depends on:' items mirror Key Assumptions rows.",
+        )
+
+
+def parse_table_row(line: str) -> list[str]:
+    """Parse a pipe-delimited markdown row into cell strings."""
+    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+    return cells
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--run-dir", required=True, type=Path,
+                    help="Run directory (e.g. ~/.autodecision/runs/slug/)")
+    ap.add_argument("--schema", required=True, type=Path,
+                    help="Path to brief-schema.json")
+    ap.add_argument("--mode", default="full", choices=["full", "medium", "quick"],
+                    help="Run mode; controls which sections are required")
+    ap.add_argument("--brief-name", default="DECISION-BRIEF.md",
+                    help="Name of brief file inside run-dir")
+    ap.add_argument("--quiet", action="store_true", help="Suppress stdout summary")
+    args = ap.parse_args()
+
+    run_dir = args.run_dir.expanduser().resolve()
+    if not run_dir.is_dir():
+        die(f"run-dir not found: {run_dir}")
+    schema_path = args.schema.expanduser().resolve()
+    if not schema_path.is_file():
+        die(f"schema not found: {schema_path}")
+    brief_path = run_dir / args.brief_name
+    if not brief_path.is_file():
+        die(f"brief not found: {brief_path}")
+
+    schema = json.loads(schema_path.read_text())
+    md = brief_path.read_text()
+
+    report = Report(schema)
+
+    positions = check_section_order_and_presence(md, schema, args.mode, report)
+    check_section_content(md, schema, positions, args.mode, report)
+    check_prohibited_patterns(md, schema, report)
+    check_cross_references(md, schema, run_dir, positions, report)
+    # Content-level checks (new in schema v1.1): source tags + depends-on mirror
+    if args.mode in ("full", "medium"):
+        check_unsourced_numbers(md, schema, positions, report)
+        check_depends_on_mirrors_assumptions(md, schema, positions, report)
+
+    out = run_dir / "validation-report.json"
+    out.write_text(json.dumps(report.as_dict(), indent=2))
+
+    if not args.quiet:
+        d = report.as_dict()
+        print(f"Brief: {brief_path}")
+        print(f"Mode:  {args.mode}")
+        print(f"Report: {out}")
+        print(f"Checks: {d['summary']['passed']} passed, {d['summary']['failed']} failed "
+              f"(severities: {d['severities_failed'] or ['none']})")
+        if d["summary"]["failed"]:
+            print("\nFAILURES:")
+            for c in d["checks"]:
+                if c["status"] == "FAIL":
+                    print(f"  [{c['severity']}] {c['name']}: {c['detail']}")
+
+    return report.exit_code()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

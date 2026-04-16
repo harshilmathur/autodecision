@@ -1,3 +1,23 @@
+<!--
+phase: 1
+phase_name: GROUND
+runs_in:
+  - full       (outer, after SCOPE, before ELICIT)
+  - medium     (outer, after SCOPE, before ELICIT)
+  - quick      (outer, after SCOPE, before SIMULATE)
+  - revise     (re-runs if revision adds new search queries; otherwise re-uses prior ground-data.md)
+reads:
+  - ~/.autodecision/runs/{slug}/config.json
+tools:
+  - WebSearch (mandatory — never simulate in a vacuum)
+  - WebFetch (optional, for sourced citations)
+writes:
+  - ~/.autodecision/runs/{slug}/ground-data.md
+gates:
+  - At least 1 grounded fact with citation, OR explicit UNGROUNDED warning logged
+  - Brief notes UNGROUNDED status if no data could be found
+-->
+
 # Phase 1: GROUND
 
 ## Purpose

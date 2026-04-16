@@ -91,30 +91,43 @@ It's **less useful for:**
 
 ## Output: The Decision Brief
 
+Structure is defined by `brief-schema.json` (v1.1). The writer emits all 16 H2 headers in order; the Phase 8.5 validator HARD_FAILs on deviation.
+
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  EXECUTIVE SUMMARY (30-second read)                     │
-│  Recommendation + confidence + cost comparison          │
-│  + first action + biggest risk                          │
+│  1. EXECUTIVE SUMMARY  — 30-second preview              │
+│     Decision · Recommendation · Confidence              │
+│     Deepest disagreement · Dominant risk                │
 ├─────────────────────────────────────────────────────────┤
-│  DATA FOUNDATION          — sourced facts, not guesses  │
-│  HYPOTHESES               — competing paths explored    │
-│  HIGH-CONFIDENCE EFFECTS  — 3+ personas agree           │
-│  MINORITY-VIEW WINNERS    — one persona's idea that won │
-│  STABLE INSIGHTS          — survived adversarial attack │
-│  FRAGILE INSIGHTS         — with exact flip thresholds  │
-│  KEY ASSUMPTIONS          — ranked by sensitivity       │
-│  ADVERSARIAL SCENARIOS    — worst cases + black swans   │
-│  RECOMMENDATION           — phased plan with kill-stops │
-│  COUNCIL DYNAMICS         — who agreed, who disagreed   │
-│  CONVERGENCE LOG          — iteration-by-iteration data │
+│  Possibility map (exploration first):                   │
+│   2. DATA FOUNDATION    — tagged facts [G#]/[U#]/[C#]   │
+│   3. HYPOTHESES EXPLORED                                │
+│   4. EFFECTS MAP        — High-Confidence / Specialist  │
+│                           / Exploratory (top 15)        │
+│   5. COUNCIL DYNAMICS   — persona legend + 5+ bullets   │
+│   6. MINORITY-VIEW WINNERS (optional)                   │
+│   7. STABLE INSIGHTS    — survived iteration pressure   │
+│   8. FRAGILE INSIGHTS   — with decision boundaries      │
+│   9. ADVERSARIAL SCENARIOS                              │
+│      Worst Cases · Black Swans · Irrational Actors      │
+│  10. KEY ASSUMPTIONS    — 5-column sensitivity table    │
+│  11. CONVERGENCE LOG    — per-iteration metrics         │
 ├─────────────────────────────────────────────────────────┤
-│  APPENDIX A: Decision Timeline with dependencies        │
-│  APPENDIX B: Quick vs Full comparison (if applicable)   │
+│  Synthesis (one path forward):                          │
+│  12. RECOMMENDATION                                     │
+│      Action · Confidence · Confidence reasoning         │
+│      Depends on · Monitor · Pre-mortem · Review trigger │
+├─────────────────────────────────────────────────────────┤
+│  Reference:                                             │
+│  13. APPENDIX A: Decision Timeline                      │
+│  14. APPENDIX B: Quick vs Full (if applicable)          │
+│  15. APPENDIX C: Complete Effects Map  (everything      │
+│      beyond the top 15 — no effect dropped)             │
+│  16. SOURCES  — one row per [G#]/[U#]/[C#:persona] tag  │
 └─────────────────────────────────────────────────────────┘
 ```
 
-Every effect traces to explicit assumptions. Every probability comes with a [min, max] range reflecting council disagreement. Every fragile insight comes with the exact threshold where it flips.
+Every effect traces to explicit assumptions. Every probability comes with a [min, max] range reflecting council disagreement. Every fragile insight comes with the exact threshold where it flips. Every dollar figure, percentage, or multiplier carries a source tag within 120 chars — unsourced numbers are a HARD_FAIL.
 
 ---
 
@@ -131,7 +144,7 @@ Works with [Claude Code](https://claude.ai/code) and [Claude Cowork](https://cla
 /plugin install autodecision@autodecision
 ```
 
-Commands land under `/autodecision:` — the main loop is `/autodecision:autodecision`. All subcommands (`:quick`, `:challenge`, `:compare`, `:revise`, `:summarize`, `:plan`, `:review`, `:export`) share the same prefix.
+Commands land under `/autodecision:` — the main loop is `/autodecision:autodecision`. All subcommands (`:quick`, `:challenge`, `:compare`, `:revise`, `:summarize`, `:publish`, `:plan`, `:review`, `:export`) share the same prefix.
 
 **Legacy skill install**
 
@@ -265,6 +278,7 @@ OUTER (runs once):
 | `/autodecision:compare` | Side-by-side comparison of two decisions | ~5 min |
 | `/autodecision:revise` | What-if on an existing run (changed assumptions/data) | ~8 min |
 | `/autodecision:summarize` | One-page shareable summary | ~1 min |
+| `/autodecision:publish` | Ship a brief as PDF → Notion, email draft, gist, Slack, Drive, or Local | ~1 min |
 | `/autodecision:plan` | Interactive scope wizard | ~2 min |
 | `/autodecision:review` | Past decisions + outcome tracking | ~1 min |
 | `/autodecision:export` | Portable archive of all decisions | ~1 min |

@@ -1,3 +1,30 @@
+<!--
+phase: 3
+phase_name: SIMULATE
+runs_in:
+  - full.iteration-1     (5-persona council, parallel subagents)
+  - full.iteration-2+    (LIGHT mode: re-simulate only — critique/adversary/sensitivity carry forward unless convergence fails)
+  - medium.iteration-1   (5-persona council, single iteration)
+  - quick                (single analyst variant — NO council, NO subagents)
+reads:
+  - ~/.autodecision/runs/{slug}/shared-context.md (precomputed by orchestrator)
+  - ~/.autodecision/runs/{slug}/iteration-{N}/hypotheses.json
+  - references/persona-council.md
+  - references/persona-preamble.md
+  - references/effects-chain-spec.md
+writes:
+  - ~/.autodecision/runs/{slug}/iteration-{N}/council/{tag}.json × 5 (full/medium — tags from persona-council.md Canonical Persona Names)
+  - ~/.autodecision/runs/{slug}/iteration-{N}/effects-chains.json (synthesis output)
+spawns:
+  - 5 foreground Agent subagents in PARALLEL (full/medium); 0 in quick mode
+  - Synthesis runs INLINE in orchestrator (NEVER as a separate agent)
+gates:
+  - diversity_check: avg probability spread across shared effects > 0.10 (else "Council diversity LOW" warning)
+  - depth_check: at least 3 first-order effects per persona per hypothesis
+  - children_check: every 1st-order effect has ≥1 second-order child
+  - alt_check: at least 3 effects with `alt_` prefix across all 5 personas (creative alternatives rule)
+-->
+
 # Phase 3: SIMULATE
 
 ## Purpose
@@ -47,9 +74,11 @@ Wait for all 5 subagents. Handle failures:
 
 After all subagents complete, the orchestrator reads all `council/*.json` files and:
 
-1. **Collect all unique `effect_id` values** across all 5 personas.
-2. **Deduplicate by semantic similarity.** If two personas use different IDs for the
-   same effect (e.g., `acq_increase` and `customer_growth_surge`), merge them:
+1. **Collect all unique `effect_id` values** across all 5 personas, across all
+   hypotheses, across BOTH first-order and second-order slots.
+2. **Deduplicate by semantic similarity (within an order).** If two personas use
+   different IDs for the same effect at the same order (e.g., `acq_increase` and
+   `customer_growth_surge` both as 1st-order), merge them:
    - Use the ID chosen by more personas
    - If tied, use the shorter/clearer ID
 3. **For each unique effect:**
@@ -59,8 +88,53 @@ After all subagents complete, the orchestrator reads all `council/*.json` files 
    - `description` = description from the persona with the highest council agreement
    - `assumptions` = union of all assumption keys across personas for this effect
 4. **Merge 2nd-order effects** similarly (by `effect_id`, with parent tracking).
-5. **Build the `all_assumptions` map** from all assumption keys referenced in any effect.
-6. **Write `effects-chains.json`.**
+
+### Step 3.5: Cross-Order Dedup (Canonicalize the Map)
+
+After Step 4 but before writing `effects-chains.json`, run a cross-order dedup
+pass. The problem it solves: Persona A may emit `merchant_churn` as a 1st-order
+effect of Hypothesis 2, while Persona B emits the same concept as a 2nd-order
+child of `price_war_escalation` under Hypothesis 1. Without dedup, the brief's
+Effects Map shows two entries for one real effect — inflating the map, breaking
+council_agreement counts, and confusing the reader.
+
+**Procedure:**
+
+1. Flatten every effect across all hypotheses AND both orders into one candidate
+   list: `[(hypothesis_id, order, effect_id, description, probability, ...), ...]`.
+2. Group candidates by semantic similarity on `description` (>70% token overlap
+   OR manually paired synonym canonicalization like
+   `merchant_churn ≡ churn_merchant ≡ enterprise_churn` when domain context
+   matches).
+3. For each group with ≥ 2 candidates:
+   - Pick the **canonical effect_id**: whichever ID the most personas chose; ties
+     go to the shortest ID.
+   - Pick the **canonical order**: if any persona emitted it as 1st-order, it's
+     1st-order. Second-order is a weaker signal and loses to any 1st-order
+     emission. Log the cross-order merge: `"Merged merchant_churn (2nd-order
+     under price_war_escalation in competitor.json) into merchant_churn (1st-order
+     of H2 in pessimist.json)."`
+   - Union assumptions, union hypotheses (the effect now traces to every
+     hypothesis that generated it), take probability median across all emissions,
+     recompute council_agreement as count of DISTINCT personas in the merged group.
+4. Write `iteration-{N}/cross-order-merges.log` with every merge so the brief's
+   Council Dynamics section can cite surprises ("the Competitor persona's 2nd-order
+   merchant_churn was the same effect the Pessimist made 1st-order — hidden
+   consensus of 4/5 that this initial view missed").
+5. Update `effects-chains.json` with the deduped list.
+
+**Guard:** do NOT merge across genuinely different effects that share a verb.
+`revenue_increases` (from acquisition) and `revenue_increases` (from upsell) are
+distinct — check assumption overlap. If assumption sets are disjoint, do not merge.
+
+### Step 3.6: Finalize
+
+After cross-order dedup completes:
+
+1. **Build the `all_assumptions` map** from all assumption keys referenced in any
+   surviving effect.
+2. **Run the Step 3.5 drift check from Assumption Key Stability above** (iter-2+ only).
+3. **Write `effects-chains.json`.**
 
 ## Effect ID Stability Across Iterations
 
@@ -72,3 +146,53 @@ Include in the subagent prompt:
 > "IMPORTANT: The following effect_ids were established in the previous iteration.
 > Reuse these IDs for the same effects. Only create new IDs for genuinely new effects.
 > [list of effect_ids from previous iteration]"
+
+## Assumption Key Stability Across Iterations
+
+**This is the same rule as effect_id stability, extended to assumption keys.** Without
+it, iter-1 `market_has_demand` becomes iter-2 `market_demand_exists` and the Judge's
+`assumption_stability` metric crashes from 100% to 11% for purely cosmetic reasons.
+Real convergence gets masked by bookkeeping churn.
+
+For iteration 2+, the subagent prompt MUST include the full `all_assumptions` map
+from the previous iteration's `effects-chains.json` — keys AND descriptions.
+Personas MUST reuse the keys verbatim for any assumption that is conceptually the
+same, even if they would prefer different phrasing.
+
+Include in the subagent prompt (after the effect_ids block):
+> "IMPORTANT: The following assumption keys were established in the previous
+> iteration. Reuse these keys verbatim for the same assumptions. Only create new
+> keys for genuinely new assumptions the previous iteration did not surface.
+>
+> Previous iteration's all_assumptions map:
+> [paste the full key: description mapping from iter-(N-1)/effects-chains.json]
+>
+> Rule: if you would write `market_demand_exists` for something the previous
+> iteration called `market_has_demand`, use the previous key. Do NOT rename
+> for style or preference. Rename ONLY if the meaning genuinely changed."
+
+**Orchestrator responsibility.** Before spawning iter-2+ personas, the orchestrator:
+1. Reads `iteration-(N-1)/effects-chains.json > all_assumptions`
+2. Formats it as a `key: description` list
+3. Injects it into the shared-context.md that every persona reads
+4. Emits a warning line in the run log if any iter-N persona introduces a new key
+   whose description semantically overlaps an existing key (synthesis pass
+   responsibility — see Step 3.7 below).
+
+### Step 3.7: Post-Synthesis Assumption Drift Check
+
+After Step 3.6 Finalize but before writing `effects-chains.json`, the orchestrator
+runs a drift check for iter-2+:
+
+1. Load previous iteration's `all_assumptions` keys into `prev_keys`.
+2. For every new key in this iteration's synthesized `all_assumptions`:
+   - If the new key's description has >70% token overlap with an existing
+     `prev_keys` entry's description, log a WARNING:
+     `"Possible assumption drift: '{new_key}' may duplicate '{prev_key}'
+     ('{new_desc}' vs '{prev_desc}'). Retaining '{prev_key}' for Judge stability."`
+   - Merge the new key into the existing `prev_key` (rename in all effects that
+     reference it, union their usages).
+3. Write `iteration-{N}/assumption-drift.log` with every detected rename, for
+   Judge and reviewer visibility.
+
+The Judge's `assumption_stability` metric now reflects genuine churn, not naming.
