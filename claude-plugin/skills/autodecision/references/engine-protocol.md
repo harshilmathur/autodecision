@@ -427,6 +427,35 @@ After scoring, the Judge writes `convergence-summary.md` (~500 tokens) containin
 
 This summary is the ONLY prior-iteration context carried forward to iteration N+1.
 
+### Pre-DECIDE Structural Gate
+
+Before Phase 8 (DECIDE) can start, verify the run directory contains the required
+upstream files. This gate catches the failure mode where the orchestrator skips the
+loop and writes a brief from memory.
+
+```bash
+# All four must exist for full/medium mode. Quick mode only needs config.json.
+ls ~/.autodecision/runs/{slug}/config.json          # Phase 0
+ls ~/.autodecision/runs/{slug}/ground-data.md        # Phase 1
+ls ~/.autodecision/runs/{slug}/iteration-1/effects-chains.json  # Phase 3
+ls ~/.autodecision/runs/{slug}/convergence-log.json  # Phase 7
+```
+
+**If ANY file is missing:** Do NOT proceed to Phase 8. Do NOT write a brief from
+memory, from the context file, or from general knowledge. Instead:
+
+1. Identify which phase failed or was skipped
+2. Go back and run it
+3. Only proceed to DECIDE when all upstream files exist
+
+A brief without upstream data files is fabricated, not analyzed. The entire value
+of the engine is the structured loop — scope, ground, personas, critique, adversary,
+sensitivity, convergence. Without those intermediate outputs, the brief is a
+consulting memo, not a Decision Brief.
+
+**This gate is the highest-priority check.** A structurally correct brief built on
+fabricated data is worse than an error message saying "Phase 3 didn't run."
+
 ## File Structure Per Run
 
 ```
