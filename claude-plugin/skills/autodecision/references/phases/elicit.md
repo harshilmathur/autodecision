@@ -251,120 +251,18 @@ If user provides answers:
   3. {question}: {answer}
 ```
 
-## Context Quality Gate (mandatory, runs after all blocks)
-
-After ELICIT completes (or after GROUND if `--skip-elicit`), evaluate whether the
-analysis setup is strong enough to produce a useful brief. A 15-minute full loop on
-weak context is worse than no loop at all ... it gives false confidence.
-
-### Signals to check
-
-Score each 0-2 (0 = red, 1 = yellow, 2 = green):
-
-| Signal | Green (2) | Yellow (1) | Red (0) |
-|--------|-----------|------------|---------|
-| **Grounding depth** | 3+ substantive data points from Phase 1 | 1-2 data points, some sub-questions ungrounded | Zero useful data, all generic or irrelevant results |
-| **Decision clarity** | Clear action with identifiable alternatives | Vague but decomposable ("improve retention") | Not a decision ("tell me about AI trends") |
-| **Scope fit** | Business/strategy decision with real tradeoffs | Borderline (operational, personal, trivial) | Not suited to autodecision (pure math, pure taste, already decided) |
-| **Assumption surface** | 3+ testable assumptions identified | 1-2 assumptions, rest are vague | No falsifiable assumptions ... nothing to stress-test |
-
-**Total score:** sum of 4 signals (0-8).
-
-### Dispatch
-
-| Score | Action |
-|-------|--------|
-| 6-8 | **Proceed.** Context is strong. Continue to Phase 2. |
-| 3-5 | **Warn + offer reframe.** Context has gaps. Present the weak signals and offer options (see below). |
-| 0-2 | **Recommend exit.** Context is too weak for a useful analysis. Present the assessment and offer options (see below). |
-
-### Warn flow (score 3-5)
-
-Present via AskUserQuestion:
-
-> "Before I run the full analysis, a few things look thin:"
->
-> {For each yellow/red signal: one sentence explaining what is weak and why it matters.}
->
-> "I can still run this, but the brief may have gaps where data is missing. Options:"
->
-> A) **Reframe** — I will suggest a sharper version of this decision and restart from Phase 0
-> B) **Add context** — tell me what I am missing and I will fold it in (restarts GROUND)
-> C) **Proceed anyway** — run the analysis with what we have (I will flag weak areas in the brief)
-> D) **Exit** — stop the run
-
-If A: generate 2-3 reframed versions of the decision statement that are more specific,
-more actionable, or better scoped. Let the user pick one. Restart from Phase 0 with the
-new statement (new slug, new run directory).
-
-If B: collect additional context, append to `ground-data.md`, then re-run the quality
-gate (re-score only — do NOT re-run Phase 1 web searches). If the user's additions
-push the score above the threshold, proceed.
-
-If C: record `"context_quality": "WEAK"` in `config.json`. Thread this into persona
-prompts: "NOTE: Grounding data for this decision is limited. Flag any claim where you
-are relying on general knowledge rather than decision-specific data. Mark these as
-LOW-CONFIDENCE." The Decision Brief header shows: `Context: WEAK (limited grounding data)`.
-
-If D: write `config.json` with `"status": "ABANDONED"`, log to journal, print:
-"Run abandoned. No brief generated." Exit cleanly.
-
-### Exit flow (score 0-2)
-
-Present via AskUserQuestion:
-
-> "This does not look like a good fit for the full decision engine:"
->
-> {For each red signal: one sentence on why.}
->
-> {If not a decision: "This reads more like a research question than a decision with
-> tradeoffs. autodecision works best when there is a concrete action to evaluate."}
->
-> {If too vague: "Try something like: 'Should we [specific action] given [specific
-> constraint]?' instead of '{current statement}'."}
->
-> A) **Reframe** — I will suggest a better-scoped version
-> B) **Run `/autodecision:quick` instead** — lighter analysis, lower cost, tolerates weaker context
-> C) **Proceed anyway** — full loop with quality warnings throughout
-> D) **Exit**
-
-Same dispatch as warn flow for A/C/D. If B: hand off to the quick command with the
-current decision statement.
-
-### Recording
-
-Append to `user-inputs.md`:
-
-```markdown
-## Context Quality Gate
-- Score: {N}/8
-- Grounding: {GREEN/YELLOW/RED} — {one-line reason}
-- Decision clarity: {GREEN/YELLOW/RED} — {one-line reason}
-- Scope fit: {GREEN/YELLOW/RED} — {one-line reason}
-- Assumption surface: {GREEN/YELLOW/RED} — {one-line reason}
-- User choice: {PROCEED / REFRAME / ADD_CONTEXT / QUICK / EXIT}
-```
-
-### Skip behavior
-
-When `--skip-elicit` is set, the quality gate STILL runs (it evaluates grounding and
-the decision statement, not user interaction). The user blocks are skipped, not the gate.
-The gate is the last thing before Phase 2 starts.
-
-**Quick mode:** the entire ELICIT phase is skipped, including this gate. Quick mode's
-low cost (~2 min) means the downside of weak context is a mediocre 2-minute brief, not
-a wasted 15-minute full loop. The gate exists to protect expensive runs.
-
 ## Skip Behavior
 
 If the user skips ALL blocks (or the command includes `--skip-elicit`):
 - Write `user-inputs.md` with all statuses as "SKIPPED"
-- Run the Context Quality Gate (above) — this is not skippable
-- Proceed to Phase 2 if gate passes, or present options if it flags issues
+- Proceed to Phase 2
 
 The ELICIT phase should take < 2 minutes if the user engages, 0 seconds if skipped.
-It should NEVER feel like a barrier to running the analysis — but it SHOULD feel like
-a safety net against wasting 15 minutes on bad input.
+It should NEVER feel like a barrier to running the analysis.
+
+**Note:** The input quality gate that catches non-decisions and weak inputs now lives
+in Phase 0 (SCOPE) — it runs before any work happens, including before ELICIT. See
+`phases/scope.md` "Input Quality Gate."
 
 ## Integration with Personas
 
