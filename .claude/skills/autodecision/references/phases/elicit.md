@@ -297,7 +297,9 @@ If A: generate 2-3 reframed versions of the decision statement that are more spe
 more actionable, or better scoped. Let the user pick one. Restart from Phase 0 with the
 new statement (new slug, new run directory).
 
-If B: collect additional context, append to `ground-data.md`, re-run the quality gate.
+If B: collect additional context, append to `ground-data.md`, then re-run the quality
+gate (re-score only — do NOT re-run Phase 1 web searches). If the user's additions
+push the score above the threshold, proceed.
 
 If C: record `"context_quality": "WEAK"` in `config.json`. Thread this into persona
 prompts: "NOTE: Grounding data for this decision is limited. Flag any claim where you
@@ -348,6 +350,10 @@ Append to `user-inputs.md`:
 When `--skip-elicit` is set, the quality gate STILL runs (it evaluates grounding and
 the decision statement, not user interaction). The user blocks are skipped, not the gate.
 The gate is the last thing before Phase 2 starts.
+
+**Quick mode:** the entire ELICIT phase is skipped, including this gate. Quick mode's
+low cost (~2 min) means the downside of weak context is a mediocre 2-minute brief, not
+a wasted 15-minute full loop. The gate exists to protect expensive runs.
 
 ## Skip Behavior
 

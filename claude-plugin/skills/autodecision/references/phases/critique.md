@@ -52,27 +52,29 @@ For each persona file in `council/*.json`:
 - Replace with the anonymous label
 - Combine all 5 into a single anonymized document
 
-### Step 3: Spawn 5 Reviewer Subagents (PARALLEL)
+### Step 3: Spawn 1 Reviewer Agent
 
-Each subagent receives:
-- All 5 analyses labeled "Analysis A" through "Analysis E"
-- Instruction: "You are reviewing 5 analyses of the same decision. Review all
-  analyses EXCEPT [your own label]. Rank the other 4 from strongest to weakest."
-- Each reviewer does NOT know which label is theirs (the mapping ensures they
-  review based on argument quality, not persona familiarity)
+Spawn a SINGLE critique agent (NOT 5 separate reviewer subagents). One reviewer
+evaluating all 5 analyses produces the same quality at 1/5 the cost.
 
-Each reviewer outputs:
-- Ranking of the other 4 analyses (strongest to weakest)
+The agent receives:
+- All 5 analyses labeled "Analysis A" through "Analysis E" (anonymized)
+- Instruction: "You are reviewing 5 independent analyses of the same decision.
+  Rank all 5 from strongest to weakest based on groundedness, specificity,
+  diversity of effects explored, and identification of blind spots."
+
+The agent outputs:
+- Ranking of all 5 analyses (strongest to weakest)
 - For each analysis: 1-2 sentence explanation of strengths/weaknesses
-- Top 3 flaws, blind spots, or missing variables across ALL analyses
+- Top 5 flaws, blind spots, or missing variables across ALL analyses
+- Which analysis had the most unique insight not found elsewhere
 
-### Step 4: Aggregate and Write
+### Step 4: Write Outputs
 
-1. Collect all 5 reviewer outputs.
-2. Compute aggregate rankings (average position per analysis, lower = better).
-3. Compile all identified flaws into a deduplicated list.
-4. Write `peer-review.json` with mapping, individual rankings, and aggregates.
-5. Write `critique.json` with:
+1. Take the reviewer's output.
+2. Write `peer-review.json` with the anonymization mapping and rankings.
+3. Compile identified flaws into a deduplicated list.
+4. Write `critique.json` with:
 
 ```json
 {

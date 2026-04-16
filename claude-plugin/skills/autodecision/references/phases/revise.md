@@ -1,3 +1,23 @@
+<!--
+phase: N/A (standalone command, not part of the main loop)
+phase_name: REVISE
+runs_in:
+  - revise     (invoked via /autodecision:revise — runs a modified inner loop)
+reads:
+  - ~/.autodecision/runs/{original-slug}/DECISION-BRIEF.md
+  - ~/.autodecision/runs/{original-slug}/config.json
+  - ~/.autodecision/runs/{original-slug}/iteration-*/effects-chains.json
+  - ~/.autodecision/runs/{original-slug}/convergence-log.json
+writes:
+  - ~/.autodecision/runs/{slug}-revise-{N}/config.json
+  - ~/.autodecision/runs/{slug}-revise-{N}/DECISION-BRIEF.md
+  - ~/.autodecision/runs/{slug}-revise-{N}/REVISION-DIFF.md
+  - journal.jsonl (append, type: "revision")
+gates:
+  - Original run must exist and have a DECISION-BRIEF.md
+  - User must specify what changed (assumption, data, tilt, or hypothesis)
+-->
+
 # Phase: REVISE
 
 ## Purpose

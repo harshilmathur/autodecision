@@ -14,7 +14,7 @@ spawns:
   - 1 dedicated adversary agent (foreground, parallel with CRITIQUE)
 gates:
   - Must populate worst_cases[], black_swans[], irrational_actors[] arrays (each ≥ 1 entry — never empty if effects exist)
-  - Every scenario carries scenario_id (wc/bs/ia prefix) — referenced via <!-- ref:ID --> comments in the brief
+  - Every scenario carries scenario_id (wc/bs/ia prefix) — referenced via trailing <!-- validator-refs: --> block in the brief
 -->
 
 # Phase 5: ADVERSARY
@@ -78,8 +78,8 @@ Every entry in `worst_cases`, `irrational_actors`, and `black_swans` MUST have a
 | `black_swans` | `bs` | `bs1_competitor_acquisition`, `bs2_macro_recession` |
 
 The validator uses these IDs to confirm which scenarios made it from `adversary.json`
-into `DECISION-BRIEF.md` via `<!-- ref:{scenario_id} -->` comments. Without stable
-IDs, the brief can silently drop adversary findings and no one notices.
+into `DECISION-BRIEF.md` via the trailing `<!-- validator-refs: -->` block. Without
+stable IDs, the brief can silently drop adversary findings and no one notices.
 
 Pattern: `^(wc|ia|bs)\d+_[a-z_]{1,40}$` — lowercase snake_case, numbered per array,
 short descriptive tail.

@@ -290,8 +290,9 @@ CHECKS:
   - Required content patterns present (e.g. `**Action:**`, `**Confidence:**`)
   - Tables present where the schema requires them
   - No snake_case identifiers in prose (outside code, inline code, links)
-  - Cross-reference coverage: source JSON items traced via `<!-- ref:ID -->`
-    comments in the brief
+  - Cross-reference coverage: source JSON items traced via trailing
+    `<!-- validator-refs: -->` block in the brief (legacy inline `<!-- ref:ID -->`
+    also accepted for old briefs)
   - Recommendation never appears before position 12
 
 SEVERITIES (from schema):

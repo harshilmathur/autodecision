@@ -1,3 +1,23 @@
+<!--
+phase: N/A (standalone command, not part of the main loop)
+phase_name: CHALLENGE
+runs_in:
+  - challenge  (invoked via /autodecision:challenge — adversary-only, no council)
+reads:
+  - User-provided action statement (from command argument)
+  - Web search results (Phase 1 grounding only)
+writes:
+  - ~/.autodecision/runs/{slug}-challenge/config.json
+  - ~/.autodecision/runs/{slug}-challenge/CHALLENGE-BRIEF.md
+  - journal.jsonl (append, type: "challenge")
+spawns:
+  - 1 adversary agent (foreground)
+  - 1 sensitivity agent (foreground, parallel with adversary)
+gates:
+  - Must populate worst_cases[], black_swans[], irrational_actors[] (each >= 1)
+  - Must identify 3-5 load-bearing assumptions with decision boundaries
+-->
+
 # Phase: CHALLENGE (Adversary-Only Mode)
 
 ## Purpose

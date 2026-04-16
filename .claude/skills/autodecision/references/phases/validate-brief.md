@@ -82,7 +82,7 @@ fixing ONLY these specific issues — do not change content that passed:
 
 {for each HARD_FAIL: check_name, location, expected, got, one-line fix}
 
-Keep all <!-- ref:ID --> comments — they are required for cross-reference tracking.
+Keep the trailing <!-- validator-refs: --> block — it is required for cross-reference tracking.
 Then I will re-run validation.
 ```
 
