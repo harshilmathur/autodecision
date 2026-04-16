@@ -250,20 +250,24 @@ If recommendation changed: "The revision FLIPPED the recommendation. Consider ru
 a full `/autodecision` to validate the new direction."
 If recommendation held: "The original recommendation is robust to this scenario."
 
-## Step 8: OFFER EXPORT
+## Step 8: OFFER PUBLISH OR EXPORT
 
-After printing, offer to export to current working directory:
+After printing, offer to publish or export:
 
-> "Export revision outputs to current directory?"
-> Options: A) Export brief + diff  B) Export brief only  C) Skip
+> "Share this revision?"
+> Options:
+> A) Publish — run `/autodecision:publish` (PDF → Notion, email, gist, Slack, Drive, or local)
+> B) Copy to current directory (brief + diff)
+> C) Copy brief only
+> D) Skip
 
-If A:
+If A: invoke the publish skill with the revision slug.
+If B:
 ```bash
 cp ~/.autodecision/runs/{slug}-revise-{N}/DECISION-BRIEF.md ./{slug}-revise-{N}-DECISION-BRIEF.md
 cp ~/.autodecision/runs/{slug}-revise-{N}/REVISION-DIFF.md ./{slug}-revise-{N}-REVISION-DIFF.md
 ```
-
-If B:
+If C:
 ```bash
 cp ~/.autodecision/runs/{slug}-revise-{N}/DECISION-BRIEF.md ./{slug}-revise-{N}-DECISION-BRIEF.md
 ```

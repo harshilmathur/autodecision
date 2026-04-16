@@ -76,12 +76,18 @@ or stakeholders who won't read 300 lines.
 
 4. Write to `~/.autodecision/runs/{slug}/SUMMARY.md`
 5. Print to conversation
-6. Offer export:
-   "Export summary to current directory?"
-   Options: A) Export summary  B) Export full brief  C) Skip
+6. Offer publish or export:
 
-   If A: `cp ~/.autodecision/runs/{slug}/SUMMARY.md ./{slug}-SUMMARY.md`
-   If B: `cp ~/.autodecision/runs/{slug}/DECISION-BRIEF.md ./{slug}-DECISION-BRIEF.md`
+   > "Share this summary?"
+   > Options:
+   > A) Publish — run `/autodecision:publish` (PDF → Notion, email, gist, Slack, Drive, or local)
+   > B) Copy summary to current directory
+   > C) Copy full brief to current directory
+   > D) Skip
+
+   If A: invoke the publish skill with the current slug.
+   If B: `cp ~/.autodecision/runs/{slug}/SUMMARY.md ./{slug}-SUMMARY.md`
+   If C: `cp ~/.autodecision/runs/{slug}/DECISION-BRIEF.md ./{slug}-DECISION-BRIEF.md`
 
 ## Rules
 

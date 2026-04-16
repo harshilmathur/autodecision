@@ -112,13 +112,18 @@ What should you do before committing?}
 
 Follow the human-readable output rules from `decide.md` — no snake_case, no raw IDs.
 
-## Step 5: OFFER EXPORT
+## Step 5: OFFER PUBLISH OR EXPORT
 
 After printing the brief, offer:
-"Export Challenge Brief to current directory?"
-Options: A) Export  B) Skip
 
-If A: `cp ~/.autodecision/runs/{slug}-challenge/CHALLENGE-BRIEF.md ./{slug}-CHALLENGE-BRIEF.md`
+> "Share this challenge brief?"
+> Options:
+> A) Publish — run `/autodecision:publish` (PDF → Notion, email, gist, Slack, Drive, or local)
+> B) Copy to current directory
+> C) Skip
+
+If A: invoke the publish skill with the challenge slug.
+If B: `cp ~/.autodecision/runs/{slug}-challenge/CHALLENGE-BRIEF.md ./{slug}-CHALLENGE-BRIEF.md`
 
 ## Persist
 
