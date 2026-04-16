@@ -20,7 +20,7 @@ gates:
   - PRIMARY (must pass): contradiction_count ≤ 1 OR decreasing AND assumption_stability > 80%
   - SECONDARY (warn but don't gate): effects_delta < 2, ranking_flips ≤ 1
   - false_convergence_check: perfect scores at iter-1 OR all-perfect-on-iter-2 → "Council diversity LOW" warning
-  - max iterations reached → exit anyway with "Convergence: NOT REACHED" warning in brief
+  - max iterations reached AND not converged → offer user extension (see "Offer to Extend at Max Iterations"); cap at 5 total
 -->
 
 # Phase 7: CONVERGE
@@ -170,8 +170,59 @@ hope that something stabilizes — burning time and compute on a decision whose
 uncertainty is genuine and won't resolve. The user knows whether another 15
 minutes is worth it; the Judge doesn't.
 
-**Iteration 2 does NOT require this confirmation.** iter-2 is the default loop
-behavior. The gate applies only when iter-N ≥ 3 is about to start.
+**Iteration 2 does NOT require mid-loop confirmation.** iter-2 is the default loop
+behavior. The mid-loop gate applies only when iter-N ≥ 3 is about to start.
+However, if iter-2 is the final iteration (default max) and convergence is NOT
+REACHED, the "Offer to Extend" gate below fires instead.
+
+### Offer to Extend at Max Iterations
+
+When the final iteration completes (iteration == max) and convergence is NOT REACHED,
+the orchestrator MUST NOT silently exit to Phase 8. Instead, pause and offer the user
+the option to extend.
+
+This is the most common failure mode: the default 2 iterations don't converge, and
+the system writes "Convergence: NOT REACHED" in the brief without ever asking whether
+the user would have been willing to spend another 5 minutes for a better answer.
+
+Ask via AskUserQuestion:
+
+> "Iteration {max} complete — convergence NOT REACHED.
+>
+> Judge scores:
+> - Effects delta: {value} (effective: {effective_delta})
+> - Assumption stability: {pct}% (threshold: 80%)
+> - Ranking flips: {value}
+> - Contradictions: {value}
+>
+> The analysis has not stabilized. Running another iteration (~5-7 min) may
+> resolve remaining instability, or the disagreement may be genuine.
+>
+> What would you like to do?"
+>
+> Options:
+> A) Run 1 more iteration (extends to iteration {max + 1})
+> B) Stop here — write the brief with "Converged: NOT REACHED"
+
+Default recommendation: A if TRENDING (contradictions decreasing OR assumption
+stability > 60%); B if FLAT or WORSENING (no improvement between iterations).
+
+If the user picks A:
+- Increment max_iterations by 1
+- The next iteration is iter-{max+1}. If iter >= 3, the "User Confirmation Before
+  Iteration 3+" gate does NOT re-fire (the user just opted in via this gate)
+- Loop back to Phase 2
+- If the extended iteration also doesn't converge, this gate fires AGAIN
+  (the user can keep extending one-at-a-time, or stop)
+
+If the user picks B:
+- Exit the inner loop
+- Phase 8 writes the brief with "Convergence: NOT REACHED" in the header
+- The brief's Convergence Log shows all iterations and their scores
+
+**Maximum extension cap:** max_iterations cannot exceed 5 total (the protocol's
+hard ceiling). If the user has already extended to 5 and it still hasn't converged,
+skip the offer and exit with NOT REACHED. At that point the disagreement is genuine.
 
 ### Partial Convergence Escalation
 

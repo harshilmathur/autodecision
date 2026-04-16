@@ -84,6 +84,10 @@ INNER (max {iterations} times, default 2):
          │     user picks C (downgrade to medium) → exit, mark "N/A (user stopped)"
          ├── not converged AND iteration < max AND next_iter == 2 →
          │     loop back to Phase 2 (iter-2 is the default, no confirmation needed)
+         ├── not converged AND iteration == max →
+         │     AskUserQuestion "Extend or stop?" (see converge.md "Offer to Extend")
+         │     user picks A (extend) → increment max by 1 (cap 5), loop to Phase 2
+         │     user picks B (stop) → exit inner loop with NOT REACHED
          └── iterations = 1 (medium mode)? → skip Phase 7, go to Phase 8
 
 OUTER (runs once):
@@ -397,8 +401,10 @@ Phase 7 (CONVERGE) runs the Judge. The Judge:
    orchestrator MUST pause and AskUserQuestion — running additional iterations is a
    user decision, not a Judge decision. iter-2 does not require confirmation. See
    `converge.md` "User Confirmation Before Iteration 3+" for the exact question and options.
-7. **Max iterations reached** = exit anyway. Phase 8 runs with a `Convergence: NOT REACHED`
-   warning in the Decision Brief.
+7. **Max iterations reached and NOT converged** = offer user extension. AskUserQuestion
+   with the Judge scores and option to extend by 1 iteration (cap 5 total) or stop.
+   See `converge.md` "Offer to Extend at Max Iterations." If user declines (or at cap),
+   Phase 8 runs with `Convergence: NOT REACHED` in the brief.
 
 ### Iteration 1 Special Case
 

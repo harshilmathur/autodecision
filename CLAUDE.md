@@ -229,7 +229,9 @@ The Judge measures 4 parameters after each iteration:
 | Ranking flips | <= 1 | Pairwise ordering reversals in peer review vs previous iteration |
 | Contradictions | <= 1 | Directly contradicting effects with council agreement >= 2 |
 
-Convergence uses a weighted composite with a delta cap: contradictions decreasing + assumption stability > 80% are the primary signals (must pass). `effective_delta` (effects delta minus effects attributable to hypotheses flagged `new_in_iter_N`) over 50 is a hard cap — if the map is still rewriting itself that large, it isn't converged regardless of other signals. Ranking flips are warnings, not gates. Iteration 2 is default; iterations 3, 4, 5 require explicit user confirmation before running. See `converge.md` for full logic including partial convergence escalation.
+Convergence uses a weighted composite with a delta cap: contradictions decreasing + assumption stability > 80% are the primary signals (must pass). `effective_delta` (effects delta minus effects attributable to hypotheses flagged `new_in_iter_N`) over 50 is a hard cap — if the map is still rewriting itself that large, it isn't converged regardless of other signals. Ranking flips are warnings, not gates. Iteration 2 is default; iterations 3, 4, 5 require explicit user confirmation before running.
+
+**Extension offer:** When max iterations are reached and convergence is NOT REACHED, the orchestrator MUST offer the user the option to extend (1 more iteration at a time, cap 5 total). Never silently exit to Phase 8 with NOT REACHED — always ask first. See `converge.md` "Offer to Extend at Max Iterations."
 
 ---
 
