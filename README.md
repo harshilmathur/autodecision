@@ -213,7 +213,9 @@ The system scopes, grounds, simulates, critiques, stress-tests, and produces a D
 
 ### Try these
 
-Decisions that work well with autodecision — copy-paste into Claude Code:
+Decisions that work well with autodecision — copy-paste and run:
+
+> **Command prefix:** In Cowork and legacy installs, use `/autodecision`. In Claude Code plugin installs, use `/autodecision:autodecision`. The examples below show the Cowork/legacy form.
 
 ```
 /autodecision "Should Adobe go all-in on agentic Creative Cloud and deprecate Photoshop's UI-first model within 3 years?"
@@ -362,4 +364,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT
+[MIT](LICENSE)

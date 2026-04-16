@@ -12,6 +12,10 @@ Thumbs.db
 # Node (if any tooling added later)
 node_modules/
 
+# Python
+__pycache__/
+*.pyc
+
 # Built plugin zips (regenerate via ./scripts/build-plugin-zip.sh)
 dist/
 *.zip
