@@ -54,11 +54,11 @@ go directly to Phase 8 (DECIDE). The brief notes "1 iteration, no convergence ch
 ```
 OUTER (runs once):
   Phase 0: SCOPE ──────────────→ config.json
+           INPUT QUALITY GATE ─→ score 0-4. Not a decision? Reframe or exit before any work.
+                                  (runs FIRST in Phase 0, before decomposition; see scope.md)
   Phase 1: GROUND ─────────────→ ground-data.md
   Phase 1.5: ELICIT ───────────→ user-inputs.md (review assumptions, personas, data with user)
                                   (ELICIT runs AFTER GROUND because it shows grounding data to user)
-             QUALITY GATE ─────→ score 0-8. If weak: warn/reframe/exit before burning compute.
-                                  (runs even with --skip-elicit; see elicit.md "Context Quality Gate")
 
 INNER (max {iterations} times, default 2):
   Phase 2: HYPOTHESIZE ────────→ iteration-{N}/hypotheses.json
