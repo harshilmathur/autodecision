@@ -1,3 +1,23 @@
+<!--
+phase: N/A (standalone command, not part of the main loop)
+phase_name: CHALLENGE
+runs_in:
+  - challenge  (invoked via /autodecision:challenge — adversary-only, no council)
+reads:
+  - User-provided action statement (from command argument)
+  - Web search results (Phase 1 grounding only)
+writes:
+  - ~/.autodecision/runs/{slug}-challenge/config.json
+  - ~/.autodecision/runs/{slug}-challenge/CHALLENGE-BRIEF.md
+  - journal.jsonl (append, type: "challenge")
+spawns:
+  - 1 adversary agent (foreground)
+  - 1 sensitivity agent (foreground, parallel with adversary)
+gates:
+  - Must populate worst_cases[], black_swans[], irrational_actors[] (each >= 1)
+  - Must identify 3-5 load-bearing assumptions with decision boundaries
+-->
+
 # Phase: CHALLENGE (Adversary-Only Mode)
 
 ## Purpose
@@ -112,13 +132,18 @@ What should you do before committing?}
 
 Follow the human-readable output rules from `decide.md` — no snake_case, no raw IDs.
 
-## Step 5: OFFER EXPORT
+## Step 5: OFFER PUBLISH OR EXPORT
 
 After printing the brief, offer:
-"Export Challenge Brief to current directory?"
-Options: A) Export  B) Skip
 
-If A: `cp ~/.autodecision/runs/{slug}-challenge/CHALLENGE-BRIEF.md ./{slug}-CHALLENGE-BRIEF.md`
+> "Share this challenge brief?"
+> Options:
+> A) Publish — run `/autodecision:publish` (PDF → Notion, email, gist, Slack, Drive, or local)
+> B) Copy to current directory
+> C) Skip
+
+If A: invoke the publish skill with the challenge slug.
+If B: `cp ~/.autodecision/runs/{slug}-challenge/CHALLENGE-BRIEF.md ./{slug}-CHALLENGE-BRIEF.md`
 
 ## Persist
 

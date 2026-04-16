@@ -57,6 +57,8 @@ OUTER (runs once):
   Phase 1: GROUND ─────────────→ ground-data.md
   Phase 1.5: ELICIT ───────────→ user-inputs.md (review assumptions, personas, data with user)
                                   (ELICIT runs AFTER GROUND because it shows grounding data to user)
+             QUALITY GATE ─────→ score 0-8. If weak: warn/reframe/exit before burning compute.
+                                  (runs even with --skip-elicit; see elicit.md "Context Quality Gate")
 
 INNER (max {iterations} times, default 2):
   Phase 2: HYPOTHESIZE ────────→ iteration-{N}/hypotheses.json

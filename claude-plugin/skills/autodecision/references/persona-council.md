@@ -2,7 +2,7 @@
 
 ## Canonical Persona Names
 
-These are the ONLY 5 personas. No custom personas (Investor, Founder, etc.) — those drift across runs and break peer-review anonymization mapping. ELICIT may *modify* a persona (e.g., name a specific competitor) but never adds or removes one.
+These are the DEFAULT 5 personas. During ELICIT, the user may modify (rename, specify a competitor), add (e.g., "Investor" for fundraising, "Engineer" for technical decisions), or remove (e.g., Regulator when irrelevant) personas. Custom personas follow the same structure: optimization objective, blind spot, contrarian question, no-hedging rule. Peer-review anonymization adapts to the actual council size (A-E for 5, A-F for 6, etc.).
 
 | Long name (for prompts and protocol) | Short tag (for brief output, file names, JSON `persona` field) |
 |--------------------------------------|----------------------------------------------------------------|

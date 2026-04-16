@@ -1,3 +1,23 @@
+<!--
+phase: N/A (standalone command, not part of the main loop)
+phase_name: REVISE
+runs_in:
+  - revise     (invoked via /autodecision:revise — runs a modified inner loop)
+reads:
+  - ~/.autodecision/runs/{original-slug}/DECISION-BRIEF.md
+  - ~/.autodecision/runs/{original-slug}/config.json
+  - ~/.autodecision/runs/{original-slug}/iteration-*/effects-chains.json
+  - ~/.autodecision/runs/{original-slug}/convergence-log.json
+writes:
+  - ~/.autodecision/runs/{slug}-revise-{N}/config.json
+  - ~/.autodecision/runs/{slug}-revise-{N}/DECISION-BRIEF.md
+  - ~/.autodecision/runs/{slug}-revise-{N}/REVISION-DIFF.md
+  - journal.jsonl (append, type: "revision")
+gates:
+  - Original run must exist and have a DECISION-BRIEF.md
+  - User must specify what changed (assumption, data, tilt, or hypothesis)
+-->
+
 # Phase: REVISE
 
 ## Purpose
@@ -250,20 +270,24 @@ If recommendation changed: "The revision FLIPPED the recommendation. Consider ru
 a full `/autodecision` to validate the new direction."
 If recommendation held: "The original recommendation is robust to this scenario."
 
-## Step 8: OFFER EXPORT
+## Step 8: OFFER PUBLISH OR EXPORT
 
-After printing, offer to export to current working directory:
+After printing, offer to publish or export:
 
-> "Export revision outputs to current directory?"
-> Options: A) Export brief + diff  B) Export brief only  C) Skip
+> "Share this revision?"
+> Options:
+> A) Publish — run `/autodecision:publish` (PDF → Notion, email, gist, Slack, Drive, or local)
+> B) Copy to current directory (brief + diff)
+> C) Copy brief only
+> D) Skip
 
-If A:
+If A: invoke the publish skill with the revision slug.
+If B:
 ```bash
 cp ~/.autodecision/runs/{slug}-revise-{N}/DECISION-BRIEF.md ./{slug}-revise-{N}-DECISION-BRIEF.md
 cp ~/.autodecision/runs/{slug}-revise-{N}/REVISION-DIFF.md ./{slug}-revise-{N}-REVISION-DIFF.md
 ```
-
-If B:
+If C:
 ```bash
 cp ~/.autodecision/runs/{slug}-revise-{N}/DECISION-BRIEF.md ./{slug}-revise-{N}-DECISION-BRIEF.md
 ```

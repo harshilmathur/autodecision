@@ -350,10 +350,10 @@ Grounding: {GROUNDED / UNGROUNDED}
 ## Data Foundation
 {Same as full brief}
 
-## Hypotheses
+## Hypotheses Explored
 {Simple list, no status tracking}
 
-## Effects
+## Effects Map
 ### First-Order
 | Effect | Probability | Timeframe | Key Assumptions |
 |--------|------------|-----------|-----------------|

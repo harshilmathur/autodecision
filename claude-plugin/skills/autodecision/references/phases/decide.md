@@ -370,14 +370,18 @@ After validation passes (or fails through with the warning), print the full
 Decision Brief to the conversation. Then print:
 "Decision logged to journal. Run `/autodecision:review` to compare predictions vs reality later."
 
-### Step 7: Offer Export
+### Step 7: Offer Publish or Export
 
-After printing, offer to export to the current working directory:
+After printing, offer to publish or export:
 
-> "Export brief to current directory?"
-> Options: A) Export full brief  B) Skip
+> "Share this brief?"
+> Options:
+> A) Publish — run `/autodecision:publish` (PDF → Notion, email, gist, Slack, Drive, or local)
+> B) Copy to current directory
+> C) Skip
 
-If A:
+If A: invoke the publish skill with the current slug.
+If B:
 ```bash
 cp ~/.autodecision/runs/{slug}/DECISION-BRIEF.md ./{slug}-DECISION-BRIEF.md
 ```

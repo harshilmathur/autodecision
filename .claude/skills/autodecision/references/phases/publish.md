@@ -1,3 +1,22 @@
+<!--
+phase: 9
+phase_name: PUBLISH
+runs_in:
+  - full       (optional — user-invoked after DECIDE via offer or /autodecision:publish)
+  - medium     (optional — same)
+  - quick      (optional — same)
+  - revise     (optional — offered after revision output)
+  - challenge  (optional — offered after challenge brief)
+  - summarize  (optional — offered after summary output)
+reads:
+  - ~/.autodecision/runs/{slug}/DECISION-BRIEF.md (or CHALLENGE-BRIEF.md, SUMMARY.md)
+writes:
+  - PDF artifact (via anthropic-skills:pdf, pandoc, or HTML fallback)
+  - Routes to: Notion, email draft, gist, Slack, Drive, or local file
+gates:
+  - At least one output route must succeed (Local is always available as fallback)
+-->
+
 # Phase: PUBLISH
 
 ## Purpose
