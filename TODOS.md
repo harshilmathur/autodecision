@@ -28,6 +28,12 @@ Evaluate whether >= 3/5 is the right threshold for "stable insight" vs >= 2/5. N
 ### Scheduled Re-evaluation
 Use scheduled tasks to re-run web search on monitoring signals weekly/monthly. Alert if a decision boundary has been crossed.
 
+### Canonical 16-header list
+The Decision Brief's 16 H2 section headers are duplicated in three places: `SKILL.md` Rule 16, `CLAUDE.md` Decision Brief Output section, and `skills/autodecision/references/output-format.md`. `brief-schema.json` is the source of truth, but markdown docs can't import from JSON, so every schema reorder requires updating three markdown files in lockstep. The 2026-04-17 appendix reorder (Appendix B ↔ C swap) was the proof — three files updated by hand. Fix: derive the inline lists from `brief-schema.json` via a pre-commit hook or a build step run by `scripts/sync.sh`. Cost: ~2hr human / ~20min with CC. Pre-existing, not urgent, but a guaranteed drift risk on the next schema change.
+
+### Validator pytest harness
+`scripts/validate-brief.py` is 974 lines of Python driving Phase 8.5 (the mandatory schema check). Zero automated tests today. Every schema change is manually smoke-tested by running one brief through it. A schema edit that subtly breaks the validator (e.g., a `skip_in` edge case, a cross-reference mismatch) would go unnoticed until a real run hit the broken path. Fix: add pytest + fixtures — one known-good brief per mode (full/medium/quick), one known-bad brief per HARD_FAIL severity, one legacy brief for backward compat. Assert exit codes and report structure. Cost: ~3hr human / ~30min with CC. Pre-existing, not urgent, but the obvious next safety net.
+
 ## P3 — Future
 
 ### Multi-Model Council

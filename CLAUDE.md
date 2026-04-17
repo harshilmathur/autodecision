@@ -271,7 +271,7 @@ The output is a **possibility map** — what the exploration surfaced, where the
 1. `## Executive Summary` — 6-line bullet box. Decision, Recommendation (called out), Confidence, Hypotheses explored, Deepest disagreement, Dominant risk, Load-bearing assumption.
 2. `## Data Foundation` — every external fact tagged `[G#]` (ground), `[D#]` (document), `[U#]` (user), or `[C#:persona]` (council). Tags reused downstream.
 3. `## Hypotheses Explored` — 4-column table: #, Hypothesis, Status, Key Assumptions.
-4. `## Effects Map` — three subsections: `### High-Confidence Effects`, `### Specialist Insights`, `### Exploratory Effects`. Top 15 by `council_agreement × probability`; rest go to Appendix C.
+4. `## Effects Map` — three subsections: `### High-Confidence Effects`, `### Specialist Insights`, `### Exploratory Effects`. Top 15 by `council_agreement × probability`; rest go to Appendix B.
 5. `## Council Dynamics` — MUST open with the persona legend (verbatim first line). Then 5+ bullets covering strongest/weakest analysis, key disagreement, uncertainty hotspot, consensus surprises, blind spots caught.
 6. `## Minority-View Winners` — OPTIONAL. Only if a single-persona insight became the recommendation.
 7. `## Stable Insights` — what survived adversarial pressure across iterations.
@@ -281,8 +281,8 @@ The output is a **possibility map** — what the exploration surfaced, where the
 11. `## Convergence Log` — 6-column table, one row per iteration: Iteration, Effects Delta, Assumption Stability, Ranking Flips, Contradictions, Converged.
 12. `## Recommendation` — 7-field block with literal bold labels: `**Action:**`, `**Confidence:**`, `**Confidence reasoning:**`, `**Depends on:**`, `**Monitor:**`, `**Pre-mortem:**`, `**Review trigger:**`. Every `Depends on:` item must mirror a row in Key Assumptions (validator-enforced).
 13. `## Appendix A: Decision Timeline` — 5-column table: When, Action, Depends On, Decision Point, Kill Criteria.
-14. `## Appendix B: Quick Mode vs Full Loop Comparison` — only if a quick run exists for the same slug.
-15. `## Appendix C: Complete Effects Map` — 8-column table for every effect not in section 4's top-15.
+14. `## Appendix B: Complete Effects Map` — 8-column table for every effect not in section 4's top-15.
+15. `## Appendix C: Quick Mode vs Full Loop Comparison` — only if a quick run exists for the same slug.
 16. `## Sources` — 4-column table: Tag, Type, Claim, Source. Every specific number in the brief needs a `[G#]`/`[D#]`/`[U#]`/`[C#:persona]` tag within 120 chars of the number.
 
 **Medium mode:** drops Convergence Log, Appendix A optional, Appendix B/C same rules.
@@ -296,7 +296,7 @@ The output is a **possibility map** — what the exploration surfaced, where the
 - Collapsing Council Dynamics to a table; skipping the mandatory persona legend first line.
 - Using prose instead of the 7-field `**Action:** / **Confidence:** / ...` Recommendation block.
 - Numbered list instead of the 5-column Key Assumptions table.
-- Skipping Sources; skipping Appendix C when the council produced more than 15 effects.
+- Skipping Sources; skipping Appendix B when the council produced more than 15 effects.
 - Dollar figures without a `[G#]`/`[D#]`/`[U#]`/`[C#:persona]` tag within 120 chars.
 
 ---

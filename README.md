@@ -120,9 +120,9 @@ Structure is defined by `brief-schema.json` (v1.1). The writer emits all 16 H2 h
 ├─────────────────────────────────────────────────────────┤
 │  Reference:                                             │
 │  13. APPENDIX A: Decision Timeline                      │
-│  14. APPENDIX B: Quick vs Full (if applicable)          │
-│  15. APPENDIX C: Complete Effects Map  (everything      │
+│  14. APPENDIX B: Complete Effects Map  (everything      │
 │      beyond the top 15 — no effect dropped)             │
+│  15. APPENDIX C: Quick vs Full (if applicable)          │
 │  16. SOURCES  — one row per [G#]/[U#]/[C#:persona] tag  │
 └─────────────────────────────────────────────────────────┘
 ```

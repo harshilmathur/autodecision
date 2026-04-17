@@ -83,7 +83,7 @@ markdown clean. See `references/phases/decide.md` Step 4c.
 
 **Top-15 rule.** Sections 4's tables (High-Confidence + Specialist + Exploratory
 combined) show the top 15 effects by `council_agreement × probability`. Every
-other effect goes to **Appendix C: Complete Effects Map** at the end of the
+other effect goes to **Appendix B: Complete Effects Map** at the end of the
 brief. No effect is dropped — they're triaged. The possibility map is preserved;
 the reader's scan is protected.
 
@@ -109,16 +109,16 @@ They may be genuine blind spots OR noise. Treat with appropriate skepticism.
 
 **Inline, in full.** Do NOT point to effects-chains.json — the JSON is for the
 validator, not the reader. Every exploratory effect that didn't make the top 15
-cutoff goes in the Appendix C table (position 15). Exploratory effects that DO
+cutoff goes in the Appendix B table (position 14). Exploratory effects that DO
 make the top 15 appear here in full.
 
 | Effect | P | Agreement | Source Persona | Note |
 |--------|---|-----------|---------------|------|
 | {description} | {P} | {N}/5 | {persona} | {why it might matter — one specific sentence, not "may be relevant"} |
 
-If exploratory effects in this table exceed 10 rows, the rest move to Appendix C.
+If exploratory effects in this table exceed 10 rows, the rest move to Appendix B.
 Never summarize to "N additional exploratory effects" in the main body — that
-erases the map. Appendix C is for volume; the main body is for the top.
+erases the map. Appendix B is for volume; the main body is for the top.
 
 ## Council Dynamics
 
@@ -261,7 +261,26 @@ Rules:
 - Show causal arrows where a 2nd-order effect is triggered by a 1st-order
   effect at an earlier month.
 
-## Appendix B: Quick Mode vs Full Loop Comparison
+## Appendix B: Complete Effects Map
+
+Every effect beyond the top 15 by `council_agreement × probability` shown in
+section 4 goes here. This preserves the full possibility map while keeping the
+main body scannable. No effect is dropped — the main body shows the top, this
+appendix shows the rest.
+
+| Effect | Order | Hypotheses | P | Range | Agreement | Source Personas | Key Assumptions |
+|--------|-------|-----------|---|-------|-----------|----------------|-----------------|
+| {description} | 1st/2nd | H1,H2 | {P} | [{min}-{max}] | {N}/5 | Optimist, Customer | {assumptions} |
+
+Rules:
+- One row per unique `effect_id` not already in section 4.
+- Hypotheses column lists EVERY hypothesis this effect traces to (the cross-order
+  dedup pass unions hypotheses — see simulate.md Step 3.5).
+- Source Personas column uses short tags (Optimist, Pessimist, Competitor,
+  Regulator, Customer) per the Council Dynamics legend.
+- Sort by `council_agreement` descending, then by probability descending.
+
+## Appendix C: Quick Mode vs Full Loop Comparison
 
 If a quick mode run exists for the same decision (check `~/.autodecision/runs/` for
 a matching slug without the `-full` suffix), include this appendix. This is often
@@ -282,25 +301,6 @@ the loop matters.
 {Honest: did extra compute change or meaningfully strengthen the recommendation?}
 
 If no quick run exists, omit this appendix entirely.
-
-## Appendix C: Complete Effects Map
-
-Every effect beyond the top 15 by `council_agreement × probability` shown in
-section 4 goes here. This preserves the full possibility map while keeping the
-main body scannable. No effect is dropped — the main body shows the top, this
-appendix shows the rest.
-
-| Effect | Order | Hypotheses | P | Range | Agreement | Source Personas | Key Assumptions |
-|--------|-------|-----------|---|-------|-----------|----------------|-----------------|
-| {description} | 1st/2nd | H1,H2 | {P} | [{min}-{max}] | {N}/5 | Optimist, Customer | {assumptions} |
-
-Rules:
-- One row per unique `effect_id` not already in section 4.
-- Hypotheses column lists EVERY hypothesis this effect traces to (the cross-order
-  dedup pass unions hypotheses — see simulate.md Step 3.5).
-- Source Personas column uses short tags (Optimist, Pessimist, Competitor,
-  Regulator, Customer) per the Council Dynamics legend.
-- Sort by `council_agreement` descending, then by probability descending.
 
 ## Sources
 
@@ -338,9 +338,9 @@ effects: {comma-separated effect_ids from effects-chains.json for every effect c
 ## Companion artifact: COMPARISON-VS-QUICK.md
 
 `COMPARISON-VS-QUICK.md` is a separate file in the run directory — NOT part of
-DECISION-BRIEF.md and NOT covered by the brief schema validator. Only Appendix B
+DECISION-BRIEF.md and NOT covered by the brief schema validator. Only Appendix C
 (above) lives in the brief itself. Use the companion file when you want a deeper
-side-by-side; use Appendix B when you want the headline diff inline with the brief.
+side-by-side; use Appendix C when you want the headline diff inline with the brief.
 For the companion file's structure, see `references/phases/decide.md`.
 
 ## Quick Mode Brief Template

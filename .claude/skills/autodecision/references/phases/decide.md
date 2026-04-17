@@ -127,7 +127,7 @@ Write `DECISION-BRIEF.md` using the template from `references/output-format.md`.
    [ ] ## Convergence Log
    [ ] ## Recommendation
    [ ] ## Appendix A: Decision Timeline
-   [ ] ## Appendix C: Complete Effects Map
+   [ ] ## Appendix B: Complete Effects Map
    [ ] ## Sources
    ```
 4. Write the brief and check each item off as you emit its header.
@@ -152,7 +152,7 @@ Write `DECISION-BRIEF.md` using the template from `references/output-format.md`.
 1. **Executive Summary** — 6-line bullet box. Decision, Recommendation (called out), Confidence, Hypotheses explored, Deepest disagreement, Dominant risk, Load-bearing assumption. NOT a standalone memo — a preview of the map with the recommendation visible. Literal header "## Executive Summary" — never "Bottom Line", "Headline", or "Summary".
 2. **Data Foundation** — tag every external fact [G#]/[D#]/[U#]/[C#:persona] so downstream sections can reuse the tags. If `context-extracted.md` exists, include `[D#]` tagged items alongside ground data.
 3. **Hypotheses Explored** (table format)
-4. **Effects Map** (High-Confidence / Specialist / Exploratory subsections — top 15 effects by `council_agreement × probability`; the rest go to Appendix C)
+4. **Effects Map** (High-Confidence / Specialist / Exploratory subsections — top 15 effects by `council_agreement × probability`; the rest go to Appendix B)
 5. **Council Dynamics** (who thought what, where they diverged — the diversity signal, not a footnote. MUST include the persona legend as the first line.)
 6. **Minority-View Winners** (optional — include only if a single-persona insight became the recommendation)
 7. **Stable Insights** (what survived adversarial pressure across iterations)
@@ -162,8 +162,8 @@ Write `DECISION-BRIEF.md` using the template from `references/output-format.md`.
 11. **Convergence Log** — see schema's `skip_in` for which modes omit
 12. **Recommendation** (the full 7-field synthesis block — Action, Confidence, Confidence reasoning, Depends on, Monitor, Pre-mortem, Review trigger). **Depends on** items MUST appear in the Key Assumptions table at position 10 — validator-enforced.
 13. **Appendix A: Decision Timeline** — see schema for mode applicability
-14. **Appendix B: Quick Mode vs Full Loop Comparison** — only emitted when a quick run exists for the same slug
-15. **Appendix C: Complete Effects Map** — every effect not in the top-15 cutoff for section 4. Preserves the full possibility map; keeps main body scannable.
+14. **Appendix B: Complete Effects Map** — every effect not in the top-15 cutoff for section 4. Preserves the full possibility map; keeps main body scannable.
+15. **Appendix C: Quick Mode vs Full Loop Comparison** — only emitted when a quick run exists for the same slug
 16. **Sources** — one row per [G#]/[U#]/[C#:persona] tag used in the brief. Every specific number cited anywhere needs a tag within 120 chars of the number; every tag needs a row here.
 
 The order signals what matters. Sections 2-11 are the possibility map. Section 12 is one synthesis of that map. Sections 13-16 are reference material. The Executive Summary at section 1 lets decision-makers skim, but the bulk of the brief is exploration.

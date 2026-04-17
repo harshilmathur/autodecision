@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.1",
-  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1 additions: positions 15 (Appendix C: Complete Effects Map) and 16 (Sources), content_checks block (unsourced numbers + depends-on mirror), trailing-block ref format, legacy inline ref fallback.",
+  "schema_version": "1.2",
+  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1 additions: positions 15 (Appendix C: Complete Effects Map) and 16 (Sources), content_checks block (unsourced numbers + depends-on mirror), trailing-block ref format, legacy inline ref fallback. v1.2: Appendix B and C swapped — Complete Effects Map is now Appendix B (required in full/medium), Quick Mode vs Full Loop Comparison is now Appendix C (optional, only emitted when a quick run exists for the same slug). Keeps appendix letters alphabetical when the optional section is absent.",
 
   "sections": [
     {
@@ -170,21 +170,21 @@
     },
     {
       "position": 14,
-      "header": "## Appendix B: Quick Mode vs Full Loop Comparison",
-      "required_in": [],
-      "optional_in": ["full"],
-      "skip_in": ["medium", "quick"],
-      "description": "Only emitted when a quick mode run exists for the same decision slug. Summarizes what the full loop surfaced that the quick run missed (additional hypotheses, joint probabilities, irrational actor analysis). Independent COMPARISON-VS-QUICK.md file is a separate artifact, not part of the brief."
-    },
-    {
-      "position": 15,
-      "header": "## Appendix C: Complete Effects Map",
+      "header": "## Appendix B: Complete Effects Map",
       "required_in": ["full", "medium"],
       "optional_in": [],
       "skip_in": ["quick"],
       "description": "All effects beyond the top 15 by council_agreement × probability shown in section 4 (Effects Map) go here. Keeps the main body scannable while preserving the full possibility map as a machine-readable artifact. One table covering every effect_id not already in section 4.",
       "requires_table": true,
       "table_columns": ["Effect", "Order", "Hypotheses", "Probability", "Range", "Agreement", "Source Personas", "Key Assumptions"]
+    },
+    {
+      "position": 15,
+      "header": "## Appendix C: Quick Mode vs Full Loop Comparison",
+      "required_in": [],
+      "optional_in": ["full"],
+      "skip_in": ["medium", "quick"],
+      "description": "Only emitted when a quick mode run exists for the same decision slug. Summarizes what the full loop surfaced that the quick run missed (additional hypotheses, joint probabilities, irrational actor analysis). Independent COMPARISON-VS-QUICK.md file is a separate artifact, not part of the brief."
     },
     {
       "position": 16,
