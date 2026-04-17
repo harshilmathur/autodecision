@@ -162,11 +162,17 @@ Bare `/autodecision "..."` works in this mode. If both paths are installed, the 
 
 **From marketplace (recommended)**
 
-In Cowork: **Customize → Create plugin → Add marketplace**, then paste:
+Two steps — add the marketplace, then install the plugin from it.
 
-```
-https://github.com/harshilmathur/autodecision
-```
+1. In Cowork: **Customize → Create plugin → Add marketplace**, then paste:
+
+   ```
+   https://github.com/harshilmathur/autodecision
+   ```
+
+2. Then: **Customize → Add plugin → Personal → autodecision → Install**.
+
+Adding the marketplace alone does not install the plugin — step 2 is required.
 
 **From release zip**
 

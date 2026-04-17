@@ -41,7 +41,11 @@ Bare `/autodecision` works in this mode (the plugin form requires the `autodecis
 
 **From marketplace (recommended)**
 
-In Cowork: **Customize → Create plugin → Add marketplace**, paste `https://github.com/harshilmathur/autodecision`.
+Two steps:
+1. **Customize → Create plugin → Add marketplace**, paste `https://github.com/harshilmathur/autodecision`.
+2. **Customize → Add plugin → Personal → autodecision → Install**.
+
+Adding the marketplace alone does not install the plugin — step 2 is required.
 
 **From release zip** (offline / restricted network)
 
