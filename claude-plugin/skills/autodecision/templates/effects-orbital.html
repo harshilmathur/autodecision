@@ -9,7 +9,8 @@
   body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #0a0a0f; color: #eee; overflow: hidden; height: 100vh; }
 
   .header { position: fixed; top: 0; left: 0; right: 0; padding: 20px 32px; z-index: 10; background: linear-gradient(to bottom, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0) 100%); pointer-events: none; }
-  .header h1 { margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #999; letter-spacing: 0.08em; text-transform: uppercase; }
+  .header h1 { margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #999; letter-spacing: 0.08em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .header h1 .experimental { display: inline-block; padding: 2px 8px; border-radius: 4px; background: rgba(255, 183, 77, 0.15); border: 1px solid rgba(255, 183, 77, 0.45); color: #ffb74d; font-size: 10px; letter-spacing: 0.12em; font-weight: 700; }
   .header .decision { font-size: 24px; font-weight: 700; color: #fff; letter-spacing: -0.01em; max-width: 720px; line-height: 1.25; }
 
   .legend { position: fixed; bottom: 20px; left: 32px; z-index: 10; font-size: 11px; color: #888; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; background: rgba(20, 20, 25, 0.8); padding: 10px 14px; border-radius: 8px; backdrop-filter: blur(8px); }
@@ -89,7 +90,7 @@
 <body>
 
 <div class="header">
-  <h1>Auto-Decision Effects Map · Orbital View</h1>
+  <h1>Auto-Decision Effects Map · Orbital View <span class="experimental">EXPERIMENTAL</span></h1>
   <div class="decision" id="decision-title"></div>
 </div>
 
