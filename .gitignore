@@ -19,3 +19,12 @@ __pycache__/
 # Built plugin zips (regenerate via ./scripts/build-plugin-zip.sh)
 dist/
 *.zip
+
+# Local QA artifacts (screenshots, review logs from gstack skills)
+.gstack/
+
+# Local-only design mockups, sample data, and generated viz outputs.
+# These are personal artifacts: they may contain decision context (company
+# names, internal strategy) and have no business in the repo. Each user
+# generates their own via /autodecision:visualize.
+mockups/
