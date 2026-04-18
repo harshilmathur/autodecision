@@ -113,6 +113,16 @@
 const HYP_COLORS = ['#4fc3f7', '#81c784', '#ba68c8', '#ffb74d', '#4dd0e1'];
 const tooltip = d3.select('#tooltip');
 
+// HTML-escape any dynamic field before interpolation. Tooltips are built via
+// d3 .html() (we need the structural <div> wrappers), so every value coming
+// from the inlined dataset — descriptions, labels, worst_case/black_swan
+// text, correlations — must be escaped or it will be parsed as HTML and can
+// execute arbitrary script (the data originates from LLM persona output).
+const esc = (s) => String(s == null ? '' : s).replace(
+  /[&<>"']/g,
+  (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])
+);
+
 function showTip(ev, html, cls = '') {
   tooltip.node().className = 'tooltip' + (cls ? ' ' + cls : '');
   tooltip.html(html)
@@ -211,14 +221,14 @@ dataPromise.then(data => {
           : '#ccc';
         showTip(ev, `
           <div class="t-kicker">Hypothesis ${i + 1}</div>
-          <div class="t-title">${h.label}</div>
+          <div class="t-title">${esc(h.label)}</div>
           <div class="t-meta">
-            ${h.status ? `<span style="color:${statusColor};font-weight:700">${h.status}</span>` : ''}
+            ${h.status ? `<span style="color:${statusColor};font-weight:700">${esc(h.status)}</span>` : ''}
             <span>${h.effects.length} 1st-order</span>
             <span>${h.effects.reduce((s, e) => s + (e.children || []).length, 0)} 2nd-order</span>
-            ${h.lethality ? `<span class="t-leth">Lethality ${h.lethality}/10</span>` : ''}
+            ${h.lethality ? `<span class="t-leth">Lethality ${+h.lethality}/10</span>` : ''}
           </div>
-          ${h.status_detail ? `<div class="t-meta" style="margin-top:6px;border-top:none;padding-top:0;color:#aaa;font-style:italic">${h.status_detail}</div>` : ''}`);
+          ${h.status_detail ? `<div class="t-meta" style="margin-top:6px;border-top:none;padding-top:0;color:#aaa;font-style:italic">${esc(h.status_detail)}</div>` : ''}`);
       })
       .on('mouseout', hideTip);
     hypG.append('text').attr('class', 'hypothesis-h').text('H' + (i + 1));
@@ -276,13 +286,13 @@ dataPromise.then(data => {
         .on('mouseover', function(ev) {
           highlightChain(i, e.id);
           showTip(ev, `
-            <div class="t-kicker">1st-order · ${h.label}</div>
-            <div class="t-title">${e.desc}</div>
+            <div class="t-kicker">1st-order · ${esc(h.label)}</div>
+            <div class="t-title">${esc(e.desc)}</div>
             <div class="t-meta">
               <span class="t-p">P ${(e.p * 100).toFixed(0)}%</span>
               <span>Range [${(e.p_range[0] * 100).toFixed(0)}–${(e.p_range[1] * 100).toFixed(0)}%]</span>
               <span>Agreement ${e.agreement}/5</span>
-              ${e.timeframe ? `<span>${e.timeframe}</span>` : ''}
+              ${e.timeframe ? `<span>${esc(e.timeframe)}</span>` : ''}
               ${e.specialist ? '<span style="color:#64b5f6">specialist</span>' : ''}
             </div>`);
         })
@@ -323,8 +333,8 @@ dataPromise.then(data => {
           .on('mouseover', function(ev) {
             highlightChain(i, e.id);  // keep parent FO's chain lit up
             showTip(ev, `
-              <div class="t-kicker">2nd-order · triggered by ${e.desc.slice(0, 60)}…</div>
-              <div class="t-title">${c.desc}</div>
+              <div class="t-kicker">2nd-order · triggered by ${esc(e.desc.slice(0, 60))}…</div>
+              <div class="t-title">${esc(c.desc)}</div>
               <div class="t-meta">
                 <span class="t-p">P ${(c.p * 100).toFixed(0)}%</span>
                 <span>Agreement ${c.agreement}/5</span>
@@ -362,10 +372,10 @@ dataPromise.then(data => {
       threat.append('path').attr('class', 'threat-diamond')
         .attr('d', `M 0 ${-tSize} L ${tSize} 0 L 0 ${tSize} L ${-tSize} 0 Z`)
         .on('mouseover', (ev) => showTip(ev, `
-          <div class="t-kicker adv">⚠ Worst case · ${h.label}</div>
-          <div class="t-title">${h.worst_case}</div>
+          <div class="t-kicker adv">⚠ Worst case · ${esc(h.label)}</div>
+          <div class="t-title">${esc(h.worst_case)}</div>
           <div class="t-meta">
-            <span class="t-leth">Lethality ${lethality}/10</span>
+            <span class="t-leth">Lethality ${+lethality}/10</span>
             <span>Scored by adversary phase</span>
           </div>`, 'adv'))
         .on('mouseout', hideTip);
@@ -386,8 +396,8 @@ dataPromise.then(data => {
     swanG.transition().delay(2100 + i * 80).duration(500).style('opacity', 1);
     swanG.append('circle').attr('class', 'swan-head').attr('r', 13)
       .on('mouseover', (ev) => showTip(ev, `
-        <div class="t-kicker swan">◯ Black swan · ${h.label}</div>
-        <div class="t-title">${h.black_swan}</div>
+        <div class="t-kicker swan">◯ Black swan · ${esc(h.label)}</div>
+        <div class="t-title">${esc(h.black_swan)}</div>
         <div class="t-meta">
           <span class="t-p">P &lt; 5% (unlisted)</span>
           <span>High impact</span>
@@ -445,7 +455,7 @@ dataPromise.then(data => {
         .on('mouseover', (ev) => showTip(ev, `
           <div class="t-kicker" style="color:#ffb74d">⚡ Hidden correlation</div>
           <div class="t-title">Compound risk: not independent</div>
-          <div class="t-meta" style="margin-bottom:8px">${corr.compound || 'Effects interact — joint probability higher than product'}</div>
+          <div class="t-meta" style="margin-bottom:8px">${esc(corr.compound || 'Effects interact — joint probability higher than product')}</div>
           <div class="t-meta">
             ${p1Val != null ? `<span class="t-p">P₁ ${(p1Val * 100).toFixed(0)}%</span>` : ''}
             ${p2Val != null ? `<span class="t-p">P₂ ${(p2Val * 100).toFixed(0)}%</span>` : ''}
