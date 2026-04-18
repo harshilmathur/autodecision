@@ -11,9 +11,7 @@
 </p>
 
 <p align="center">
-  <video src="docs/effects-viz-preview.mp4" autoplay loop muted playsinline width="900" poster="docs/effects-viz-preview.png">
-    <img src="docs/effects-viz-preview.png" alt="Orbital effects map: hypotheses on the inner ring, 1st- and 2nd-order effects fanning outward, worst-case diamonds and black-swan comets on the outer rings" width="900">
-  </video>
+  <img src="docs/effects-viz-preview.gif" alt="Orbital effects map: hypotheses on the inner ring, 1st- and 2nd-order effects fanning outward, worst-case diamonds and black-swan comets on the outer rings" width="900">
   <br />
   <sub>Output of <code>/autodecision:visualize</code> (experimental) — the full possibility map for one decision: 5 hypotheses, ~110 effects, worst cases, black swans.</sub>
 </p>
