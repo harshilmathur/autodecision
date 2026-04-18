@@ -215,10 +215,14 @@ dataPromise.then(data => {
     hypG.transition().delay(300 + i * 60).duration(400).style('opacity', 1);
     hypG.append('circle').attr('r', 18).attr('fill', color)
       .on('mouseover', (ev) => {
-        const statusColor = h.status && h.status.includes('ELIMINATED') ? '#ff6b7a'
-          : h.status && h.status.includes('SUPPORTED') ? '#7bd88f'
-          : h.status && h.status.includes('WEAKENED') ? '#ffb74d'
-          : '#ccc';
+        // Status color matches the parser's expanded vocabulary
+        // (ELIMINATED/WEAKENED/RISK/LEADING/SUPPORTED/CONDITIONAL/OTHER).
+        const s = h.status || '';
+        const statusColor = s.includes('ELIMINATED') ? '#ff6b7a'
+          : s.includes('WEAKENED') || s.includes('RISK') || s.includes('FRAGILE') ? '#ffb74d'
+          : s.includes('LEADING') || s.includes('SUPPORTED') ? '#7bd88f'
+          : s.includes('CONDITIONAL') ? '#64b5f6'
+          : '#999';
         showTip(ev, `
           <div class="t-kicker">Hypothesis ${i + 1}</div>
           <div class="t-title">${esc(h.label)}</div>

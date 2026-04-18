@@ -311,11 +311,39 @@ def extract_threats_flat(adv: dict) -> tuple[list, list]:
     return wcs, bss
 
 
-def parse_brief_statuses(brief_path: Path) -> dict[str, dict[str, str]]:
-    """Parse the '## Hypotheses Explored' table. Return {hypothesis_id: {label, detail}}.
+def _classify_status(status_cell: str) -> str:
+    """Map a free-text status string to a short tag for color-coding.
 
-    Status is classified into a short tag (ELIMINATED / SUPPORTED / WEAKENED / UNKNOWN) based
-    on substring match, with the full status string kept as the detail line.
+    The brief schema doesn't constrain the status text, so this matches the
+    vocabulary that current and historical briefs actually use. Order matters:
+    the more specific (negative) keywords come first so a status like
+    "RISK — could be fatal" is RISK, not LEADING.
+    """
+    low = status_cell.lower()
+    if "eliminat" in low or "dominated" in low or "strictly worse" in low:
+        return "ELIMINATED"
+    if "fragile" in low or "weaken" in low or "fail" in low:
+        return "WEAKENED"
+    if "risk" in low and "leading" not in low:
+        return "RISK"
+    if "leading recommendation" in low or "promoted" in low or "new:" in low or low.startswith("new "):
+        return "LEADING"
+    if "support" in low or "recommend" in low or "stable" in low:
+        return "SUPPORTED"
+    if "conditional" in low or low.startswith("real ") or low.startswith("real—") or low.startswith("real—") or low == "real" or low.startswith("real "):
+        return "CONDITIONAL"
+    return "OTHER"
+
+
+def parse_brief_statuses(brief_path: Path) -> dict[str, dict[str, str]]:
+    """Parse the '## Hypotheses Explored' table. Return {hypothesis_key: {short, detail}}.
+
+    Stores each row under BOTH the raw first-cell key (`"1"`, `"H1"`) AND the
+    canonical `"H{n}"` form, so the build_dataset lookup at `H{i}` succeeds
+    regardless of whether the brief schema uses `#` (numeric) or `H#` columns.
+
+    Status is classified by `_classify_status` into one of:
+    ELIMINATED / WEAKENED / RISK / LEADING / SUPPORTED / CONDITIONAL / OTHER.
     """
     out: dict[str, dict[str, str]] = {}
     if not brief_path.exists():
@@ -325,6 +353,7 @@ def parse_brief_statuses(brief_path: Path) -> dict[str, dict[str, str]]:
     if not m:
         return out
     table = m.group(1)
+    row_index = 0  # 1-based positional counter for non-header data rows
     for line in table.splitlines():
         if not line.strip().startswith("|"):
             continue
@@ -334,19 +363,18 @@ def parse_brief_statuses(brief_path: Path) -> dict[str, dict[str, str]]:
         first = cells[0].strip().lower()
         if first in ("", "#", "---") or set(first) <= {"-", ":"}:
             continue
-        hyp_label_cell = cells[0]  # e.g. "H1"
+        row_index += 1
+        # Skip header row (e.g. "| # | Hypothesis | Status | Key Assumptions |")
+        if first in ("hypothesis", "hyp", "id"):
+            row_index -= 1
+            continue
+        raw_key = cells[0].strip().strip("*")
         status_cell = cells[2]
-        low = status_cell.lower()
-        if "eliminat" in low:
-            short = "ELIMINATED"
-        elif "support" in low or "recommend" in low:
-            short = "SUPPORTED"
-        elif "weaken" in low:
-            short = "WEAKENED"
-        else:
-            short = "UNKNOWN"
-        # key is "H1", "H2" etc — we map by position later
-        out[hyp_label_cell.strip().strip("*")] = {"short": short, "detail": status_cell}
+        short = _classify_status(status_cell)
+        entry = {"short": short, "detail": status_cell}
+        # Store under raw key ("1" or "H1") AND canonical positional ("H1")
+        out[raw_key] = entry
+        out[f"H{row_index}"] = entry
     return out
 
 
