@@ -311,27 +311,69 @@ def extract_threats_flat(adv: dict) -> tuple[list, list]:
     return wcs, bss
 
 
+# Status text in real briefs almost always opens with a tag word, e.g.
+# "**ELIMINATED.** ...", "CONDITIONAL — ...", "**LEADING RECOMMENDATION** (5/5)".
+# We classify by the LEAD portion (everything before the first separator)
+# rather than substring-anywhere — so descriptions like "applies if X fails
+# to deliver" or "Real risk that compounds" classify by the opening tag,
+# not by an incidental keyword later in the description.
+_LEAD_SEPARATOR_RE = re.compile(r"[.:|—–—\-]| {2,}")
+
+
 def _classify_status(status_cell: str) -> str:
     """Map a free-text status string to a short tag for color-coding.
 
-    The brief schema doesn't constrain the status text, so this matches the
-    vocabulary that current and historical briefs actually use. Order matters:
-    the more specific (negative) keywords come first so a status like
-    "RISK — could be fatal" is RISK, not LEADING.
+    Tags: ELIMINATED / WEAKENED / RISK / LEADING / SUPPORTED / CONDITIONAL / OTHER.
+
+    Algorithm:
+      1. Strip leading markdown emphasis (`**`, `*`, `_`) and whitespace.
+      2. Take everything before the first separator (period, colon, em/en/hyphen,
+         double-space) as the LEAD chunk — this is the brief's actual tag word.
+      3. Classify by keywords in the LEAD. Earlier branches win ties so the
+         negative/strong tags don't get swallowed by the conditional fallback.
+      4. If the LEAD has no recognizable keyword, fall back to a small set of
+         substring matches across the full string (catches `**LEADING
+         RECOMMENDATION**` where the bold separator splits the lead).
     """
-    low = status_cell.lower()
-    if "eliminat" in low or "dominated" in low or "strictly worse" in low:
+    s = re.sub(r"^[\s*_`>]+", "", status_cell)
+    parts = _LEAD_SEPARATOR_RE.split(s, maxsplit=1)
+    lead = parts[0].strip().lower()
+    # Strip trailing markdown emphasis from the lead chunk so "**ELIMINATED"
+    # matches "eliminated".
+    lead = re.sub(r"[*_`\s]+$", "", lead)
+
+    def has(*words):
+        return any(w in lead for w in words)
+
+    # Word-boundary verb forms — avoids matching "failover", "failsafe", or
+    # "failure" inside descriptions. Only fire on actual failure verbs.
+    fail_re = re.compile(r"\b(failed|failing|fails|failure)\b")
+
+    if has("eliminat", "dominated", "strictly worse"):
         return "ELIMINATED"
-    if "fragile" in low or "weaken" in low or "fail" in low:
-        return "WEAKENED"
-    if "risk" in low and "leading" not in low:
-        return "RISK"
-    if "leading recommendation" in low or "promoted" in low or "new:" in low or low.startswith("new "):
+    if has("leading", "promoted") or lead == "new" or lead.startswith("new ") or "new hypothesis" in lead:
         return "LEADING"
-    if "support" in low or "recommend" in low or "stable" in low:
-        return "SUPPORTED"
-    if "conditional" in low or low.startswith("real ") or low.startswith("real—") or low.startswith("real—") or low == "real" or low.startswith("real "):
+    if has("fragile") or "weaken" in lead or fail_re.search(lead):
+        return "WEAKENED"
+    if "risk" in lead:
+        return "RISK"
+    # CONDITIONAL/REAL win over SUPPORTED in mixed-lead briefs like
+    # "Conditional, partially supported" — the primary state is conditional;
+    # the support qualifier is secondary.
+    if has("conditional", "real"):
         return "CONDITIONAL"
+    if has("supported", "recommend", "stable", "strongest", "dominant"):
+        return "SUPPORTED"
+
+    # Fall back to substring on the full string — catches cases where a
+    # leading **bold** tag was split off (e.g. "**LEADING RECOMMENDATION**")
+    full = status_cell.lower()
+    if "leading recommendation" in full or "promoted" in full:
+        return "LEADING"
+    if "eliminat" in full:
+        return "ELIMINATED"
+    if "strongest" in full or "dominant" in full:
+        return "SUPPORTED"
     return "OTHER"
 
 

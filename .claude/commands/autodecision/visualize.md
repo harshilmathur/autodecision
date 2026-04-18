@@ -33,12 +33,6 @@ Example: `/autodecision:visualize law-firm-replace-1Y-with-claude`
 ```
 (Uses the most recently modified directory under `~/.autodecision/runs/`.)
 
-### Visualize every full-mode run + generate a gallery
-```
-/autodecision:visualize --all
-```
-Produces an `index.html` gallery in `~/.autodecision/exports/effects-gallery/` linking every run that has renderable data.
-
 ## Invocation
 
 1. **Locate the skill directory** so the generator script + template can be resolved:
@@ -58,12 +52,11 @@ Produces an `index.html` gallery in `~/.autodecision/exports/effects-gallery/` l
    [ -z "$SKILL_DIR" ] && { echo "ERROR: autodecision skill not found"; exit 1; }
    ```
 
-2. **Resolve the target run(s):**
+2. **Resolve the target run:**
    - If the user named a slug, expand to `~/.autodecision/runs/$slug`. Error if missing.
    - If no arg, pick the most recently modified directory under `~/.autodecision/runs/`.
-   - If `--all`, iterate over every subdirectory.
 
-3. **Generate the HTML** for each target:
+3. **Generate the HTML:**
    ```bash
    python3 "$SKILL_DIR/scripts/generate-effects-viz.py" --run-dir "$RUN_DIR"
    ```
@@ -75,11 +68,7 @@ Produces an `index.html` gallery in `~/.autodecision/exports/effects-gallery/` l
    # xdg-open on Linux, start on Windows
    ```
 
-5. **If `--all`:** after generating every viz, write `~/.autodecision/exports/effects-gallery/index.html` containing a card grid linking each `EFFECTS-VIZ.html`. Open the gallery.
-
-6. **Report what ran:**
-   - For single-run: filepath, hypothesis count, total FO/SO effects, worst-case count, black-swan count, correlation count.
-   - For `--all`: summary table of runs successfully rendered vs skipped, with the reason (e.g. "quick-mode run — no effects-chains.json").
+5. **Report what ran:** filepath, hypothesis count, total FO/SO effects, worst-case count, black-swan count, correlation count.
 
 ## Failure modes
 
