@@ -417,6 +417,49 @@ Then the next user action, specific to the destination:
 - Slack: "Team can read it now."
 - Gist: "Share the gist URL privately — anyone with the link can view."
 
+## Step 6.5: Offer Visualize
+
+After printing the status, offer the interactive visualization. This is the only
+follow-on suggestion — the user already chose to publish, so surfacing more
+destinations would be noise. Check whether the viz file exists before offering:
+
+```bash
+VIZ=~/.autodecision/runs/{slug}/EFFECTS-VIZ.html
+if [ -f "$VIZ" ]; then
+  HAS_VIZ=1
+else
+  HAS_VIZ=0
+fi
+```
+
+If `HAS_VIZ=1` use AskUserQuestion:
+
+> "Also open the interactive visualization?"
+>
+> A) Open `EFFECTS-VIZ.html` in the browser
+> B) Skip
+
+If A:
+```bash
+case "$(uname -s)" in
+  Darwin) open "$VIZ" ;;
+  Linux)  xdg-open "$VIZ" 2>/dev/null || echo "Open manually: $VIZ" ;;
+  *)      start "" "$VIZ" 2>/dev/null || echo "Open manually: $VIZ" ;;
+esac
+```
+
+If `HAS_VIZ=0` (older run that predates auto-generation, or a quick-mode run):
+
+> "No visualization generated for this run. Run `/autodecision:visualize {slug}` to generate, then open."
+>
+> A) Generate and open now
+> B) Skip
+
+If A: invoke `/autodecision:visualize` with the current slug, then open the output.
+
+**Skip on Cancel:** if the user cancelled the earlier publish menu, do not show this
+offer — they're done.
+
 ## Edge cases
 
 | Case | Behavior |
