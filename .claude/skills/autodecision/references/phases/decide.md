@@ -365,70 +365,33 @@ This step is MANDATORY for full/medium/revise runs. Quick mode runs it in a
 reduced mode that only checks prohibited patterns and the quick-mode section
 subset.
 
-### Step 5.7: Auto-generate effects visualization (full / medium only)
-
-Runs AFTER Phase 8.5 validation completes (regardless of pass/fail — we still
-want the viz even for briefs with warnings). Skipped in **quick mode** because
-quick runs don't produce `effects-chains.json`.
-
-Generate the interactive orbital diagram alongside the brief:
-
-```bash
-SKILL_DIR="$(dirname "$(dirname "$(realpath "references/phases/decide.md")")")"
-# Equivalent: the directory containing scripts/ and templates/
-python3 "{skill_dir}/scripts/generate-effects-viz.py" \
-  --run-dir ~/.autodecision/runs/{slug} \
-  --output ~/.autodecision/runs/{slug}/EFFECTS-VIZ.html \
-  --quiet
-```
-
-If the generator exits non-zero (e.g., missing `effects-chains.json`, template
-not found), log the error and continue — the brief is the primary artifact, the
-viz is a bonus. Do NOT block Phase 8 completion on viz failure.
-
-The brief header already contains the viz pointer line (see
-`output-format.md`). If the viz failed to generate, the link will 404 — that's
-a cosmetic issue, not a blocker.
-
 ### Step 6: Print Brief to User
 
 After validation passes (or fails through with the warning), print the full
 Decision Brief to the conversation. Then print:
 "Decision logged to journal. Run `/autodecision:review` to compare predictions vs reality later."
 
-### Step 7: Offer Next Actions
+For full and medium mode runs only, also print this experimental tip on a new line:
+"Tip: `/autodecision:visualize {slug}` renders an interactive orbital diagram of the effects cascade (experimental)."
 
-After printing, offer publish + visualize + export:
+Skip the tip for quick mode — quick runs don't produce the `effects-chains.json` the visualizer needs.
 
-> "What next?"
+### Step 7: Offer Publish or Export
+
+After printing, offer to publish or export:
+
+> "Share this brief?"
 > Options:
-> A) Publish — `/autodecision:publish` (PDF → Notion, email, gist, Slack, Drive, or local)
-> B) Open visualization — the interactive orbital diagram (already generated at `EFFECTS-VIZ.html`)
-> C) Copy brief markdown to current directory
-> D) Skip
+> A) Publish — run `/autodecision:publish` (PDF → Notion, email, gist, Slack, Drive, or local)
+> B) Copy to current directory
+> C) Skip
 
 If A: invoke the publish skill with the current slug.
-If B: open the viz in the system browser:
-```bash
-VIZ=~/.autodecision/runs/{slug}/EFFECTS-VIZ.html
-if [ -f "$VIZ" ]; then
-  case "$(uname -s)" in
-    Darwin) open "$VIZ" ;;
-    Linux)  xdg-open "$VIZ" 2>/dev/null || echo "Open manually: $VIZ" ;;
-    *)      start "" "$VIZ" 2>/dev/null || echo "Open manually: $VIZ" ;;
-  esac
-else
-  echo "Visualization not found. Run /autodecision:visualize {slug} to generate."
-fi
-```
-If C:
+If B:
 ```bash
 cp ~/.autodecision/runs/{slug}/DECISION-BRIEF.md ./{slug}-DECISION-BRIEF.md
 ```
 Print: "Exported to ./{slug}-DECISION-BRIEF.md"
-
-**Quick mode note:** in quick mode, omit option B (no viz was generated). The
-menu becomes A/C/D only.
 
 ## Handling Incomplete Data
 

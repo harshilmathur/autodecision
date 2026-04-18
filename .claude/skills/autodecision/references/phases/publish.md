@@ -417,48 +417,20 @@ Then the next user action, specific to the destination:
 - Slack: "Team can read it now."
 - Gist: "Share the gist URL privately — anyone with the link can view."
 
-## Step 6.5: Offer Visualize
+## Step 6.5: Mention the visualizer (experimental)
 
-After printing the status, offer the interactive visualization. This is the only
-follow-on suggestion — the user already chose to publish, so surfacing more
-destinations would be noise. Check whether the viz file exists before offering:
+After the status lines, print one experimental tip on a new line:
 
-```bash
-VIZ=~/.autodecision/runs/{slug}/EFFECTS-VIZ.html
-if [ -f "$VIZ" ]; then
-  HAS_VIZ=1
-else
-  HAS_VIZ=0
-fi
-```
+"Tip: `/autodecision:visualize {slug}` renders an interactive orbital diagram of the effects cascade (experimental)."
 
-If `HAS_VIZ=1` use AskUserQuestion:
+Skip the tip if the user cancelled the publish menu, or if the source run is
+quick mode (no `effects-chains.json` exists, so the visualizer has nothing to
+render). Detect quick mode by reading `config.json > mode` or by checking that
+no `iteration-*/effects-chains.json` exists in the run directory.
 
-> "Also open the interactive visualization?"
->
-> A) Open `EFFECTS-VIZ.html` in the browser
-> B) Skip
-
-If A:
-```bash
-case "$(uname -s)" in
-  Darwin) open "$VIZ" ;;
-  Linux)  xdg-open "$VIZ" 2>/dev/null || echo "Open manually: $VIZ" ;;
-  *)      start "" "$VIZ" 2>/dev/null || echo "Open manually: $VIZ" ;;
-esac
-```
-
-If `HAS_VIZ=0` (older run that predates auto-generation, or a quick-mode run):
-
-> "No visualization generated for this run. Run `/autodecision:visualize {slug}` to generate, then open."
->
-> A) Generate and open now
-> B) Skip
-
-If A: invoke `/autodecision:visualize` with the current slug, then open the output.
-
-**Skip on Cancel:** if the user cancelled the earlier publish menu, do not show this
-offer — they're done.
+This is informational only — no AskUserQuestion, no auto-invoke. The user
+chose to publish; surfacing a follow-on prompt is noise. The tip is a single
+line they can ignore or copy.
 
 ## Edge cases
 

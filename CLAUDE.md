@@ -67,6 +67,7 @@ Download `autodecision-<version>.zip` from the [latest release](https://github.c
 | `/autodecision:plan` | Interactive setup wizard (scope only) | ~2 min |
 | `/autodecision:review` | Review past decisions, compare predictions vs outcomes | ~1 min |
 | `/autodecision:export` | Bundle journal + assumptions into portable archive | ~1 min |
+| `/autodecision:visualize` _(experimental)_ | Render an existing full-mode run's effects map as an interactive orbital HTML page | ~1 min |
 
 ---
 

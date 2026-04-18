@@ -294,6 +294,7 @@ OUTER (runs once):
 | `/autodecision:plan` | Interactive scope wizard | ~2 min |
 | `/autodecision:review` | Past decisions + outcome tracking | ~1 min |
 | `/autodecision:export` | Portable archive of all decisions | ~1 min |
+| `/autodecision:visualize` _(experimental)_ | Render an existing full-mode run as an interactive orbital diagram (HTML, opens in browser) | ~1 min |
 
 **Iteration depth is configurable:**
 
