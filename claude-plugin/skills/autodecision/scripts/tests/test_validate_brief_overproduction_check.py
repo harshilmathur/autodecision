@@ -63,6 +63,50 @@ def _make_council_file(persona: str, per_hyp_first_order_counts: dict) -> dict:
     return {"status": "complete", "persona": persona, "hypotheses": hyps}
 
 
+def _make_council_dict_keyed_first_order_effects(persona: str, per_hyp_first_order_counts: dict) -> dict:
+    """Shape 3 — `hypotheses` as dict keyed by id, with `first_order_effects` field.
+
+    Real-world example: ~/.autodecision/runs/leave-unicorn-for-ai-startup/iteration-1/council/future_self.json
+    """
+    hyps = {}
+    for hyp_id, count in per_hyp_first_order_counts.items():
+        effects = []
+        for j in range(count):
+            effects.append({
+                "effect_id": f"{hyp_id}_e{j}",
+                "description": f"Effect {hyp_id}.{j}",
+                # NOTE: no "order" field — first_order_effects container implies first-order
+                "probability": 0.5,
+                "timeframe": "0-3 months",
+                "assumptions": [],
+                "children": [],
+            })
+        hyps[hyp_id] = {"first_order_effects": effects}
+    return {"persona": persona, "hypotheses": hyps}
+
+
+def _make_council_effects_by_hypothesis(persona: str, per_hyp_first_order_counts: dict) -> dict:
+    """Shape 2 — `effects_by_hypothesis` flat dict, no `hypotheses` field.
+
+    Real-world example: ~/.autodecision/runs/leave-unicorn-for-ai-startup/iteration-1/council/optimist.json
+    """
+    ebh = {}
+    for hyp_id, count in per_hyp_first_order_counts.items():
+        ebh[hyp_id] = [
+            {
+                "effect_id": f"{hyp_id}_e{j}",
+                "description": f"Effect {hyp_id}.{j}",
+                "order": 1,
+                "probability": 0.5,
+                "timeframe": "0-3 months",
+                "assumptions": [],
+                "children": [],
+            }
+            for j in range(count)
+        ]
+    return {"status": "complete", "persona": persona, "effects_by_hypothesis": ebh}
+
+
 def _setup_run(tmp: Path, council_files: dict, iter_n: int = 1) -> Path:
     """Create iteration-{N}/council/{persona}.json files in tmp."""
     iter_dir = tmp / f"iteration-{iter_n}"
@@ -190,6 +234,85 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
         # Should reference iter-1 in the violations
         sample_iters = {v["iteration"] for v in c["sample_violations"]}
         self.assertIn("iteration-1", sample_iters)
+
+    # ----- Schema-shape regression tests (leave-unicorn-for-ai-startup run crash) -----
+
+    def test_dict_keyed_first_order_effects_schema_no_crash(self):
+        """Real-world shape 3: hypotheses as dict-keyed, with first_order_effects
+        container (no `order` field on individual effects).
+
+        Reproduces the AttributeError from leave-unicorn-for-ai-startup run where
+        the validator did `for h in data.get("hypotheses", []):` against a dict,
+        iterated keys (strings), then tried h.get("effects") on the string."""
+        council = {
+            p: _make_council_dict_keyed_first_order_effects(p, {"h1_stay": 3, "h2_leave": 7})
+            for p in ("optimist", "future_self")
+        }
+        # Should not crash; should HARD_FAIL on h2_leave (count=7 > cap 6)
+        c = self._run(council)
+        self.assertEqual(c["status"], "FAIL")
+        self.assertEqual(c["severity"], "HARD_FAIL")
+        self.assertEqual(c["fail_count"], 2)  # 2 personas, both over cap on h2_leave
+        sample_hyps = {v["hypothesis"] for v in c["sample_violations"]}
+        self.assertIn("h2_leave", sample_hyps)
+
+    def test_effects_by_hypothesis_flat_alt_schema(self):
+        """Real-world shape 2: effects_by_hypothesis dict, no `hypotheses` field."""
+        council = {
+            p: _make_council_effects_by_hypothesis(p, {"h1": 3, "h2": 8})
+            for p in ("market", "optimist")
+        }
+        c = self._run(council)
+        self.assertEqual(c["status"], "FAIL")
+        self.assertEqual(c["severity"], "HARD_FAIL")
+        self.assertEqual(c["fail_count"], 2)
+
+    def test_mixed_schema_shapes_in_same_council(self):
+        """One run, one iteration, mix of all 3 shapes — must not crash, must count all."""
+        council = {
+            "canonical_persona": _make_council_file("canonical_persona", {"h1": 3, "h2": 3}),
+            "dict_keyed_persona": _make_council_dict_keyed_first_order_effects(
+                "dict_keyed_persona", {"h1": 3, "h2": 3}),
+            "alt_persona": _make_council_effects_by_hypothesis(
+                "alt_persona", {"h1": 7, "h2": 3}),  # over the cap
+        }
+        c = self._run(council)
+        self.assertEqual(c["status"], "FAIL")
+        self.assertEqual(c["severity"], "HARD_FAIL")
+        # Only the alt_persona on h1 violates
+        self.assertEqual(c["fail_count"], 1)
+        v = c["sample_violations"][0]
+        self.assertEqual(v["persona"], "alt_persona")
+        self.assertEqual(v["hypothesis"], "h1")
+
+    def test_universal_helper_returns_correct_first_order_counts(self):
+        """Direct unit test on the helper — all 3 shapes return matching counts."""
+        # Same logical content (h1: 3 effects, h2: 5 effects) in 3 different schemas
+        canonical = _make_council_file("p", {"h1": 3, "h2": 5})
+        dict_keyed = _make_council_dict_keyed_first_order_effects("p", {"h1": 3, "h2": 5})
+        alt = _make_council_effects_by_hypothesis("p", {"h1": 3, "h2": 5})
+
+        for label, data in (("canonical", canonical), ("dict_keyed", dict_keyed), ("alt", alt)):
+            extracted = vb._extract_first_order_per_hyp(data)
+            self.assertEqual(len(extracted["h1"]), 3, f"{label}: h1 count mismatch")
+            self.assertEqual(len(extracted["h2"]), 5, f"{label}: h2 count mismatch")
+
+    def test_helper_skips_malformed_silently(self):
+        """Garbage input must not crash — return empty dict."""
+        # Various malformed payloads
+        cases = [
+            {},  # empty
+            {"hypotheses": "this is a string not a list or dict"},  # wrong type
+            {"hypotheses": [None, None]},  # list of nones
+            {"hypotheses": ["just_id_strings"]},  # list of strings
+            {"effects_by_hypothesis": "not a dict"},  # wrong type
+            {"hypotheses": {"h1": "not a dict or list"}},  # dict-keyed but bad inner
+        ]
+        for i, data in enumerate(cases):
+            extracted = vb._extract_first_order_per_hyp(data)
+            # Either empty {} or {hyp_id: []} — never crash
+            for hid, effs in extracted.items():
+                self.assertIsInstance(effs, list, f"case {i}: effects must be list")
 
 
 if __name__ == "__main__":

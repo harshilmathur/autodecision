@@ -1013,6 +1013,78 @@ def check_synthesis_dedup_quality(schema: dict, run_dir: Path, mode: str, report
         )
 
 
+def _extract_first_order_per_hyp(persona_data: dict) -> dict[str, list[dict]]:
+    """Return {hypothesis_id: [first_order_effect_dict, ...]} for a council file.
+
+    Robust to all observed schema shapes in the wild (catalogued from real runs):
+
+    1. CANONICAL — `hypotheses` as a list of objects:
+       {"hypotheses": [{"hypothesis_id": "h1", "effects": [...]}]}
+
+    2. FLAT-ALT — `effects_by_hypothesis` dict, no `hypotheses` field:
+       {"effects_by_hypothesis": {"h1": [...effects...]}}
+       (or wrapped: {"effects_by_hypothesis": {"h1": {"effects": [...]}}})
+
+    3. DICT-KEYED — `hypotheses` as a dict keyed by hypothesis_id:
+       {"hypotheses": {"h1": {"first_order_effects": [...]}}}
+       (also seen with "effects" inner field)
+
+    Filters to first-order only (effect.order == 1, OR no order field when source
+    is a "first_order_effects" container which is implicitly first-order).
+    Skips non-dict entries silently — never crashes on malformed input.
+    """
+    out: dict[str, list[dict]] = {}
+
+    def _filter_fo(effs, container_implies_fo: bool = False) -> list[dict]:
+        if not isinstance(effs, list):
+            return []
+        result = []
+        for e in effs:
+            if not isinstance(e, dict):
+                continue
+            order = e.get("order")
+            if order is None and container_implies_fo:
+                result.append(e)
+            elif order == 1:
+                result.append(e)
+        return result
+
+    def _unwrap_effects(v) -> tuple[list[dict], bool]:
+        """Pull the effects list + flag whether the container implies first-order."""
+        if isinstance(v, list):
+            return v, False  # bare list, rely on order field
+        if isinstance(v, dict):
+            if "first_order_effects" in v:
+                return v["first_order_effects"] or [], True
+            if "effects" in v:
+                return v["effects"] or [], False
+        return [], False
+
+    hyp_field = persona_data.get("hypotheses")
+    ebh = persona_data.get("effects_by_hypothesis")
+
+    if isinstance(hyp_field, list):
+        # Shape 1: canonical
+        for h in hyp_field:
+            if not isinstance(h, dict):
+                continue
+            hid = h.get("hypothesis_id", "?")
+            effs, implies_fo = _unwrap_effects(h.get("effects") or h.get("first_order_effects") or [])
+            out[hid] = _filter_fo(effs, container_implies_fo=("first_order_effects" in h))
+    elif isinstance(hyp_field, dict):
+        # Shape 3: dict-keyed
+        for hid, v in hyp_field.items():
+            effs, implies_fo = _unwrap_effects(v)
+            out[hid] = _filter_fo(effs, container_implies_fo=implies_fo)
+    elif isinstance(ebh, dict):
+        # Shape 2: flat alt
+        for hid, v in ebh.items():
+            effs, implies_fo = _unwrap_effects(v)
+            out[hid] = _filter_fo(effs, container_implies_fo=implies_fo)
+
+    return out
+
+
 def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
     """
     Enforce content_checks.per_persona_overproduction: every persona must produce
@@ -1057,15 +1129,15 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
                 council_files_unreadable.append(f"{council_file.relative_to(run_dir)}: {e}")
                 continue
             persona = data.get("persona") or council_file.stem
-            for h in data.get("hypotheses", []):
-                # Count first-order effects only (effects[] at the top level of each hypothesis).
-                # Per persona-preamble.md, the budget is per-hypothesis first-order count.
-                count = len(h.get("effects", []) or [])
+            # Use the universal helper (handles all 3 schema shapes — see _extract_first_order_per_hyp)
+            per_hyp = _extract_first_order_per_hyp(data)
+            for hyp_id, fo_effects in per_hyp.items():
+                count = len(fo_effects)
                 if count > fail_threshold:
                     violations.append({
                         "iteration": d.name,
                         "persona": persona,
-                        "hypothesis": h.get("hypothesis_id", "?"),
+                        "hypothesis": hyp_id,
                         "first_order_count": count,
                         "severity": "FAIL",
                     })
@@ -1073,7 +1145,7 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
                     violations.append({
                         "iteration": d.name,
                         "persona": persona,
-                        "hypothesis": h.get("hypothesis_id", "?"),
+                        "hypothesis": hyp_id,
                         "first_order_count": count,
                         "severity": "WARN",
                     })
@@ -1152,33 +1224,17 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
         )
 
 
-def _extract_council_effect_ids_per_hyp(persona_data: dict) -> dict:
+def _extract_council_effect_ids_per_hyp(persona_data: dict) -> dict[str, set]:
     """Return {hypothesis_id: set(effect_id, ...)} of first-order IDs in a council file.
 
-    Handles two schema shapes:
-    - canonical: persona_data['hypotheses'] = [{hypothesis_id, effects: [...]}]
-    - alt:       persona_data['effects_by_hypothesis'] = {hypothesis_id: [...effects...]}
-                 (or sometimes wrapped as {hypothesis_id: {effects: [...]}})
+    Thin wrapper around _extract_first_order_per_hyp — handles all 3 schema shapes
+    catalogued there. Returns sets of effect_ids (strings only, skips malformed).
     """
-    out: dict[str, set] = {}
-    if isinstance(persona_data.get("hypotheses"), list):
-        for h in persona_data["hypotheses"]:
-            hid = h.get("hypothesis_id", "?")
-            ids = {
-                e["effect_id"] for e in (h.get("effects") or [])
-                if e.get("order", 1) == 1 and isinstance(e.get("effect_id"), str)
-            }
-            out[hid] = ids
-    elif isinstance(persona_data.get("effects_by_hypothesis"), dict):
-        for hid, effs in persona_data["effects_by_hypothesis"].items():
-            if isinstance(effs, dict):
-                effs = effs.get("effects") or []
-            ids = {
-                e["effect_id"] for e in (effs or [])
-                if e.get("order", 1) == 1 and isinstance(e.get("effect_id"), str)
-            }
-            out[hid] = ids
-    return out
+    per_hyp = _extract_first_order_per_hyp(persona_data)
+    return {
+        hid: {e["effect_id"] for e in effs if isinstance(e.get("effect_id"), str)}
+        for hid, effs in per_hyp.items()
+    }
 
 
 def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
