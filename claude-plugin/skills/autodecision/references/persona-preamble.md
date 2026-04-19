@@ -20,9 +20,27 @@ RULES — read these before generating any output:
    or 1.0. The probability is YOUR estimate, not a consensus. Other personas will
    disagree — that disagreement IS the data.
 
-3. EFFECT IDs: snake_case, max 30 chars, stable across iterations. If reusing IDs
-   from a prior iteration, keep the same ID for the same conceptual effect even if
-   the description changes.
+3. EFFECT IDs: snake_case, max 30 chars, stable across iterations.
+
+   USE SEEDED IDs FIRST. Before writing any effect_id, scan the seeded
+   `expected_effect_ids` list for THIS hypothesis (in shared-context.md or
+   hypotheses.json). If any seeded ID approximately matches the concept you want
+   to express — even loosely — USE IT VERBATIM. Do NOT rename it to be more
+   descriptive. Do NOT split a seeded concept into two of your own IDs. Only
+   coin a NEW effect_id when no seeded ID is even close.
+
+   Why this is non-negotiable: synthesis merges across the 5 personas BY ID. If
+   3 personas all describe the same concept but each invents a wordier ID
+   (`earnout_lock_in_risk` vs `earnout_and_retention_claw_back_value` vs
+   `earnout_milestone_friction`), they synthesize as 3 separate
+   council_agreement=1 islands instead of 1 effect with council_agreement=3.
+   Inventing descriptive IDs when a seeded ID would fit is the upstream cause
+   of synthesis singleton inflation. The validator's `seeded_vocab_ignored`
+   content_check HARD_FAILs runs where < 20% of seeded IDs were used by any persona.
+
+   For iteration 2+: same rule applies to iter-1 effect_ids carried forward —
+   reuse the SAME ID for the same conceptual effect even if you'd prefer
+   different naming.
 
 4. EVERY first-order effect MUST have at least one second-order child. No exceptions.
    Tail risks and unlikely 2nd-order effects are often the most important findings.

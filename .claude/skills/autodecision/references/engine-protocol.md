@@ -226,7 +226,35 @@ Contents of `shared-context.md`:
 - User-provided domain knowledge (from user-inputs.md, if any)
 - Document context (from context-extracted.md, if --context was provided — see below)
 - Key data points from ground-data.md (include ALL key findings, not a lossy summary)
-- Hypotheses with expected effect IDs (from hypotheses.json)
+- Hypotheses with expected effect IDs (from hypotheses.json) — format these as a
+  PROMINENT block, NOT a flat list. Per `persona-preamble.md` rule 3, personas
+  must use seeded IDs verbatim where the concept matches. To make this real
+  (not just spec-language), the shared-context.md block MUST look like:
+
+  ```
+  ## SEEDED EFFECT VOCABULARY — USE THESE IDs FIRST
+
+  When writing effects for a hypothesis, scan its seeded list. If any seeded ID
+  approximately matches your concept, USE IT VERBATIM. Coin a new effect_id
+  ONLY when no seeded ID is close. Inventing wordier descriptive IDs when a
+  seeded ID would fit is a HARD_FAIL on the seeded_vocab_ignored validator
+  check (< 20% adoption fails the run).
+
+  ### h1_short_label
+  Seeded effect_ids (use these first):
+  - `seeded_id_1` — one-line description of the concept
+  - `seeded_id_2` — ...
+  - `seeded_id_3` — ...
+  - `seeded_id_4` — ...
+
+  ### h2_short_label
+  Seeded effect_ids (use these first):
+  - ...
+  ```
+
+  The per-hypothesis layout + "USE THESE IDs FIRST" framing + concept hints
+  beat the historical flat-list rendering, which personas routinely ignored
+  (sell-15m-vs-safe-30m run had 0/16 seeded IDs adopted).
 - Persona preamble rules (from persona-preamble.md)
 - **FOR ITERATION 2+ ONLY** — append these two blocks before spawning:
   - **Previous iteration effect_ids:** the full list of `effect_id` values from

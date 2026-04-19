@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.3",
-  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1 additions: positions 15 (Appendix C: Complete Effects Map) and 16 (Sources), content_checks block (unsourced numbers + depends-on mirror), trailing-block ref format, legacy inline ref fallback. v1.2: Appendix B and C swapped — Complete Effects Map is now Appendix B (required in full/medium), Quick Mode vs Full Loop Comparison is now Appendix C (optional, only emitted when a quick run exists for the same slug). v1.3: added per_persona_overproduction content_check — post-hoc backstop for the per-persona output budget (3 first-order per hypothesis, hard cap 4) defined in persona-preamble.md rule 6 and enforced at runtime by the Phase 2.5 Pre-Synthesis Discipline Gate in simulate.md. Catches runs that bypassed the runtime gate.",
+  "schema_version": "1.4",
+  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1 additions: positions 15 (Appendix C: Complete Effects Map) and 16 (Sources), content_checks block (unsourced numbers + depends-on mirror), trailing-block ref format, legacy inline ref fallback. v1.2: Appendix B and C swapped — Complete Effects Map is now Appendix B (required in full/medium), Quick Mode vs Full Loop Comparison is now Appendix C (optional, only emitted when a quick run exists for the same slug). v1.3: added per_persona_overproduction content_check — post-hoc backstop for the per-persona output budget (3 first-order per hypothesis, hard cap 4) defined in persona-preamble.md rule 6. v1.4: added seeded_vocab_ignored content_check — backstop for the seeded effect_id vocabulary mechanism defined in persona-preamble.md rule 3 and hypothesize.md (Shared Effect ID Vocabulary). Sell-15m-vs-safe-30m run had 0/16 seeded IDs adopted across both iterations, dragging avg council_agreement to 1.80 because personas invented wordier descriptive IDs instead of reusing seeded ones. WARN < 50%, HARD_FAIL < 20% adoption.",
 
   "sections": [
     {
@@ -256,7 +256,8 @@
     "unsourced_numeric_claim":     "WARN",
     "depends_on_missing_assumption":"HARD_FAIL",
     "synthesis_dedup_skipped":     "HARD_FAIL",
-    "per_persona_overproduction":  "HARD_FAIL"
+    "per_persona_overproduction":  "HARD_FAIL",
+    "seeded_vocab_ignored":        "HARD_FAIL"
   },
 
   "content_checks": {
@@ -290,6 +291,15 @@
       "fail_threshold": 6,
       "skip_in_modes": ["quick", "challenge"],
       "remediation": "Re-spawn the offending personas with the explicit re-prompt from simulate.md Step 2.5 Pre-Synthesis Discipline Gate. Trim each over-producing (persona, hypothesis) cell to <=4 first-order effects, then regenerate effects-chains.json (synthesis pass) and re-run the validator. For repeated failures, check that hypotheses.json's expected_effect_ids per hypothesis is <=4 (per phases/hypothesize.md) and that shared-context.md does not include aggregate-total parentheticals (per engine-protocol.md 'Shared-context anti-patterns')."
+    },
+    "seeded_vocab_ignored": {
+      "description": "The seeded `expected_effect_ids` per hypothesis (defined in hypotheses.json, populated by phases/hypothesize.md 'Shared Effect ID Vocabulary') are MEANT to make ~80% of synthesis mechanical: 5 personas seeing the same 4 seeded IDs SHOULD converge on those IDs and synthesis just merges by exact effect_id. When personas instead invent wordier descriptive IDs for the same concepts (e.g. seeded `earnout_lock_in_risk` becomes `earnout_and_retention_claw_back_value` in 4 personas with NO match to the seeded form), each invented ID becomes a council_agreement=1 island and synthesis dedup must work much harder. Even when 4-5 personas converge on the SAME invented ID, they get high mechanical agreement on that island but ZERO credit toward the seeded vocabulary mechanism. This check reads hypotheses.json's expected_effect_ids per hypothesis and inspects iteration-*/council/*.json for actual usage of those seeded IDs (handles both `hypotheses[]` and `effects_by_hypothesis{}` schema shapes). Computes adoption rate = seeded IDs that appeared in at least one persona's output / total seeded IDs across all hypotheses. WARN below warn_threshold (50%); HARD_FAIL below fail_threshold (20%). Sell-15m-vs-safe-30m run had 0/16 = 0% adoption → silent regression caught only by manual inspection.",
+      "source_file_glob": "iteration-*/council/*.json",
+      "metric": "seeded_id_adoption_rate_pct",
+      "warn_threshold": 50,
+      "fail_threshold": 20,
+      "skip_in_modes": ["quick", "challenge"],
+      "remediation": "Verify shared-context.md presents the seeded vocabulary as a PROMINENT per-hypothesis block with 'USE THESE IDs FIRST' framing per engine-protocol.md 'Shared Context File' section. Verify persona-preamble.md rule 3 is included verbatim (or at least the 'USE SEEDED IDs FIRST' clause). If both are correct and personas still ignore the seeded vocab, escalate to architectural fix: split persona JSON output schema into seeded_effects[] (must use IDs from seeded list) and novel_effects[] (max 1 per hypothesis)."
     }
   }
 }

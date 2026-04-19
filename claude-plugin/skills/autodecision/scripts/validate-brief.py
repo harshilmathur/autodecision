@@ -1152,6 +1152,194 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
         )
 
 
+def _extract_council_effect_ids_per_hyp(persona_data: dict) -> dict:
+    """Return {hypothesis_id: set(effect_id, ...)} of first-order IDs in a council file.
+
+    Handles two schema shapes:
+    - canonical: persona_data['hypotheses'] = [{hypothesis_id, effects: [...]}]
+    - alt:       persona_data['effects_by_hypothesis'] = {hypothesis_id: [...effects...]}
+                 (or sometimes wrapped as {hypothesis_id: {effects: [...]}})
+    """
+    out: dict[str, set] = {}
+    if isinstance(persona_data.get("hypotheses"), list):
+        for h in persona_data["hypotheses"]:
+            hid = h.get("hypothesis_id", "?")
+            ids = {
+                e["effect_id"] for e in (h.get("effects") or [])
+                if e.get("order", 1) == 1 and isinstance(e.get("effect_id"), str)
+            }
+            out[hid] = ids
+    elif isinstance(persona_data.get("effects_by_hypothesis"), dict):
+        for hid, effs in persona_data["effects_by_hypothesis"].items():
+            if isinstance(effs, dict):
+                effs = effs.get("effects") or []
+            ids = {
+                e["effect_id"] for e in (effs or [])
+                if e.get("order", 1) == 1 and isinstance(e.get("effect_id"), str)
+            }
+            out[hid] = ids
+    return out
+
+
+def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
+    """
+    Enforce content_checks.seeded_vocab_ignored: personas must actually USE the
+    seeded `expected_effect_ids` from hypotheses.json instead of inventing
+    descriptive variants.
+
+    Reads each iteration's hypotheses.json (for seeded IDs) and council/*.json
+    (for actual IDs personas used). Computes adoption rate per iteration:
+    seeded IDs that appeared in at least one persona's output / total seeded.
+
+    WARN below warn_threshold (50%), HARD_FAIL below fail_threshold (20%).
+    """
+    cfg = schema.get("content_checks", {}).get("seeded_vocab_ignored")
+    if not cfg:
+        return
+    if mode in cfg.get("skip_in_modes", []):
+        return
+
+    iter_dirs = sorted(
+        [d for d in run_dir.iterdir() if d.is_dir() and re.match(r"iteration-\d+$", d.name)],
+        key=lambda d: int(d.name.split("-")[1]),
+    )
+    if not iter_dirs:
+        return
+
+    # Use latest iteration that has BOTH hypotheses.json and council/*.json
+    latest = None
+    for d in reversed(iter_dirs):
+        if (d / "hypotheses.json").is_file() and (d / "council").is_dir():
+            latest = d
+            break
+    if not latest:
+        return  # nothing to check (other gates handle missing data)
+
+    try:
+        hyp = json.loads((latest / "hypotheses.json").read_text())
+    except (json.JSONDecodeError, OSError) as e:
+        report.add(
+            "seeded_vocab_ignored",
+            "FAIL", "WARN",
+            f"Could not read {(latest / 'hypotheses.json').relative_to(run_dir)}: {e}",
+        )
+        return
+
+    seeded_by_hyp: dict[str, set] = {
+        h["hypothesis_id"]: set(h.get("expected_effect_ids", []) or [])
+        for h in hyp.get("hypotheses", [])
+        if h.get("hypothesis_id")
+    }
+    total_seeded = sum(len(s) for s in seeded_by_hyp.values())
+    if total_seeded == 0:
+        report.add(
+            "seeded_vocab_ignored",
+            "PASS", "WARN",
+            "No seeded effect_ids in hypotheses.json — Shared Effect ID Vocabulary mechanism (phases/hypothesize.md) is not being used. Personas have no shared vocabulary to converge on.",
+        )
+        return
+
+    # Aggregate persona usage across all council files in this iteration
+    used_ids_by_hyp: dict[str, set] = {hid: set() for hid in seeded_by_hyp}
+    council_files_seen = 0
+    council_files_unreadable: list[str] = []
+    for council_file in sorted((latest / "council").glob("*.json")):
+        council_files_seen += 1
+        try:
+            data = json.loads(council_file.read_text())
+        except (json.JSONDecodeError, OSError) as e:
+            council_files_unreadable.append(f"{council_file.relative_to(run_dir)}: {e}")
+            continue
+        per_hyp_ids = _extract_council_effect_ids_per_hyp(data)
+        for hid, ids in per_hyp_ids.items():
+            if hid in used_ids_by_hyp:
+                used_ids_by_hyp[hid].update(ids)
+
+    if council_files_seen == 0:
+        return
+
+    # Adoption: for each seeded ID, was it used by at least one persona?
+    seeded_used = 0
+    per_hyp_breakdown: list[dict] = []
+    for hid, seeded in seeded_by_hyp.items():
+        used = used_ids_by_hyp.get(hid, set())
+        adopted = sum(1 for s in seeded if s in used)
+        seeded_used += adopted
+        per_hyp_breakdown.append({
+            "hypothesis": hid,
+            "seeded_count": len(seeded),
+            "adopted_count": adopted,
+            "adoption_pct": round(100 * adopted / len(seeded), 1) if seeded else 0,
+        })
+
+    adoption_pct = round(100 * seeded_used / total_seeded, 1)
+    warn_threshold = cfg.get("warn_threshold", 50)
+    fail_threshold = cfg.get("fail_threshold", 20)
+
+    if council_files_unreadable:
+        report.add(
+            "seeded_vocab_ignored",
+            "FAIL", "WARN",
+            f"Could not read {len(council_files_unreadable)} council file(s): {council_files_unreadable[:3]}",
+        )
+
+    if adoption_pct < fail_threshold:
+        report.add(
+            "seeded_vocab_ignored",
+            "FAIL",
+            schema.get("severity_on_fail", {}).get("seeded_vocab_ignored", "HARD_FAIL"),
+            (
+                f"Only {seeded_used}/{total_seeded} ({adoption_pct}%) of seeded effect_ids "
+                f"were used by any persona in {latest.name}/council/. Below the hard floor "
+                f"of {fail_threshold}%. Personas invented descriptive variants instead of "
+                f"using the seeded vocabulary, so synthesis dedup must work much harder. "
+                f"{cfg.get('remediation', 'Verify shared-context.md presents seeded vocab prominently.')}"
+            ),
+            adoption_pct=adoption_pct,
+            seeded_used=seeded_used,
+            total_seeded=total_seeded,
+            warn_threshold=warn_threshold,
+            fail_threshold=fail_threshold,
+            council_files_inspected=council_files_seen,
+            per_hypothesis_breakdown=per_hyp_breakdown,
+            iteration=latest.name,
+        )
+    elif adoption_pct < warn_threshold:
+        report.add(
+            "seeded_vocab_ignored",
+            "PASS", "WARN",
+            (
+                f"Only {seeded_used}/{total_seeded} ({adoption_pct}%) of seeded effect_ids "
+                f"were used by any persona in {latest.name}/council/. Above the hard floor "
+                f"({fail_threshold}%) but below the healthy threshold ({warn_threshold}%). "
+                f"Synthesis dedup is doing more work than it should. Consider tightening "
+                f"shared-context.md's seeded-vocab block per engine-protocol.md."
+            ),
+            adoption_pct=adoption_pct,
+            seeded_used=seeded_used,
+            total_seeded=total_seeded,
+            warn_threshold=warn_threshold,
+            council_files_inspected=council_files_seen,
+            per_hypothesis_breakdown=per_hyp_breakdown,
+            iteration=latest.name,
+        )
+    else:
+        report.add(
+            "seeded_vocab_ignored",
+            "PASS", "INFO",
+            (
+                f"{seeded_used}/{total_seeded} ({adoption_pct}%) of seeded effect_ids "
+                f"adopted by at least one persona in {latest.name}/council/. "
+                f"Seeded vocabulary mechanism is working."
+            ),
+            adoption_pct=adoption_pct,
+            seeded_used=seeded_used,
+            total_seeded=total_seeded,
+            council_files_inspected=council_files_seen,
+            iteration=latest.name,
+        )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--run-dir", required=True, type=Path,
@@ -1192,6 +1380,8 @@ def main() -> int:
     check_synthesis_dedup_quality(schema, run_dir, args.mode, report)
     # Per-persona overproduction backstop (new in schema v1.3)
     check_per_persona_overproduction(schema, run_dir, args.mode, report)
+    # Seeded vocabulary adoption backstop (new in schema v1.4)
+    check_seeded_vocab_adoption(schema, run_dir, args.mode, report)
 
     out = run_dir / "validation-report.json"
     out.write_text(json.dumps(report.as_dict(), indent=2))
