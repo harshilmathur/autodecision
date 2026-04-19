@@ -1013,6 +1013,145 @@ def check_synthesis_dedup_quality(schema: dict, run_dir: Path, mode: str, report
         )
 
 
+def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
+    """
+    Enforce content_checks.per_persona_overproduction: every persona must produce
+    <= warn_threshold (default 4) first-order effects per hypothesis. > fail_threshold
+    (default 6) is HARD_FAIL.
+
+    This is the post-hoc backstop. The runtime enforcement is the Phase 2.5
+    Pre-Synthesis Discipline Gate in simulate.md, which re-spawns over-producing
+    personas before synthesis. This check catches runs where the gate was bypassed
+    or its 1-retry limit was exhausted.
+    """
+    cfg = schema.get("content_checks", {}).get("per_persona_overproduction")
+    if not cfg:
+        return
+    if mode in cfg.get("skip_in_modes", []):
+        return
+
+    iter_dirs = sorted(
+        [d for d in run_dir.iterdir() if d.is_dir() and re.match(r"iteration-\d+$", d.name)],
+        key=lambda d: int(d.name.split("-")[1]),
+    )
+    if not iter_dirs:
+        return  # no iterations — nothing to check (intermediate-files gate handles missing data)
+
+    warn_threshold = cfg.get("warn_threshold", 4)
+    fail_threshold = cfg.get("fail_threshold", 6)
+
+    # Inspect council/*.json across ALL iterations (not just latest) — iter-1 bloat
+    # surfaces just as much as iter-N bloat for upstream diagnosis.
+    violations: list[dict] = []  # rows: {iter, persona, hypothesis, count, severity}
+    council_files_seen = 0
+    council_files_unreadable: list[str] = []
+    for d in iter_dirs:
+        council_dir = d / "council"
+        if not council_dir.is_dir():
+            continue
+        for council_file in sorted(council_dir.glob("*.json")):
+            council_files_seen += 1
+            try:
+                data = json.loads(council_file.read_text())
+            except (json.JSONDecodeError, OSError) as e:
+                council_files_unreadable.append(f"{council_file.relative_to(run_dir)}: {e}")
+                continue
+            persona = data.get("persona") or council_file.stem
+            for h in data.get("hypotheses", []):
+                # Count first-order effects only (effects[] at the top level of each hypothesis).
+                # Per persona-preamble.md, the budget is per-hypothesis first-order count.
+                count = len(h.get("effects", []) or [])
+                if count > fail_threshold:
+                    violations.append({
+                        "iteration": d.name,
+                        "persona": persona,
+                        "hypothesis": h.get("hypothesis_id", "?"),
+                        "first_order_count": count,
+                        "severity": "FAIL",
+                    })
+                elif count > warn_threshold:
+                    violations.append({
+                        "iteration": d.name,
+                        "persona": persona,
+                        "hypothesis": h.get("hypothesis_id", "?"),
+                        "first_order_count": count,
+                        "severity": "WARN",
+                    })
+
+    if council_files_seen == 0:
+        # No council files to inspect — could be a quick-mode legacy or a partial run.
+        # Don't fail; the intermediate-files gate handles missing data.
+        return
+
+    if council_files_unreadable:
+        report.add(
+            "per_persona_overproduction",
+            "FAIL", "WARN",
+            f"Could not read {len(council_files_unreadable)} council file(s): {council_files_unreadable[:3]}",
+        )
+
+    fail_violations = [v for v in violations if v["severity"] == "FAIL"]
+    warn_violations = [v for v in violations if v["severity"] == "WARN"]
+
+    if fail_violations:
+        # Build a compact summary
+        sample = fail_violations[:5]
+        sample_str = "; ".join(
+            f"{v['iteration']}/{v['persona']}/{v['hypothesis']}={v['first_order_count']}"
+            for v in sample
+        )
+        more = f" (+{len(fail_violations) - 5} more)" if len(fail_violations) > 5 else ""
+        report.add(
+            "per_persona_overproduction",
+            "FAIL",
+            schema.get("severity_on_fail", {}).get("per_persona_overproduction", "HARD_FAIL"),
+            (
+                f"{len(fail_violations)} (persona, hypothesis) cell(s) exceed the hard cap of "
+                f"{fail_threshold} first-order effects. Examples: {sample_str}{more}. "
+                f"{cfg.get('remediation', 'Re-spawn over-producing personas with the trim re-prompt from simulate.md Step 2.5.')}"
+            ),
+            fail_threshold=fail_threshold,
+            warn_threshold=warn_threshold,
+            council_files_inspected=council_files_seen,
+            fail_count=len(fail_violations),
+            warn_count=len(warn_violations),
+            sample_violations=sample,
+        )
+    elif warn_violations:
+        sample = warn_violations[:5]
+        sample_str = "; ".join(
+            f"{v['iteration']}/{v['persona']}/{v['hypothesis']}={v['first_order_count']}"
+            for v in sample
+        )
+        more = f" (+{len(warn_violations) - 5} more)" if len(warn_violations) > 5 else ""
+        report.add(
+            "per_persona_overproduction",
+            "PASS", "WARN",
+            (
+                f"{len(warn_violations)} (persona, hypothesis) cell(s) exceed the soft cap of "
+                f"{warn_threshold} first-order effects (still below hard cap {fail_threshold}). "
+                f"Examples: {sample_str}{more}. The runtime Pre-Synthesis Discipline Gate "
+                "should have caught these — verify the gate ran in simulate.md Step 2.5."
+            ),
+            fail_threshold=fail_threshold,
+            warn_threshold=warn_threshold,
+            council_files_inspected=council_files_seen,
+            warn_count=len(warn_violations),
+            sample_violations=sample,
+        )
+    else:
+        report.add(
+            "per_persona_overproduction",
+            "PASS", "INFO",
+            (
+                f"All {council_files_seen} council file(s) are within the per-hypothesis "
+                f"first-order budget (<= {warn_threshold} per persona per hypothesis)."
+            ),
+            council_files_inspected=council_files_seen,
+            warn_threshold=warn_threshold,
+        )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--run-dir", required=True, type=Path,
@@ -1051,6 +1190,8 @@ def main() -> int:
         check_depends_on_mirrors_assumptions(md, schema, positions, report)
     # Synthesis dedup quality (skipped in quick mode where there is no council)
     check_synthesis_dedup_quality(schema, run_dir, args.mode, report)
+    # Per-persona overproduction backstop (new in schema v1.3)
+    check_per_persona_overproduction(schema, run_dir, args.mode, report)
 
     out = run_dir / "validation-report.json"
     out.write_text(json.dumps(report.as_dict(), indent=2))

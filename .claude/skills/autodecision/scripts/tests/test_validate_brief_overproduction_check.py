@@ -1,0 +1,196 @@
+"""Lock-in tests for the `per_persona_overproduction` content check in validate-brief.py.
+
+Catches the failure mode where personas write 5-8 first-order effects per hypothesis
+instead of the 3 (hard cap 4) target from persona-preamble.md rule 6. This is the
+upstream cause of the synthesis_dedup_skipped failure: too many singleton-island
+effects pull avg council_agreement below 1.5.
+
+The runtime enforcement is the Phase 2.5 Pre-Synthesis Discipline Gate in
+simulate.md. This validator is the post-hoc backstop.
+
+Run with:  python3 -m pytest claude-plugin/skills/autodecision/scripts/tests/
+"""
+from __future__ import annotations
+import importlib.util
+import json
+import sys
+import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+
+_HERE = Path(__file__).resolve().parent
+_SCRIPT = _HERE.parent / "validate-brief.py"
+_SCHEMA = _HERE.parent.parent / "references" / "brief-schema.json"
+_spec = importlib.util.spec_from_file_location("vb", _SCRIPT)
+vb = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(vb)
+
+
+def _make_council_file(persona: str, per_hyp_first_order_counts: dict) -> dict:
+    """Build a minimal persona council JSON.
+
+    per_hyp_first_order_counts: {hypothesis_id: int} — number of 1st-order effects
+    to fabricate for that hypothesis.
+    """
+    hyps = []
+    for hyp_id, count in per_hyp_first_order_counts.items():
+        effects = []
+        for j in range(count):
+            effects.append({
+                "effect_id": f"{hyp_id}_e{j}",
+                "description": f"Effect {hyp_id}.{j}",
+                "order": 1,
+                "probability": 0.5,
+                "timeframe": "0-3 months",
+                "assumptions": [],
+                "children": [{
+                    "effect_id": f"{hyp_id}_e{j}_c0",
+                    "description": "child",
+                    "order": 2,
+                    "probability": 0.4,
+                    "timeframe": "3-6 months",
+                    "assumptions": [],
+                    "parent_effect_id": f"{hyp_id}_e{j}",
+                    "children": [],
+                }],
+            })
+        hyps.append({
+            "hypothesis_id": hyp_id,
+            "statement": "...",
+            "effects": effects,
+        })
+    return {"status": "complete", "persona": persona, "hypotheses": hyps}
+
+
+def _setup_run(tmp: Path, council_files: dict, iter_n: int = 1) -> Path:
+    """Create iteration-{N}/council/{persona}.json files in tmp."""
+    iter_dir = tmp / f"iteration-{iter_n}"
+    council_dir = iter_dir / "council"
+    council_dir.mkdir(parents=True)
+    for persona, data in council_files.items():
+        (council_dir / f"{persona}.json").write_text(json.dumps(data))
+    return tmp
+
+
+class PerPersonaOverproductionCheckTests(unittest.TestCase):
+    def setUp(self):
+        self.schema = json.loads(_SCHEMA.read_text())
+        self.assertIn("per_persona_overproduction", self.schema["content_checks"],
+                      "schema must define per_persona_overproduction")
+
+    def _run(self, council_files: dict, mode: str = "full", iter_n: int = 1,
+             extra_iter_files: dict | None = None) -> dict:
+        d = TemporaryDirectory()
+        self.addCleanup(d.cleanup)
+        run_dir = Path(d.name)
+        _setup_run(run_dir, council_files, iter_n=iter_n)
+        if extra_iter_files:
+            for n, files in extra_iter_files.items():
+                _setup_run(run_dir, files, iter_n=n)
+        report = vb.Report(self.schema)
+        vb.check_per_persona_overproduction(self.schema, run_dir, mode, report)
+        for c in report.as_dict()["checks"]:
+            if c["name"] == "per_persona_overproduction":
+                return c
+        return {}
+
+    def test_healthy_3_per_hyp_passes(self):
+        """Target case: every persona writes exactly 3 first-order per hypothesis."""
+        council = {
+            p: _make_council_file(p, {"h1": 3, "h2": 3, "h3": 3, "h4": 3, "h5": 3})
+            for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
+        }
+        c = self._run(council)
+        self.assertEqual(c["status"], "PASS")
+        self.assertEqual(c["severity"], "INFO")
+        self.assertEqual(c["council_files_inspected"], 5)
+
+    def test_at_cap_4_per_hyp_passes(self):
+        """At the hard cap (4 per hypothesis) — no warn, no fail."""
+        council = {
+            p: _make_council_file(p, {"h1": 4, "h2": 4, "h3": 4})
+            for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
+        }
+        c = self._run(council)
+        self.assertEqual(c["status"], "PASS")
+        self.assertEqual(c["severity"], "INFO")
+
+    def test_5_per_hyp_warns(self):
+        """5 per hypothesis: above warn (4), below fail (6) → WARN."""
+        council = {
+            p: _make_council_file(p, {"h1": 5, "h2": 3})
+            for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
+        }
+        c = self._run(council)
+        self.assertEqual(c["status"], "PASS")
+        self.assertEqual(c["severity"], "WARN")
+        # 5 personas × 1 violating hypothesis = 5 warn cells
+        self.assertEqual(c["warn_count"], 5)
+
+    def test_7_per_hyp_hard_fails(self):
+        """7 per hypothesis: above hard fail (6) → HARD_FAIL."""
+        council = {
+            p: _make_council_file(p, {"h1": 7})
+            for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
+        }
+        c = self._run(council)
+        self.assertEqual(c["status"], "FAIL")
+        self.assertEqual(c["severity"], "HARD_FAIL")
+        self.assertEqual(c["fail_count"], 5)
+
+    def test_mixed_one_persona_over_others_healthy(self):
+        """One persona over-produces, others healthy — fail on the offender only."""
+        council = {
+            "optimist": _make_council_file("optimist", {"h1": 8, "h2": 3}),
+            "pessimist": _make_council_file("pessimist", {"h1": 3, "h2": 3}),
+            "competitor": _make_council_file("competitor", {"h1": 3, "h2": 3}),
+            "regulator": _make_council_file("regulator", {"h1": 3, "h2": 3}),
+            "customer": _make_council_file("customer", {"h1": 3, "h2": 3}),
+        }
+        c = self._run(council)
+        self.assertEqual(c["status"], "FAIL")
+        self.assertEqual(c["severity"], "HARD_FAIL")
+        self.assertEqual(c["fail_count"], 1)
+        # The sample should pinpoint the offender
+        sample = c["sample_violations"][0]
+        self.assertEqual(sample["persona"], "optimist")
+        self.assertEqual(sample["hypothesis"], "h1")
+        self.assertEqual(sample["first_order_count"], 8)
+
+    def test_quick_mode_skipped(self):
+        """Quick mode has no council — check should not run at all."""
+        council = {p: _make_council_file(p, {"h1": 8}) for p in ("optimist",)}
+        c = self._run(council, mode="quick")
+        self.assertEqual(c, {})
+
+    def test_no_council_files_silent(self):
+        """No council/ directory at all — silent (other gates handle missing data)."""
+        d = TemporaryDirectory()
+        self.addCleanup(d.cleanup)
+        run_dir = Path(d.name)
+        # Create iteration-1 but no council dir
+        (run_dir / "iteration-1").mkdir()
+        report = vb.Report(self.schema)
+        vb.check_per_persona_overproduction(self.schema, run_dir, "full", report)
+        for c in report.as_dict()["checks"]:
+            self.assertNotEqual(c["name"], "per_persona_overproduction")
+
+    def test_inspects_all_iterations_not_just_latest(self):
+        """An overstuffed iter-1 + clean iter-2 should still HARD_FAIL on iter-1.
+
+        Codex's point about iter-stability risk: iter-1 bloat surfaces just as
+        much as iter-N bloat for upstream diagnosis.
+        """
+        iter1 = {p: _make_council_file(p, {"h1": 8}) for p in ("optimist",)}
+        iter2 = {p: _make_council_file(p, {"h1": 3}) for p in ("optimist",)}
+        c = self._run(iter1, mode="full", iter_n=1, extra_iter_files={2: iter2})
+        self.assertEqual(c["status"], "FAIL")
+        self.assertEqual(c["severity"], "HARD_FAIL")
+        # Should reference iter-1 in the violations
+        sample_iters = {v["iteration"] for v in c["sample_violations"]}
+        self.assertIn("iteration-1", sample_iters)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

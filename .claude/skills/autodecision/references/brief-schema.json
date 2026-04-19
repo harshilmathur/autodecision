@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.2",
-  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1 additions: positions 15 (Appendix C: Complete Effects Map) and 16 (Sources), content_checks block (unsourced numbers + depends-on mirror), trailing-block ref format, legacy inline ref fallback. v1.2: Appendix B and C swapped — Complete Effects Map is now Appendix B (required in full/medium), Quick Mode vs Full Loop Comparison is now Appendix C (optional, only emitted when a quick run exists for the same slug). Keeps appendix letters alphabetical when the optional section is absent.",
+  "schema_version": "1.3",
+  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1 additions: positions 15 (Appendix C: Complete Effects Map) and 16 (Sources), content_checks block (unsourced numbers + depends-on mirror), trailing-block ref format, legacy inline ref fallback. v1.2: Appendix B and C swapped — Complete Effects Map is now Appendix B (required in full/medium), Quick Mode vs Full Loop Comparison is now Appendix C (optional, only emitted when a quick run exists for the same slug). v1.3: added per_persona_overproduction content_check — post-hoc backstop for the per-persona output budget (3 first-order per hypothesis, hard cap 4) defined in persona-preamble.md rule 6 and enforced at runtime by the Phase 2.5 Pre-Synthesis Discipline Gate in simulate.md. Catches runs that bypassed the runtime gate.",
 
   "sections": [
     {
@@ -255,7 +255,8 @@
     "unsourced_dollar_figure":     "HARD_FAIL",
     "unsourced_numeric_claim":     "WARN",
     "depends_on_missing_assumption":"HARD_FAIL",
-    "synthesis_dedup_skipped":     "HARD_FAIL"
+    "synthesis_dedup_skipped":     "HARD_FAIL",
+    "per_persona_overproduction":  "HARD_FAIL"
   },
 
   "content_checks": {
@@ -280,6 +281,15 @@
       "warn_below": 2.00,
       "skip_in_modes": ["quick"],
       "remediation": "Re-run the synthesis step from references/persona-council.md 'Synthesis Pass'. Specifically perform Step 3 (Semantic dedup) — either inline if <=3 novel IDs OR by spawning a single dedup agent if >3. Then regenerate effects-chains.json and re-run the validator."
+    },
+    "per_persona_overproduction": {
+      "description": "Per-persona output budget (per persona-preamble.md rule 6) is 3 first-order effects per hypothesis, hard cap 4. The Phase 2.5 Pre-Synthesis Discipline Gate in simulate.md enforces this at runtime by re-spawning over-producing personas before synthesis runs (1 retry per persona). This post-hoc check is the BACKSTOP for runs that bypassed the runtime gate, where the gate's 1-retry limit was exhausted, or where legacy runs predate the gate. It reads every iteration-{N}/council/{persona}.json, counts first-order effects per (persona, hypothesis), and fires HARD_FAIL on > fail_threshold or WARN on > warn_threshold for any (persona, hypothesis) pair. The upstream cause of synthesis_dedup_skipped: too many singleton-island effects pull avg council_agreement below 1.5. Catching at the per-persona level (post-spawn but pre-aggregate) gives the user a sharper signal than the post-aggregate synthesis check.",
+      "source_file_glob": "iteration-*/council/*.json",
+      "metric": "first_order_effects_per_persona_per_hypothesis",
+      "warn_threshold": 4,
+      "fail_threshold": 6,
+      "skip_in_modes": ["quick", "challenge"],
+      "remediation": "Re-spawn the offending personas with the explicit re-prompt from simulate.md Step 2.5 Pre-Synthesis Discipline Gate. Trim each over-producing (persona, hypothesis) cell to <=4 first-order effects, then regenerate effects-chains.json (synthesis pass) and re-run the validator. For repeated failures, check that hypotheses.json's expected_effect_ids per hypothesis is <=4 (per phases/hypothesize.md) and that shared-context.md does not include aggregate-total parentheticals (per engine-protocol.md 'Shared-context anti-patterns')."
     }
   }
 }

@@ -162,20 +162,39 @@ Auto-fix what's fixable. Log warnings. Never block the run for a single failure.
 After certain phases, the orchestrator checks output quality before proceeding.
 These catch shallow analysis that would otherwise produce a fast but worthless brief.
 
-**After Phase 3 (SIMULATE) — Diversity Check:**
+**After Phase 3 (SIMULATE) — Diversity + Discipline Check:**
 After all 5 persona files are written, before synthesis:
-1. Count effects per persona per hypothesis. If any persona has fewer than 3
-   first-order effects for any hypothesis, the analysis is too shallow. Log a
-   warning and note in the brief.
+1. Count effects per persona per hypothesis. Healthy band: 3 (target), 2-4
+   (acceptable). BOTH ends are checked:
+   - **Floor:** If any persona has fewer than 2 first-order effects for any
+     hypothesis, the analysis is too shallow. Log a warning.
+   - **Ceiling:** If any persona has more than 4 first-order effects for any
+     hypothesis, the persona over-produced. Log a warning. > 6 is the upstream
+     cause of the synthesis_dedup_skipped HARD_FAIL — too many single-persona
+     effects sit as council_agreement = 1 islands and pull avg agreement below
+     1.5. The validator's per_persona_overproduction check fires HARD_FAIL on
+     > 6 per hypothesis post-hoc.
+   - **Why both ends:** the historical spec said "5-8 per hypothesis" and a
+     literal-minded model picked the midpoint, producing inflated maps. The
+     corrected target in `persona-preamble.md` rule 6 + `persona-council.md`
+     Token Budget is 3 (single number, not a range). 5 personas × 3 strong
+     effects = ~15 raw per hypothesis → ~5-7 unique post-synth with avg
+     agreement 3-4 (healthy). 5 personas × 7 effects = ~35 raw → ~15-20
+     unique post-synth with avg agreement 1.5 (broken).
 2. Check probability spread. For each effect that 3+ personas generated, compute
    the range (max - min probability). If the AVERAGE range across all shared
    effects is < 0.10, the personas are not genuinely disagreeing — the council
    added no value. Log: "Council diversity LOW — average probability spread {N}.
    Consider re-running with independent subagents."
 3. Check for creative alternatives. Count effects with `alt_` prefix across all
-   personas. If fewer than 3 total (across all 5 personas), the "non-obvious
-   alternative" rule is not being followed. This is a quality issue, not a
-   blocking error.
+   personas. The new spec (persona-preamble.md rule 8) makes alts OPTIONAL, not
+   mandatory — personas should write alts only when they have genuine non-obvious
+   insight. Healthy band: 3-15 alts per run (across 5 personas × 5 hypotheses, so
+   25 maximum if every persona had one for every hypothesis). 0 alts is a quality
+   warning ("council surfaced zero creative alternatives — possible groupthink").
+   25 alts is also a quality warning ("personas forced alts on every hypothesis —
+   likely weak alternatives padding the singleton bucket"). Both are quality
+   issues, not blocking errors.
 
 **After Synthesis — Depth Check:**
 After effects-chains.json is written:
@@ -247,6 +266,63 @@ Budget: ~300-500 tokens for the document block. Read from `context-extracted.md`
 Target: ~1500 tokens in iter-1 without docs, ~1800-2000 with docs, ~2500-3000
 in iter-2+ with docs (the previous-iter ID and assumption blocks add ~500-1000
 tokens but are load-bearing for stability metrics).
+
+### Shared-context anti-patterns (do NOT do these)
+
+When constructing `shared-context.md` and `hypotheses.json`, do NOT reintroduce
+phrasings that historically inflated effect counts:
+
+1. **Aggregate-total parentheticals.** Do NOT add expansions like
+   `"(so 25-40 first-order total across 5 hypotheses)"` alongside the
+   per-hypothesis budget. The budget IS per-hypothesis (3, per
+   `persona-preamble.md` rule 6). Aggregate-total phrasing converts a soft
+   per-hypothesis target into a numerical total floor that the persona
+   optimizes against.
+
+2. **Inflated `expected_effect_ids`.** Per `phases/hypothesize.md`, seed AT MOST
+   4 effect IDs per hypothesis. Do NOT seed 6-8 — the persona reads the seeded
+   vocabulary as "produce ~N effects per hypothesis".
+
+**Pre-spawn validation (run BEFORE spawning Phase 3 personas):**
+
+Reliable structured checks, NOT brittle grep-based string matching:
+
+```python
+# Check 1: hypotheses.json — every hypothesis seeds ≤ 4 expected_effect_ids
+import json
+hyp = json.load(open(f"{run_dir}/iteration-{N}/hypotheses.json"))
+violations = [
+    h["hypothesis_id"] for h in hyp["hypotheses"]
+    if len(h.get("expected_effect_ids", [])) > 4
+]
+if violations:
+    raise SystemExit(
+        f"hypotheses.json over-seeded for {violations}. "
+        f"hypothesize.md caps at 4 — prune the seeded list before spawning."
+    )
+
+# Check 2: shared-context.md — no aggregate-total parentheticals
+shared = open(f"{run_dir}/shared-context.md").read()
+import re
+banned = re.findall(
+    r"\(\s*so\s+\d+[-\d]*\s+(first-order|effects?|total)[^)]*\)|"
+    r"\(\s*produce\s+\d+[-\d]*\s+effects[^)]*across[^)]*\)|"
+    r"\d+[-\d]*\s+first-order\s+total\s+across",
+    shared, flags=re.IGNORECASE
+)
+if banned:
+    raise SystemExit(
+        f"shared-context.md contains aggregate-total phrasing: {banned}. "
+        f"The persona budget is per-hypothesis (3, per preamble rule 6); "
+        f"do NOT compute totals — that converts soft target into hard floor."
+    )
+```
+
+The structured `expected_effect_ids` check is the primary defense — schema-bound
+counts can't be evaded by rephrasing. The regex check on shared-context.md is a
+secondary signal; a smart-but-misguided orchestrator could phrase aggregate
+totals creatively. The post-spawn Phase 3.5 Pre-Synthesis Discipline Gate
+(below, in the Persona Subagent Protocol section) is the actual enforcement.
 
 ### Persona Subagent Protocol
 

@@ -213,10 +213,18 @@ For the field-level type spec independent of the prompt format, see
 
 ## Token Budget Per Persona
 
-Target: ~2000 tokens per persona per phase output. This means:
-- ~5-8 first-order effects per hypothesis
-- ~2-3 second-order effects per first-order effect
-- Each effect: ~50-80 tokens (ID, description, probability, assumptions)
+**Canonical budget lives in `persona-preamble.md` rule 6.** Read it there. This file
+must NOT redefine numbers — the preamble is the single source of truth.
 
-If a persona generates more than 3000 tokens, it's being too verbose. The skill
-should instruct personas to be concise and structured.
+Quick reference (defer to preamble for any conflict):
+- Per hypothesis: 3 first-order effects (hard cap 4, floor 2)
+- Per first-order effect: 1 second-order child (hard cap 2)
+- Target ~1500 tokens per persona output
+
+Multi-layered enforcement:
+1. **Spec wording** (preamble rule 6, included in shared-context.md per spawn) — primary
+2. **Pre-synthesis discipline gate** (`engine-protocol.md` Phase 3.5 Pre-Synthesis Discipline Gate) — re-spawns over-producing personas BEFORE synthesis, repair-loop with 1 retry per persona
+3. **Post-hoc validator** (`brief-schema.json` `per_persona_overproduction` content_check) — backstop, HARD_FAIL > 6 per hypothesis, WARN > 4
+
+The preamble target was historically "5-8" and was repeatedly misinterpreted by
+literal-minded models picking the midpoint. Do NOT reintroduce ranges anywhere.

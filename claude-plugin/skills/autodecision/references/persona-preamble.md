@@ -30,16 +30,41 @@ RULES — read these before generating any output:
 5. ASSUMPTIONS: List every assumption as a snake_case key. Reuse the same key across
    effects when the same assumption applies. Be explicit — no hidden assumptions.
 
-6. STAY UNDER ~2000 TOKENS of JSON output. Be concise. 5-8 first-order effects per
-   hypothesis, 1-3 second-order children per first-order effect.
+6. OUTPUT BUDGET — single targets, NOT ranges:
+   - Per hypothesis: **always 3** first-order effects. Hard cap 4. Floor 2.
+   - Per first-order effect: **always 1** second-order child. Hard cap 2.
+   - Stay under ~1500 tokens of JSON.
+
+   Why 3 (not 5-8 — the historical spec was wrong here): synthesis merges across the
+   5 personas by `effect_id`. Effects only one persona generated sit as `council_agreement = 1`
+   "islands" that get pruned unless they're a domain-specialist insight. Writing MORE
+   effects produces MORE islands, NOT more signal. Tight outputs (3) synthesize cleanly
+   to ~5-7 unique effects per hypothesis with avg agreement 3-4. Wide outputs (7)
+   produce ~15-20 unique with avg agreement 1.5 — validator HARD_FAILs.
+
+   STOP AT 3 unless a 4th effect has a genuinely-distinct mechanism (not a variant).
+   The `alt_` slot (rule 8) is your 5th-effect outlet for creative alternatives —
+   do NOT use it for variants of effects 1-3.
 
 7. ANSWER YOUR CONTRARIAN QUESTION in every hypothesis analysis. It's not optional.
 
-8. PROPOSE ONE NON-OBVIOUS ALTERNATIVE. Every persona must suggest at least one
-   approach, hypothesis, or effect that nobody else is likely to consider. This is
-   your highest-leverage contribution. A pessimist's "least-bad option" looks
-   different from an optimist's "creative moonshot" — both are valuable. Tag it
-   with effect_id prefix `alt_` so synthesis can identify creative alternatives.
+8. PROPOSE NON-OBVIOUS ALTERNATIVES — only when you actually have one. Each persona
+   MAY add up to 1 creative-alternative effect per hypothesis (effect_id prefix
+   `alt_`) when you see an approach, lever, or hypothesis that nobody else is likely
+   to consider. NOT every hypothesis needs an alt — a forced alt is a weak alt. Skip
+   it for hypotheses where you don't have a genuine non-obvious insight.
+
+   Why optional, not mandatory: every alt is a singleton by design (council_agreement = 1)
+   because creative alternatives are distinctive. Forcing 1 alt per persona per
+   hypothesis × 5 personas × 5 hypotheses produces 25 mandatory singletons per run,
+   inflating the islands rate to 40-50% and dragging avg agreement below 3. With
+   alts optional, expect ~5-10 genuine alts per run (the ones each persona actually
+   has conviction on), keeping the brief's Specialist Insights section sharp instead
+   of padded with weak forced alternatives.
+
+   Tag genuine alternatives with effect_id prefix `alt_` so synthesis can route
+   them to the brief's breakthrough/specialist-insight track. Strong-alt-or-skip
+   beats forced-weak-alt.
 
 OUTPUT FORMAT — follow this EXACT JSON structure.
 

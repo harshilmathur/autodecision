@@ -63,18 +63,34 @@ same axis at different magnitudes).
 
 ## Shared Effect ID Vocabulary
 
-For EACH hypothesis, generate 4-6 expected effect IDs that personas should use.
+For EACH hypothesis, generate **3-4 expected effect IDs** (HARD CAP 4).
 These go into `hypotheses.json` under `expected_effect_ids` and are seeded into
 every persona's prompt in Phase 3 to reduce semantic dedup problems in synthesis.
 
-Pick IDs that cover the obvious effects for each hypothesis. Personas reuse these
-where applicable and only invent new IDs for genuinely novel effects.
+**Why the 4-cap is a hard limit:** the persona reads the seeded vocabulary as a
+target ("produce ~N effects per hypothesis"). 7 seeds → ~7 produced. Per
+`persona-preamble.md` rule 6, the persona output budget is 3 per hypothesis
+(hard cap 4). Seeded vocabulary must match.
 
-Example:
+Seeding 6+ IDs is the upstream cause of:
+- `synthesis_dedup_skipped` HARD_FAIL (avg council_agreement < 1.5 because
+  personas produce too many singleton-island effects)
+- `per_persona_overproduction` HARD_FAIL (any persona writes > 6 first-order
+  effects for any hypothesis)
+
+The orchestrator's pre-spawn validation in `engine-protocol.md` ("Shared-context
+anti-patterns") fails the run if any hypothesis has > 4 seeded IDs.
+
+**Pick the 4 most likely effects.** Let personas surface novel ones via the `alt_`
+creative-alternative slot. The seeded vocabulary is a floor (here are the obvious
+ones), not a ceiling (the personas can add more — but each addition becomes a
+singleton island unless 3+ personas independently land on it).
+
+Example (4 seeded IDs, NOT 5-6):
 ```json
 {
   "hypothesis_id": "h1_buy_vendor",
-  "expected_effect_ids": ["fast_deploy", "adoption_plateau", "vendor_lock_in", "dlp_required", "budget_fit"]
+  "expected_effect_ids": ["fast_deploy", "vendor_lock_in", "dlp_required", "budget_fit"]
 }
 ```
 
