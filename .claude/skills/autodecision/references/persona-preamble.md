@@ -20,27 +20,23 @@ RULES — read these before generating any output:
    or 1.0. The probability is YOUR estimate, not a consensus. Other personas will
    disagree — that disagreement IS the data.
 
-3. EFFECT IDs: snake_case, max 30 chars, stable across iterations.
+3. EFFECT IDs: snake_case, max 30 chars, stable across iterations. If reusing IDs
+   from a prior iteration, keep the same ID for the same conceptual effect even if
+   the description changes.
 
-   USE SEEDED IDs FIRST. Before writing any effect_id, scan the seeded
-   `expected_effect_ids` list for THIS hypothesis (in shared-context.md or
-   hypotheses.json). If any seeded ID approximately matches the concept you want
-   to express — even loosely — USE IT VERBATIM. Do NOT rename it to be more
-   descriptive. Do NOT split a seeded concept into two of your own IDs. Only
-   coin a NEW effect_id when no seeded ID is even close.
+   PREFER SEEDED IDs WHEN APPLICABLE. The seeded `expected_effect_ids` list per
+   hypothesis (in shared-context.md or hypotheses.json) is your shared vocabulary
+   with the other 4 personas. When a seeded ID matches a concept you want to
+   express, use it verbatim — synthesis merges by exact effect_id, so shared
+   vocabulary directly improves council_agreement signal. Coin new IDs freely for
+   genuine specialist insights, tiered effects (e.g. multiple cash-tier variants
+   of one outcome), or novel mechanisms the seeded list doesn't cover. The
+   `seeded_vocab_ignored` validator WARN fires below 50% adoption (HARD_FAIL
+   below 20%) — well below either threshold means you're routinely renaming
+   shared concepts.
 
-   Why this is non-negotiable: synthesis merges across the 5 personas BY ID. If
-   3 personas all describe the same concept but each invents a wordier ID
-   (`earnout_lock_in_risk` vs `earnout_and_retention_claw_back_value` vs
-   `earnout_milestone_friction`), they synthesize as 3 separate
-   council_agreement=1 islands instead of 1 effect with council_agreement=3.
-   Inventing descriptive IDs when a seeded ID would fit is the upstream cause
-   of synthesis singleton inflation. The validator's `seeded_vocab_ignored`
-   content_check HARD_FAILs runs where < 20% of seeded IDs were used by any persona.
-
-   For iteration 2+: same rule applies to iter-1 effect_ids carried forward —
-   reuse the SAME ID for the same conceptual effect even if you'd prefer
-   different naming.
+   For iteration 2+: same rule for iter-1 effect_ids carried forward — reuse the
+   SAME ID for the same conceptual effect even if you'd prefer different naming.
 
 4. EVERY first-order effect MUST have at least one second-order child. No exceptions.
    Tail risks and unlikely 2nd-order effects are often the most important findings.
@@ -48,41 +44,37 @@ RULES — read these before generating any output:
 5. ASSUMPTIONS: List every assumption as a snake_case key. Reuse the same key across
    effects when the same assumption applies. Be explicit — no hidden assumptions.
 
-6. OUTPUT BUDGET — single targets, NOT ranges:
-   - Per hypothesis: **always 3** first-order effects. Hard cap 4. Floor 2.
-   - Per first-order effect: **always 1** second-order child. Hard cap 2.
-   - Stay under ~1500 tokens of JSON.
+6. OUTPUT BUDGET — stay under ~2000 tokens of JSON. 5-8 first-order effects per
+   hypothesis, 1-3 second-order children per first-order effect.
 
-   Why 3 (not 5-8 — the historical spec was wrong here): synthesis merges across the
-   5 personas by `effect_id`. Effects only one persona generated sit as `council_agreement = 1`
-   "islands" that get pruned unless they're a domain-specialist insight. Writing MORE
-   effects produces MORE islands, NOT more signal. Tight outputs (3) synthesize cleanly
-   to ~5-7 unique effects per hypothesis with avg agreement 3-4. Wide outputs (7)
-   produce ~15-20 unique with avg agreement 1.5 — validator HARD_FAILs.
+   The 5-8 range is intentional: it allows tiered effect modeling (e.g. 4 acquirer-
+   motive variants each with its own probability, or 3 cash-structure tiers) AND
+   specialist insights (regulatory mechanisms, tax structures, novel hypotheses)
+   that don't fit a single-effect-per-concept frame. Writing MORE than 8 per
+   hypothesis without that structural reason inflates singleton islands and
+   trips the validator's `per_persona_overproduction` (WARN > 8, HARD_FAIL > 12)
+   and `synthesis_dedup_skipped` (HARD_FAIL avg agreement < 1.5) checks.
 
-   STOP AT 3 unless a 4th effect has a genuinely-distinct mechanism (not a variant).
-   The `alt_` slot (rule 8) is your 5th-effect outlet for creative alternatives —
-   do NOT use it for variants of effects 1-3.
+   Bias toward the lower end (5-6) for clean decisions; reach for the upper end
+   (7-8) when the hypothesis genuinely has tiered or conditional effects worth
+   modeling separately. Don't pad. Don't repeat the same concept under different
+   IDs (use the seeded vocabulary per rule 3).
 
 7. ANSWER YOUR CONTRARIAN QUESTION in every hypothesis analysis. It's not optional.
 
-8. PROPOSE NON-OBVIOUS ALTERNATIVES — only when you actually have one. Each persona
-   MAY add up to 1 creative-alternative effect per hypothesis (effect_id prefix
-   `alt_`) when you see an approach, lever, or hypothesis that nobody else is likely
-   to consider. NOT every hypothesis needs an alt — a forced alt is a weak alt. Skip
-   it for hypotheses where you don't have a genuine non-obvious insight.
+8. PROPOSE ONE NON-OBVIOUS ALTERNATIVE per hypothesis. Every persona must suggest
+   at least one approach, hypothesis, or effect that nobody else is likely to
+   consider — tag with effect_id prefix `alt_` so synthesis can route it to the
+   brief's specialist-insight / breakthrough track. This is your highest-leverage
+   contribution. A pessimist's "least-bad option" looks different from an optimist's
+   "creative moonshot" — both are valuable.
 
-   Why optional, not mandatory: every alt is a singleton by design (council_agreement = 1)
-   because creative alternatives are distinctive. Forcing 1 alt per persona per
-   hypothesis × 5 personas × 5 hypotheses produces 25 mandatory singletons per run,
-   inflating the islands rate to 40-50% and dragging avg agreement below 3. With
-   alts optional, expect ~5-10 genuine alts per run (the ones each persona actually
-   has conviction on), keeping the brief's Specialist Insights section sharp instead
-   of padded with weak forced alternatives.
-
-   Tag genuine alternatives with effect_id prefix `alt_` so synthesis can route
-   them to the brief's breakthrough/specialist-insight track. Strong-alt-or-skip
-   beats forced-weak-alt.
+   Why mandatory, not optional: alts are singletons by design (council_agreement
+   often 1) but they force creative search. The strongest brief insights routinely
+   come from 5/5 personas independently surfacing the SAME alt in iter-2 (e.g.,
+   "90-day paid-pilot sprint" emerging across all personas in the sell-vs-raise
+   v0.4.0 brief). Without the mandatory pressure, personas write only the obvious
+   effects and the breakthrough track stays empty.
 
 OUTPUT FORMAT — follow this EXACT JSON structure.
 

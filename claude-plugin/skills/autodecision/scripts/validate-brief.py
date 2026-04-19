@@ -1087,14 +1087,17 @@ def _extract_first_order_per_hyp(persona_data: dict) -> dict[str, list[dict]]:
 
 def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
     """
-    Enforce content_checks.per_persona_overproduction: every persona must produce
-    <= warn_threshold (default 4) first-order effects per hypothesis. > fail_threshold
-    (default 6) is HARD_FAIL.
+    Enforce content_checks.per_persona_overproduction: per-persona output budget
+    is 5-8 first-order effects per hypothesis (per persona-preamble.md rule 6).
 
-    This is the post-hoc backstop. The runtime enforcement is the Phase 2.5
-    Pre-Synthesis Discipline Gate in simulate.md, which re-spawns over-producing
-    personas before synthesis. This check catches runs where the gate was bypassed
-    or its 1-retry limit was exhausted.
+    Defaults: WARN > warn_threshold (8) — likely tiered analysis or borderline.
+              HARD_FAIL > fail_threshold (12) — catastrophic redundant invention.
+
+    The 5-8 range allows tiered effect modeling (e.g. 4 motive tiers + 3 cash
+    tiers in one hypothesis) and specialist insights without false-positiving.
+    The runtime Phase 2.5 Pre-Synthesis Discipline Gate in simulate.md catches
+    catastrophic patterns at synthesis time; this check is the brief-validation
+    backstop.
     """
     cfg = schema.get("content_checks", {}).get("per_persona_overproduction")
     if not cfg:
@@ -1109,8 +1112,8 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
     if not iter_dirs:
         return  # no iterations — nothing to check (intermediate-files gate handles missing data)
 
-    warn_threshold = cfg.get("warn_threshold", 4)
-    fail_threshold = cfg.get("fail_threshold", 6)
+    warn_threshold = cfg.get("warn_threshold", 8)
+    fail_threshold = cfg.get("fail_threshold", 12)
 
     # Inspect council/*.json across ALL iterations (not just latest) — iter-1 bloat
     # surfaces just as much as iter-N bloat for upstream diagnosis.

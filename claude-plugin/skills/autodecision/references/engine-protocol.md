@@ -162,25 +162,26 @@ Auto-fix what's fixable. Log warnings. Never block the run for a single failure.
 After certain phases, the orchestrator checks output quality before proceeding.
 These catch shallow analysis that would otherwise produce a fast but worthless brief.
 
-**After Phase 3 (SIMULATE) — Diversity + Discipline Check:**
+**After Phase 3 (SIMULATE) — Diversity Check:**
 After all 5 persona files are written, before synthesis:
-1. Count effects per persona per hypothesis. Healthy band: 3 (target), 2-4
-   (acceptable). BOTH ends are checked:
-   - **Floor:** If any persona has fewer than 2 first-order effects for any
+1. Count effects per persona per hypothesis.
+   - **Floor:** If any persona has fewer than 3 first-order effects for any
      hypothesis, the analysis is too shallow. Log a warning.
-   - **Ceiling:** If any persona has more than 4 first-order effects for any
-     hypothesis, the persona over-produced. Log a warning. > 6 is the upstream
-     cause of the synthesis_dedup_skipped HARD_FAIL — too many single-persona
-     effects sit as council_agreement = 1 islands and pull avg agreement below
-     1.5. The validator's per_persona_overproduction check fires HARD_FAIL on
-     > 6 per hypothesis post-hoc.
-   - **Why both ends:** the historical spec said "5-8 per hypothesis" and a
-     literal-minded model picked the midpoint, producing inflated maps. The
-     corrected target in `persona-preamble.md` rule 6 + `persona-council.md`
-     Token Budget is 3 (single number, not a range). 5 personas × 3 strong
-     effects = ~15 raw per hypothesis → ~5-7 unique post-synth with avg
-     agreement 3-4 (healthy). 5 personas × 7 effects = ~35 raw → ~15-20
-     unique post-synth with avg agreement 1.5 (broken).
+   - **Ceiling:** If any persona has more than 8 first-order effects for any
+     hypothesis, the persona may be over-producing. Log a WARN. > 12 is the
+     upstream cause of the synthesis_dedup_skipped HARD_FAIL — too many
+     redundant inventions sit as council_agreement = 1 islands and pull avg
+     agreement below 1.5.
+   - **Healthy band: 5-8 first-order effects per persona per hypothesis** —
+     allows tiered effect modeling (e.g. 4 acquirer-motive variants each with
+     its own probability, 3 cash-structure tiers) AND specialist insights that
+     don't fit a single-effect-per-concept frame. Tightening below this floor
+     killed legitimate tiered analysis in real runs (v0.4.0 sell-vs-raise
+     brief had 7 effects in one hypothesis from 4 motive tiers + 3 cash tiers,
+     all with high agreement). The validator's `per_persona_overproduction`
+     check (HARD_FAIL > 12, WARN > 8) catches the genuinely-broken redundant-
+     invention pattern (Japan-style 30+ wordy variants per persona) without
+     false-positiving on tiered specialist analysis.
 2. Check probability spread. For each effect that 3+ personas generated, compute
    the range (max - min probability). If the AVERAGE range across all shared
    effects is < 0.10, the personas are not genuinely disagreeing — the council
@@ -227,34 +228,28 @@ Contents of `shared-context.md`:
 - Document context (from context-extracted.md, if --context was provided — see below)
 - Key data points from ground-data.md (include ALL key findings, not a lossy summary)
 - Hypotheses with expected effect IDs (from hypotheses.json) — format these as a
-  PROMINENT block, NOT a flat list. Per `persona-preamble.md` rule 3, personas
-  must use seeded IDs verbatim where the concept matches. To make this real
-  (not just spec-language), the shared-context.md block MUST look like:
+  per-hypothesis block (not one flat list across all hypotheses) so personas
+  can scan seeded IDs in context. Per `persona-preamble.md` rule 3, personas
+  should prefer seeded IDs when the concept matches; the `seeded_vocab_ignored`
+  validator (WARN < 50%, HARD_FAIL < 20% adoption) catches runs where personas
+  systematically ignored the shared vocabulary. Format example:
 
   ```
-  ## SEEDED EFFECT VOCABULARY — USE THESE IDs FIRST
-
-  When writing effects for a hypothesis, scan its seeded list. If any seeded ID
-  approximately matches your concept, USE IT VERBATIM. Coin a new effect_id
-  ONLY when no seeded ID is close. Inventing wordier descriptive IDs when a
-  seeded ID would fit is a HARD_FAIL on the seeded_vocab_ignored validator
-  check (< 20% adoption fails the run).
+  ## Seeded effect vocabulary (prefer these where applicable)
 
   ### h1_short_label
-  Seeded effect_ids (use these first):
-  - `seeded_id_1` — one-line description of the concept
+  - `seeded_id_1` — one-line concept hint
   - `seeded_id_2` — ...
-  - `seeded_id_3` — ...
-  - `seeded_id_4` — ...
 
   ### h2_short_label
-  Seeded effect_ids (use these first):
   - ...
   ```
 
-  The per-hypothesis layout + "USE THESE IDs FIRST" framing + concept hints
-  beat the historical flat-list rendering, which personas routinely ignored
-  (sell-15m-vs-safe-30m run had 0/16 seeded IDs adopted).
+  Aggressive "USE THESE FIRST" all-caps framing penalized novel insight in
+  real runs — personas suppressed legitimate specialist contributions (§368
+  tax mechanics, novel hypothesis branches) because the spec read as "always
+  pick seeded." The softer "prefer when applicable" framing keeps the synthesis
+  benefit without killing creative range.
 - Persona preamble rules (from persona-preamble.md)
 - **FOR ITERATION 2+ ONLY** — append these two blocks before spawning:
   - **Previous iteration effect_ids:** the full list of `effect_id` values from
@@ -297,60 +292,26 @@ tokens but are load-bearing for stability metrics).
 
 ### Shared-context anti-patterns (do NOT do these)
 
-When constructing `shared-context.md` and `hypotheses.json`, do NOT reintroduce
-phrasings that historically inflated effect counts:
+When constructing `shared-context.md` and `hypotheses.json`, avoid phrasings
+that historically inflated effect counts:
 
 1. **Aggregate-total parentheticals.** Do NOT add expansions like
    `"(so 25-40 first-order total across 5 hypotheses)"` alongside the
-   per-hypothesis budget. The budget IS per-hypothesis (3, per
+   per-hypothesis budget. The budget IS per-hypothesis (5-8, per
    `persona-preamble.md` rule 6). Aggregate-total phrasing converts a soft
-   per-hypothesis target into a numerical total floor that the persona
+   per-hypothesis range into a numerical total floor that the persona
    optimizes against.
 
-2. **Inflated `expected_effect_ids`.** Per `phases/hypothesize.md`, seed AT MOST
-   4 effect IDs per hypothesis. Do NOT seed 6-8 — the persona reads the seeded
-   vocabulary as "produce ~N effects per hypothesis".
+2. **Excessive `expected_effect_ids`.** Per `phases/hypothesize.md`, seed 4-6
+   effect IDs per hypothesis. Seeding 8+ signals "produce ~8 per hypothesis"
+   which can drift toward redundant invention.
 
-**Pre-spawn validation (run BEFORE spawning Phase 3 personas):**
-
-Reliable structured checks, NOT brittle grep-based string matching:
-
-```python
-# Check 1: hypotheses.json — every hypothesis seeds ≤ 4 expected_effect_ids
-import json
-hyp = json.load(open(f"{run_dir}/iteration-{N}/hypotheses.json"))
-violations = [
-    h["hypothesis_id"] for h in hyp["hypotheses"]
-    if len(h.get("expected_effect_ids", [])) > 4
-]
-if violations:
-    raise SystemExit(
-        f"hypotheses.json over-seeded for {violations}. "
-        f"hypothesize.md caps at 4 — prune the seeded list before spawning."
-    )
-
-# Check 2: shared-context.md — no aggregate-total parentheticals
-shared = open(f"{run_dir}/shared-context.md").read()
-import re
-banned = re.findall(
-    r"\(\s*so\s+\d+[-\d]*\s+(first-order|effects?|total)[^)]*\)|"
-    r"\(\s*produce\s+\d+[-\d]*\s+effects[^)]*across[^)]*\)|"
-    r"\d+[-\d]*\s+first-order\s+total\s+across",
-    shared, flags=re.IGNORECASE
-)
-if banned:
-    raise SystemExit(
-        f"shared-context.md contains aggregate-total phrasing: {banned}. "
-        f"The persona budget is per-hypothesis (3, per preamble rule 6); "
-        f"do NOT compute totals — that converts soft target into hard floor."
-    )
-```
-
-The structured `expected_effect_ids` check is the primary defense — schema-bound
-counts can't be evaded by rephrasing. The regex check on shared-context.md is a
-secondary signal; a smart-but-misguided orchestrator could phrase aggregate
-totals creatively. The post-spawn Phase 3.5 Pre-Synthesis Discipline Gate
-(below, in the Persona Subagent Protocol section) is the actual enforcement.
+The post-spawn validators (`per_persona_overproduction` HARD_FAIL > 12 + WARN
+> 8, `synthesis_dedup_skipped` HARD_FAIL avg agreement < 1.5) catch the
+genuinely-broken redundant-invention pattern. There is no pre-spawn structured
+check — earlier versions tried to enforce a hard `expected_effect_ids ≤ 4` cap
+which over-constrained Phase 2 and killed legitimate seeding for hypotheses
+with 5-6 obvious distinct effects.
 
 ### Persona Subagent Protocol
 

@@ -139,10 +139,10 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
                 return c
         return {}
 
-    def test_healthy_3_per_hyp_passes(self):
-        """Target case: every persona writes exactly 3 first-order per hypothesis."""
+    def test_healthy_5_per_hyp_passes(self):
+        """Healthy band lower end: 5 per hypothesis. All clean."""
         council = {
-            p: _make_council_file(p, {"h1": 3, "h2": 3, "h3": 3, "h4": 3, "h5": 3})
+            p: _make_council_file(p, {"h1": 5, "h2": 5, "h3": 5, "h4": 5, "h5": 5})
             for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
         }
         c = self._run(council)
@@ -150,20 +150,31 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
         self.assertEqual(c["severity"], "INFO")
         self.assertEqual(c["council_files_inspected"], 5)
 
-    def test_at_cap_4_per_hyp_passes(self):
-        """At the hard cap (4 per hypothesis) — no warn, no fail."""
+    def test_tiered_analysis_7_per_hyp_passes(self):
+        """v0.4.0 sell-vs-raise pattern: 7 per hyp from 4 motive tiers + 3 cash tiers.
+        Threshold of WARN > 8 / HARD_FAIL > 12 must NOT false-positive on this."""
         council = {
-            p: _make_council_file(p, {"h1": 4, "h2": 4, "h3": 4})
+            p: _make_council_file(p, {"h1": 7, "h2": 6, "h3": 5})
             for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
         }
         c = self._run(council)
         self.assertEqual(c["status"], "PASS")
         self.assertEqual(c["severity"], "INFO")
 
-    def test_5_per_hyp_warns(self):
-        """5 per hypothesis: above warn (4), below fail (6) → WARN."""
+    def test_at_warn_threshold_8_per_hyp_passes(self):
+        """At warn threshold (8 per hypothesis) — exactly at, not over."""
         council = {
-            p: _make_council_file(p, {"h1": 5, "h2": 3})
+            p: _make_council_file(p, {"h1": 8, "h2": 8, "h3": 8})
+            for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
+        }
+        c = self._run(council)
+        self.assertEqual(c["status"], "PASS")
+        self.assertEqual(c["severity"], "INFO")
+
+    def test_9_per_hyp_warns(self):
+        """9 per hypothesis: above warn (8), below fail (12) → WARN."""
+        council = {
+            p: _make_council_file(p, {"h1": 9, "h2": 5})
             for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
         }
         c = self._run(council)
@@ -172,10 +183,11 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
         # 5 personas × 1 violating hypothesis = 5 warn cells
         self.assertEqual(c["warn_count"], 5)
 
-    def test_7_per_hyp_hard_fails(self):
-        """7 per hypothesis: above hard fail (6) → HARD_FAIL."""
+    def test_15_per_hyp_hard_fails(self):
+        """15 per hypothesis: above hard fail (12) → HARD_FAIL.
+        Catastrophic redundant invention pattern (Japan run had 30+ per persona)."""
         council = {
-            p: _make_council_file(p, {"h1": 7})
+            p: _make_council_file(p, {"h1": 15})
             for p in ("optimist", "pessimist", "competitor", "regulator", "customer")
         }
         c = self._run(council)
@@ -183,24 +195,23 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
         self.assertEqual(c["severity"], "HARD_FAIL")
         self.assertEqual(c["fail_count"], 5)
 
-    def test_mixed_one_persona_over_others_healthy(self):
-        """One persona over-produces, others healthy — fail on the offender only."""
+    def test_mixed_one_persona_catastrophic_others_healthy(self):
+        """One persona catastrophically over-produces, others healthy — fail on offender only."""
         council = {
-            "optimist": _make_council_file("optimist", {"h1": 8, "h2": 3}),
-            "pessimist": _make_council_file("pessimist", {"h1": 3, "h2": 3}),
-            "competitor": _make_council_file("competitor", {"h1": 3, "h2": 3}),
-            "regulator": _make_council_file("regulator", {"h1": 3, "h2": 3}),
-            "customer": _make_council_file("customer", {"h1": 3, "h2": 3}),
+            "optimist": _make_council_file("optimist", {"h1": 18, "h2": 5}),
+            "pessimist": _make_council_file("pessimist", {"h1": 5, "h2": 5}),
+            "competitor": _make_council_file("competitor", {"h1": 5, "h2": 5}),
+            "regulator": _make_council_file("regulator", {"h1": 5, "h2": 5}),
+            "customer": _make_council_file("customer", {"h1": 5, "h2": 5}),
         }
         c = self._run(council)
         self.assertEqual(c["status"], "FAIL")
         self.assertEqual(c["severity"], "HARD_FAIL")
         self.assertEqual(c["fail_count"], 1)
-        # The sample should pinpoint the offender
         sample = c["sample_violations"][0]
         self.assertEqual(sample["persona"], "optimist")
         self.assertEqual(sample["hypothesis"], "h1")
-        self.assertEqual(sample["first_order_count"], 8)
+        self.assertEqual(sample["first_order_count"], 18)
 
     def test_quick_mode_skipped(self):
         """Quick mode has no council — check should not run at all."""
@@ -223,11 +234,11 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
     def test_inspects_all_iterations_not_just_latest(self):
         """An overstuffed iter-1 + clean iter-2 should still HARD_FAIL on iter-1.
 
-        Codex's point about iter-stability risk: iter-1 bloat surfaces just as
-        much as iter-N bloat for upstream diagnosis.
+        Iter-stability risk: iter-1 bloat surfaces just as much as iter-N bloat
+        for upstream diagnosis.
         """
-        iter1 = {p: _make_council_file(p, {"h1": 8}) for p in ("optimist",)}
-        iter2 = {p: _make_council_file(p, {"h1": 3}) for p in ("optimist",)}
+        iter1 = {p: _make_council_file(p, {"h1": 15}) for p in ("optimist",)}
+        iter2 = {p: _make_council_file(p, {"h1": 5}) for p in ("optimist",)}
         c = self._run(iter1, mode="full", iter_n=1, extra_iter_files={2: iter2})
         self.assertEqual(c["status"], "FAIL")
         self.assertEqual(c["severity"], "HARD_FAIL")
@@ -245,10 +256,10 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
         the validator did `for h in data.get("hypotheses", []):` against a dict,
         iterated keys (strings), then tried h.get("effects") on the string."""
         council = {
-            p: _make_council_dict_keyed_first_order_effects(p, {"h1_stay": 3, "h2_leave": 7})
+            p: _make_council_dict_keyed_first_order_effects(p, {"h1_stay": 5, "h2_leave": 15})
             for p in ("optimist", "future_self")
         }
-        # Should not crash; should HARD_FAIL on h2_leave (count=7 > cap 6)
+        # Should not crash; should HARD_FAIL on h2_leave (count=15 > cap 12)
         c = self._run(council)
         self.assertEqual(c["status"], "FAIL")
         self.assertEqual(c["severity"], "HARD_FAIL")
@@ -259,7 +270,7 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
     def test_effects_by_hypothesis_flat_alt_schema(self):
         """Real-world shape 2: effects_by_hypothesis dict, no `hypotheses` field."""
         council = {
-            p: _make_council_effects_by_hypothesis(p, {"h1": 3, "h2": 8})
+            p: _make_council_effects_by_hypothesis(p, {"h1": 5, "h2": 15})
             for p in ("market", "optimist")
         }
         c = self._run(council)
@@ -270,11 +281,11 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
     def test_mixed_schema_shapes_in_same_council(self):
         """One run, one iteration, mix of all 3 shapes — must not crash, must count all."""
         council = {
-            "canonical_persona": _make_council_file("canonical_persona", {"h1": 3, "h2": 3}),
+            "canonical_persona": _make_council_file("canonical_persona", {"h1": 5, "h2": 5}),
             "dict_keyed_persona": _make_council_dict_keyed_first_order_effects(
-                "dict_keyed_persona", {"h1": 3, "h2": 3}),
+                "dict_keyed_persona", {"h1": 5, "h2": 5}),
             "alt_persona": _make_council_effects_by_hypothesis(
-                "alt_persona", {"h1": 7, "h2": 3}),  # over the cap
+                "alt_persona", {"h1": 15, "h2": 5}),  # over the cap
         }
         c = self._run(council)
         self.assertEqual(c["status"], "FAIL")

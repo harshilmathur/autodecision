@@ -21,8 +21,8 @@ spawns:
   - Synthesis runs INLINE in orchestrator (NEVER as a separate agent)
 gates:
   - diversity_check: avg probability spread across shared effects > 0.10 (else "Council diversity LOW" warning)
-  - depth_check: 2-4 first-order effects per persona per hypothesis (floor 2, target 3, hard ceiling 4 — defer to persona-preamble.md rule 6)
-  - pre_synthesis_discipline_gate: re-spawn personas with > 4 first-order for any hypothesis (1 retry per persona)
+  - depth_check: at least 3 first-order effects per persona per hypothesis (target band 5-8)
+  - pre_synthesis_discipline_gate: re-spawn personas with > 12 first-order for any hypothesis (1 retry per persona) — catches catastrophic overproduction without false-positiving on tiered analysis
   - children_check: every 1st-order effect has ≥1 second-order child
   - alt_check: at least 3 effects with `alt_` prefix across all 5 personas (creative alternatives rule)
 -->
@@ -72,92 +72,52 @@ Wait for all 5 subagents. Handle failures:
 - 3-4/5 complete: proceed with available data, note missing personas
 - < 3/5 complete: critical error, skip to Phase 8 with available data
 
-### Step 2.5: Pre-Synthesis Discipline Gate (NEW — runs BEFORE Step 3 Synthesis)
+### Step 2.5: Pre-Synthesis Discipline Gate (catastrophic-overproduction repair)
 
-This gate is the load-bearing enforcement of the per-persona output budget from
-`persona-preamble.md` rule 6 (3 first-order per hypothesis, hard cap 4). Without
-this gate, spec wording is a soft constraint that LLMs routinely ignore — and once
-overproduction is locked into council files, the only options are:
-(a) accept synthesis bloat (validator HARD_FAIL on `synthesis_dedup_skipped` and
-`per_persona_overproduction`), or (b) re-run the entire council manually.
-
-The gate runs the repair loop automatically.
+This gate catches catastrophic per-persona overproduction (> 12 first-order
+effects for any single hypothesis) BEFORE it locks into the synthesis. The
+threshold is intentionally high — at the genuinely-broken end (Japan-style
+30+ wordy variants per persona) — so the gate doesn't false-positive on
+tiered specialist analysis (5-8 distinct effects per hypothesis is healthy).
 
 **Procedure:**
 
-1. **Parse all completed council files.** For each `iteration-{N}/council/{persona}.json`:
-   ```python
-   counts = {}  # (persona, hypothesis_id) -> first-order effect count
-   for p in personas_completed:
-       data = json.load(open(f"{run_dir}/iteration-{N}/council/{p}.json"))
-       for h in data["hypotheses"]:
-           counts[(p, h["hypothesis_id"])] = len(h["effects"])
-   ```
+1. **Parse all completed council files** using the universal extractor in
+   `validate-brief.py` (`_extract_first_order_per_hyp`). Handles all 3 schema
+   shapes (canonical `hypotheses[]`, alt `effects_by_hypothesis{}`, dict-keyed
+   `hypotheses{}` with `first_order_effects`).
 
-2. **Identify violations.** Any `(persona, hypothesis)` where count > 4 is a violation.
-   Log all violations:
-   ```
-   pre-synthesis discipline gate:
-     optimist  / h1_acquire_local_devtools: 7 first-order effects (cap 4) — VIOLATION
-     pessimist / h1_acquire_local_devtools: 8 first-order effects (cap 4) — VIOLATION
-     regulator / h2_greenfield_full_subsidiary: 4 first-order — OK
-   ```
+2. **Identify violations.** Any `(persona, hypothesis)` where first-order count
+   > 12 is a violation. Log every count > 8 as a WARN for visibility, but only
+   re-spawn on > 12 — the lower band is where legitimate tiered analysis lives.
 
 3. **No violations → proceed to Step 3 Synthesis.**
 
-4. **One or more violations → spawn focused re-prompts.** For each violating persona
-   (NOT all 5 — only the offenders), spawn ONE Agent subagent with a re-prompt:
+4. **One or more violations → spawn focused re-prompts** for each violating
+   persona (only the offenders) with a trim instruction: "you wrote N effects
+   for hypothesis X, the cap is 12 — pick the 5-8 strongest by causal-mechanism
+   distinctness, drop the rest. Tiered effects (e.g. 4 cash-tier variants of
+   one outcome) count as legitimately distinct. Wordy redundant variants of the
+   same concept do not."
 
-   ```
-   YOUR PREVIOUS OUTPUT for hypothesis {hyp_id} had {N} first-order effects.
-   The hard cap per persona-preamble.md rule 6 is 4 first-order effects per
-   hypothesis. Re-do JUST that hypothesis:
+5. **One retry per persona, then accept.** If a persona STILL has > 12 after
+   the re-prompt, log a WARNING and proceed. The post-hoc validator
+   (`per_persona_overproduction` HARD_FAIL > 12) will surface it in the brief.
 
-   1. Read your previous output at iteration-{N}/council/{persona}.json
-   2. For hypothesis {hyp_id}, pick the 3-4 STRONGEST effects by causal-mechanism
-      distinctness. Drop the weakest. The alt_ slot stays as your 5th.
-   3. Output the FULL JSON shape (all 5 hypotheses) but with the trimmed effect
-      list for {hyp_id}. Other hypotheses unchanged.
-   4. Write the updated JSON to iteration-{N}/council/{persona}.json (overwrite).
+6. **Append to `iteration-{N}/discipline-gate.log`** so the brief's Council
+   Dynamics can cite the repair if it ran.
 
-   Why this matters: synthesis merges across the 5 personas by effect_id. Effects
-   only one persona generated sit as council_agreement = 1 islands that drown the
-   shared signal. 5 personas × 3 strong effects = ~15 raw → ~5-7 unique with
-   council_agreement 3-4 (clean synthesis). Your overproduction breaks that math.
+**Why the threshold is 12, not 4:**
 
-   Cap: 4 first-order. Floor: 2. Target: 3.
-   ```
+Earlier versions of this gate triggered at > 4, which forced re-spawns on every
+healthy run that did tiered analysis (the v0.4.0 sell-vs-raise brief had 7
+effects in one hypothesis from 4 acquirer-motive tiers + 3 cash-structure tiers,
+all with high agreement). At threshold 12, only catastrophic patterns trigger
+the repair, and the validator backstops catch the borderline cases at brief-
+validation time.
 
-5. **Wait for re-prompts to complete.** Re-validate the updated council files.
-
-6. **One retry per persona, then accept.** If a persona STILL has > 4 first-order
-   for any hypothesis after the re-prompt, log a WARNING and proceed to synthesis
-   with the over-stuffed file. The post-hoc validator (`per_persona_overproduction`
-   in `brief-schema.json`) will then HARD_FAIL the brief. Don't loop infinitely.
-
-7. **Append to `iteration-{N}/discipline-gate.log`** so the brief's Council Dynamics
-   can cite the repair: "Optimist re-spawned for h1 (7 → 3 first-order); Pessimist
-   re-spawned for h1 (8 → 4)."
-
-**Why this is in Step 2.5, before synthesis:**
-
-- After Step 3 Synthesis, the bad pattern is locked into `effects-chains.json` —
-  re-spawning a single persona requires re-running synthesis end-to-end, which
-  is expensive and error-prone.
-- Per-persona re-spawn is cheap: one Agent subagent with a focused prompt
-  (~500 tokens), 1 minute wall-clock.
-- Re-spawning the FULL council would defeat the purpose — the genuine
-  per-persona analyses are independent observations and we want to keep
-  the (compliant) ones.
-
-**Iteration-2 light mode applies the gate too.** See `engine-protocol.md`
-"Iteration Modes" — iter-2 personas write fresh council files, the gate runs
-on iter-2/council/*.json before iter-2 synthesis. Without this, an over-stuffed
-iter-1 followed by a trimmed iter-2 (or vice versa) creates fake convergence
-or fake instability via count drift.
-
-**Exempt modes:** quick mode (no council). Medium and Full modes both run
-this gate.
+**Exempt modes:** quick mode (no council), challenge mode (adversary-only).
+Medium and Full modes both run this gate.
 
 ### Step 3: Synthesis Pass
 
