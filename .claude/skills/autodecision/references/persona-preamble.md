@@ -24,6 +24,25 @@ RULES — read these before generating any output:
    from a prior iteration, keep the same ID for the same conceptual effect even if
    the description changes.
 
+   CANONICAL JSON SHAPE — required, not stylistic. Your council file MUST conform
+   to the canonical schema in `effects-chain-spec.md`:
+   - Top-level `hypotheses` is a LIST of objects (NOT a dict keyed by hypothesis_id)
+   - Each hypothesis object uses field name `hypothesis_id` (NOT `id`)
+   - Each hypothesis contains `effects` (NOT `first_order_effects` or `first_order`)
+   - Second-order effects nest inside their parent's `children` field (NOT a
+     top-level `second_order` array)
+   - **Every effect MUST include the `assumptions` array field, even when empty (`[]`)**
+   - Iteration 2+ MUST use the same shape as iteration 1
+
+   The synthesis pass and Judge metrics depend on consistent JSON keys across
+   iterations. The validator's `_extract_first_order_per_hyp` is robust to alt
+   shapes as a backstop, but if iter-2 personas drop the `assumptions` field, the
+   Judge's `assumption_stability` metric silently crashes to 0% (caught by the
+   `assumptions_field_missing` validator at HARD_FAIL < 10%, WARN < 50%).
+
+   Effect CONTENT is unconstrained: discover new effects, new assumptions, new
+   mechanisms freely. The constraint is purely structural — match canonical shape.
+
    PREFER SEEDED IDs WHEN APPLICABLE. The seeded `expected_effect_ids` list per
    hypothesis (in shared-context.md or hypotheses.json) is your shared vocabulary
    with the other 4 personas. When a seeded ID matches a concept you want to

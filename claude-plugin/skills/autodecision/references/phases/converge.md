@@ -104,37 +104,90 @@ contradictions, which REQUIRES changing effects. A 22-effect delta that resolves
 - `assumption_stability` > 80%
 
 **SECONDARY signals (inform but also hard-cap):**
-- `effects_delta` — WARNING if high. **Hard-cap gate:** if `effects_delta > 50`,
-  convergence is FALSE regardless of other signals. A delta that high means the
-  map is still being rewritten, not refined. Exception: if iter-N explicitly
-  labeled any added hypothesis with `new_in_iter_N: true`, subtract effects
-  attributable to that hypothesis from the delta before comparing to 50. This
-  prevents "productive refinement" from masking genuine churn (the bug we hit
-  at delta=126 in the pricing rerun).
+- `shared_effect_shifts` — load-bearing convergence signal. Count of first-order
+  effect_ids present in BOTH iterations whose probability shifted by > 0.10.
+  This is what "the map stabilized" actually means.
+- `delta_first_order_added_removed` — first-order effect_ids added or removed
+  between iterations. Real convergence signal but distinguishes from sub-effect
+  noise.
+- `sub_effect_noise` — count of new/removed second-order children of stable
+  first-order effects. Informational only — does NOT trip the cap. Natural
+  elaboration as personas refine details around stable mechanisms.
 - `ranking_flip_count` — WARNING if > 1, gate only if > 3 (complete ranking reversal)
 
-**Convergence logic:**
-```
-effective_delta = effects_delta
-if any hypothesis is flagged new_in_iter_N:
-    effective_delta -= count_of_effects_attributable_to_that_hypothesis
+**Hard-cap gate:** if `effective_delta > 50`, convergence is FALSE regardless of
+other signals. The cap fires only on first-order signal (shared shifts +
+add/remove), NOT on sub-effect noise. Earlier versions used raw `effects_delta`
+which counted every 2nd-order child change — false-NOT-CONVERGED on substantively-
+converged runs (real case: 27 stable shared first-order, 1 shifted, 89 new 2nd-
+order children → raw delta 116 wrongly fired the cap).
 
+**Convergence logic (canonical pseudocode — implement exactly this):**
+
+```
+# --- Compute the 3 first-order signals + 1 noise signal ---
+shared_effect_shifts = 0
+delta_first_order_added_removed = 0
+sub_effect_noise = 0
+
+prev_first_order_ids = {e.effect_id for e in iter-(N-1).hypotheses[*].effects
+                        where e.order == 1}
+curr_first_order_ids = {e.effect_id for e in iter-N.hypotheses[*].effects
+                        where e.order == 1}
+
+# Shared first-order: effect_ids in BOTH iters
+for eid in prev_first_order_ids ∩ curr_first_order_ids:
+    if abs(prev[eid].probability - curr[eid].probability) > 0.10:
+        shared_effect_shifts += 1
+
+# Added/removed at first-order (still convergence signal)
+delta_first_order_added_removed = len(prev_first_order_ids ⊕ curr_first_order_ids)
+
+# Sub-effect noise: 2nd-order children of effect_ids stable across iters
+for eid in prev_first_order_ids ∩ curr_first_order_ids:
+    prev_children = {c.effect_id for c in prev[eid].children}
+    curr_children = {c.effect_id for c in curr[eid].children}
+    sub_effect_noise += len(prev_children ⊕ curr_children)
+
+# --- Compute effective_delta (excludes sub-effect noise) ---
+effective_delta = shared_effect_shifts + delta_first_order_added_removed
+
+# Subtract first-order effects from new_in_iter_N hypotheses (existing exception)
+if any hypothesis in iter-N has new_in_iter_N: true:
+    effective_delta -= count_of_first_order_effects_attributable_to_that_hypothesis
+
+# --- Decide ---
 if effective_delta > 50:
-    NOT CONVERGED  (map is still rewriting itself)
+    NOT CONVERGED  (first-order map is still being rewritten)
 elif contradiction_count <= 1 AND assumption_stability > 80%:
-    CONVERGED (even if effective_delta is moderate, e.g., 5-50)
-    note effective_delta and ranking_flips as warnings in the brief
+    CONVERGED  (even if sub_effect_noise is high — that's natural refinement)
+    note sub_effect_noise and ranking_flips as warnings in the brief
 elif contradiction_count is decreasing AND assumption_stability > 70%:
-    TRENDING (close to convergence, worth one more iteration if budget allows)
+    TRENDING  (close to convergence, worth one more iteration if budget allows)
 else:
     NOT CONVERGED
 ```
 
-**Report all 4 values regardless** — and add `effective_delta` alongside
-`effects_delta` in `judge-score.json` so the brief's Convergence Log shows both
-the raw delta and what was excluded. The brief shows the full picture. But
-convergence is determined by contradictions resolving + assumptions stabilizing
-AND the map actually stabilizing.
+**Report all values in `judge-score.json`:**
+- `shared_effect_shifts` (NEW, primary convergence signal)
+- `delta_first_order_added_removed` (NEW)
+- `sub_effect_noise` (NEW, informational)
+- `effective_delta` (now = shared_shifts + add/remove, NOT the old raw delta)
+- `effects_delta` (raw, kept for backward compat with prior runs and for the
+  Convergence Log table — display alongside effective_delta so reader can see both)
+- `contradiction_count`, `assumption_stability_pct`, `ranking_flip_count`
+
+The brief's Convergence Log table shows all 7 values. The cap fires only on
+`effective_delta`. Convergence requires PRIMARY signals (contradictions resolving
++ assumptions stabilizing) plus first-order map stabilizing — sub-effect noise
+is reported but never gates.
+
+**Why this changed:** earlier `effects_delta` was raw (all orders, no split).
+A run with 27 stable shared first-order effects + 89 new 2nd-order children of
+those stable parents had effects_delta = 116, fired the > 50 cap, and was wrongly
+reported NOT CONVERGED even though the first-order map was substantively stable.
+The split fixes this: load-bearing signal (first-order add/remove + shifts) is
+what triggers the cap; second-order proliferation is reported but doesn't gate.
 
 ### User Confirmation Before Iteration 3+
 

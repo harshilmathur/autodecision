@@ -251,7 +251,56 @@ Contents of `shared-context.md`:
   pick seeded." The softer "prefer when applicable" framing keeps the synthesis
   benefit without killing creative range.
 - Persona preamble rules (from persona-preamble.md)
-- **FOR ITERATION 2+ ONLY** — append these two blocks before spawning:
+- **FOR ITERATION 2+ ONLY** — append these three blocks before spawning:
+  - **Mandatory canonical schema example.** Iter-2+ council files MUST match
+    iter-1's JSON shape — same field names, same nesting, no alt schemas. Personas
+    in the wild have switched mid-run to `effects_by_hypothesis`, dict-keyed
+    `hypotheses`, `first_order_effects` (instead of `effects`), `id` (instead of
+    `hypothesis_id`), and dropped the `assumptions` field entirely. The last one
+    crashes the Judge's assumption_stability metric to 0% silently. Include the
+    following literal example in shared-context.md, prefaced with "Your iter-2
+    council file MUST match this canonical shape":
+
+    ```json
+    {
+      "status": "complete",
+      "persona": "optimist",
+      "iteration": 2,
+      "hypotheses": [
+        {
+          "hypothesis_id": "h1_short_label",
+          "effects": [
+            {
+              "effect_id": "stable_id_carried_from_iter1",
+              "description": "Human-readable description",
+              "order": 1,
+              "probability": 0.65,
+              "timeframe": "0-3 months",
+              "assumptions": ["assumption_key_1", "assumption_key_2"],
+              "children": [
+                {
+                  "effect_id": "second_order_id",
+                  "description": "...",
+                  "order": 2,
+                  "probability": 0.50,
+                  "timeframe": "3-6 months",
+                  "assumptions": [],
+                  "parent_effect_id": "stable_id_carried_from_iter1",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+    ```
+
+    Do NOT switch to `effects_by_hypothesis`, dict-keyed `hypotheses`,
+    `first_order_effects`, `first_order`, `second_order`, or use `id` instead of
+    `hypothesis_id`. Always include the `assumptions` array on every effect, even
+    if empty (`[]`). The validator's `assumptions_field_missing` content_check
+    HARD_FAILs if < 10% of first-order effects have non-empty assumptions.
   - **Previous iteration effect_ids:** the full list of `effect_id` values from
     `iteration-{N-1}/effects-chains.json > effects[].effect_id` with the rule
     "reuse these IDs for conceptually identical effects, only create new IDs for

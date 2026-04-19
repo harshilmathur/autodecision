@@ -760,11 +760,18 @@ def check_unsourced_numbers(md: str, schema: dict, positions: dict, report: Repo
     proximity = cfg.get("proximity_chars", 120)
     exempt_headers = set(cfg.get("exempt_sections", []))
 
-    # Build a set of (start, end) byte ranges for exempt sections
+    # Strip code blocks first — we scan in scan_text, so all offsets MUST be
+    # in scan_text coordinates. Earlier versions built exempt_ranges from `md`
+    # coordinates and then checked violations in `scan_text` coordinates,
+    # causing false HARD_FAILs when code blocks BEFORE an exempt section
+    # shifted the offset such that the exempt header appeared at a different
+    # byte position post-strip. Detected in the saas-founder run.
+    scan_text = strip_code_blocks(md)
+
+    # Build (start, end) byte ranges for exempt sections — in scan_text coords
     exempt_ranges: list[tuple[int, int]] = []
-    headers = extract_h2_sections(md)
-    header_positions = [(ln, h, sum(len(l) + 1 for l in md.split("\n")[:ln])) for ln, h in headers]
-    lines = md.split("\n")
+    headers = extract_h2_sections(scan_text)
+    lines = scan_text.split("\n")
 
     def line_to_char(ln: int) -> int:
         return sum(len(l) + 1 for l in lines[:ln])
@@ -775,11 +782,8 @@ def check_unsourced_numbers(md: str, schema: dict, positions: dict, report: Repo
             if i + 1 < len(headers):
                 end = line_to_char(headers[i + 1][0])
             else:
-                end = len(md)
+                end = len(scan_text)
             exempt_ranges.append((start, end))
-
-    # Also exempt code blocks entirely (strip them from the scanning text)
-    scan_text = strip_code_blocks(md)
 
     # Find all numeric claims
     violations: list[tuple[int, str]] = []
@@ -1491,6 +1495,129 @@ def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: 
         )
 
 
+def check_assumptions_field_present(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
+    """
+    Enforce content_checks.assumptions_field_missing: backstop for the iter-2
+    schema drift pattern where personas drop the `assumptions` field entirely
+    from their council-file effects. The synthesized effects-chains.json then
+    has effects with no assumptions, and the Judge's assumption_stability
+    metric silently goes to 0%.
+
+    Reads iteration-{latest}/effects-chains.json (the synthesized output, where
+    drift would have manifested even after synthesis tried to recover).
+
+    Computes: % of first-order effects with non-empty `assumptions` array.
+    WARN below warn_threshold (50%) — drift detected, recoverable.
+    HARD_FAIL below fail_threshold (10%) — catastrophic, Judge metric crash.
+    """
+    cfg = schema.get("content_checks", {}).get("assumptions_field_missing")
+    if not cfg:
+        return
+    if mode in cfg.get("skip_in_modes", []):
+        return
+
+    iter_dirs = sorted(
+        [d for d in run_dir.iterdir() if d.is_dir() and re.match(r"iteration-\d+$", d.name)],
+        key=lambda d: int(d.name.split("-")[1]),
+    )
+    if not iter_dirs:
+        return
+
+    # Find the latest iteration with effects-chains.json
+    ec_path = None
+    for d in reversed(iter_dirs):
+        candidate = d / "effects-chains.json"
+        if candidate.is_file():
+            ec_path = candidate
+            break
+    if not ec_path:
+        return  # other gates handle missing data
+
+    try:
+        ec = json.loads(ec_path.read_text())
+    except (json.JSONDecodeError, OSError) as e:
+        report.add(
+            "assumptions_field_missing",
+            "FAIL", "WARN",
+            f"Could not read {ec_path.relative_to(run_dir)}: {e}",
+        )
+        return
+
+    # Iterate first-order effects across all hypotheses
+    total_first_order = 0
+    with_assumptions = 0
+    for h in ec.get("hypotheses", []) or []:
+        if not isinstance(h, dict):
+            continue
+        for e in h.get("effects", []) or []:
+            if not isinstance(e, dict):
+                continue
+            # Only count first-order
+            if e.get("order", 1) != 1:
+                continue
+            total_first_order += 1
+            assumptions = e.get("assumptions")
+            if isinstance(assumptions, list) and len(assumptions) > 0:
+                with_assumptions += 1
+
+    if total_first_order == 0:
+        # No first-order effects — different gate handles this
+        return
+
+    pct = round(100 * with_assumptions / total_first_order, 1)
+    warn_threshold = cfg.get("warn_threshold", 50)
+    fail_threshold = cfg.get("fail_threshold", 10)
+
+    if pct < fail_threshold:
+        report.add(
+            "assumptions_field_missing",
+            "FAIL",
+            schema.get("severity_on_fail", {}).get("assumptions_field_missing", "HARD_FAIL"),
+            (
+                f"Only {with_assumptions}/{total_first_order} ({pct}%) of first-order effects "
+                f"in {ec_path.name} have non-empty `assumptions` arrays. Below the hard floor "
+                f"of {fail_threshold}%. Personas dropped the assumptions field — Judge's "
+                f"assumption_stability metric will silently crash to 0%. "
+                f"{cfg.get('remediation', 'Verify persona-preamble.md rule 3 includes the canonical-schema clause.')}"
+            ),
+            pct_with_assumptions=pct,
+            with_assumptions=with_assumptions,
+            total_first_order=total_first_order,
+            warn_threshold=warn_threshold,
+            fail_threshold=fail_threshold,
+            iteration=ec_path.parent.name,
+        )
+    elif pct < warn_threshold:
+        report.add(
+            "assumptions_field_missing",
+            "PASS", "WARN",
+            (
+                f"Only {with_assumptions}/{total_first_order} ({pct}%) of first-order effects "
+                f"in {ec_path.name} have non-empty `assumptions` arrays. Above the hard floor "
+                f"({fail_threshold}%) but below the healthy threshold ({warn_threshold}%). "
+                f"Schema drift detected — some personas may be dropping the field."
+            ),
+            pct_with_assumptions=pct,
+            with_assumptions=with_assumptions,
+            total_first_order=total_first_order,
+            warn_threshold=warn_threshold,
+            iteration=ec_path.parent.name,
+        )
+    else:
+        report.add(
+            "assumptions_field_missing",
+            "PASS", "INFO",
+            (
+                f"{with_assumptions}/{total_first_order} ({pct}%) of first-order effects in "
+                f"{ec_path.name} have non-empty `assumptions` arrays. Schema integrity holds."
+            ),
+            pct_with_assumptions=pct,
+            with_assumptions=with_assumptions,
+            total_first_order=total_first_order,
+            iteration=ec_path.parent.name,
+        )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--run-dir", required=True, type=Path,
@@ -1533,6 +1660,8 @@ def main() -> int:
     check_per_persona_overproduction(schema, run_dir, args.mode, report)
     # Seeded vocabulary adoption backstop (new in schema v1.4)
     check_seeded_vocab_adoption(schema, run_dir, args.mode, report)
+    # Assumptions field present backstop (new in schema v1.6)
+    check_assumptions_field_present(schema, run_dir, args.mode, report)
 
     out = run_dir / "validation-report.json"
     out.write_text(json.dumps(report.as_dict(), indent=2))

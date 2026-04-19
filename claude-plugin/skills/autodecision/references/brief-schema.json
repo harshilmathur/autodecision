@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.5",
-  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1 additions: positions 15 (Appendix C: Complete Effects Map) and 16 (Sources), content_checks block (unsourced numbers + depends-on mirror), trailing-block ref format, legacy inline ref fallback. v1.2: Appendix B and C swapped. v1.3: added per_persona_overproduction content_check. v1.4: added seeded_vocab_ignored content_check. v1.5: relaxed per_persona_overproduction thresholds (WARN > 8, HARD_FAIL > 12, was > 4 / > 6) and reverted the spec-tightening that paired with it. The earlier thresholds over-constrained legitimate tiered analysis (v0.4.0 sell-vs-raise brief had 7 effects in one hypothesis from 4 acquirer-motive tiers + 3 cash-structure tiers, all with high agreement). Spec wording (persona-preamble.md rule 6) restored to v0.4.0 5-8 range; alts restored to mandatory; seeded vocab framing softened to 'prefer when applicable' rather than 'USE FIRST'. Validator backstops kept as wider safety nets that catch the genuinely-broken Japan-style redundant-invention pattern without false-positiving on healthy specialist analysis.",
+  "schema_version": "1.6",
+  "description": "Canonical structure for Decision Brief. The validator at scripts/validate-brief.py enforces this spec against DECISION-BRIEF.md. This is the single source of truth; references/output-format.md must match it. v1.1: source tagging + depends-on mirror. v1.2: Appendix B/C swap. v1.3: per_persona_overproduction. v1.4: seeded_vocab_ignored. v1.5: relaxed per_persona_overproduction thresholds + restored v0.4.0 spec wording. v1.6: added assumptions_field_missing content_check (backstop for iter-2 schema drift where personas drop the assumptions field, which silently crashes the Judge's assumption_stability metric to 0%). Also fixed check_unsourced_numbers offset-mismatch bug (exempt_ranges was built from md but scan happened in scan_text after strip — caused false HARD_FAILs on Sources sections preceded by code blocks).",
 
   "sections": [
     {
@@ -257,7 +257,8 @@
     "depends_on_missing_assumption":"HARD_FAIL",
     "synthesis_dedup_skipped":     "HARD_FAIL",
     "per_persona_overproduction":  "HARD_FAIL",
-    "seeded_vocab_ignored":        "HARD_FAIL"
+    "seeded_vocab_ignored":        "HARD_FAIL",
+    "assumptions_field_missing":   "HARD_FAIL"
   },
 
   "content_checks": {
@@ -291,6 +292,15 @@
       "fail_threshold": 12,
       "skip_in_modes": ["quick", "challenge"],
       "remediation": "If the violation is genuine catastrophic overproduction (15+ wordy variants per hypothesis with all council_agreement=1), re-spawn the offending personas with the trim re-prompt from simulate.md Step 2.5 Pre-Synthesis Discipline Gate. If the violation is tiered analysis (multiple distinct probability variants of one mechanism), the threshold should NOT trigger — verify the spec wording in persona-preamble.md rule 6 hasn't drifted back to single-target framing."
+    },
+    "assumptions_field_missing": {
+      "description": "Backstop for the iter-2 schema drift pattern where personas drop the `assumptions` field from their council-file effects. The Judge's assumption_stability metric reads `all_assumptions` from effects-chains.json — if synthesis can't extract assumptions because personas omitted the field, stability silently drops to 0% and an extra iteration is triggered to recover. The fix at the spec layer (persona-preamble.md rule 3 + engine-protocol.md iter-2 carryforward) is markdown-only and relies on persona compliance. This validator catches the failure post-hoc by reading iteration-{latest}/effects-chains.json and computing the % of first-order effects with non-empty assumptions arrays. WARN below 50% (drift detected, recoverable). HARD_FAIL below 10% (catastrophic, Judge metric will crash).",
+      "source_file_glob": "iteration-*/effects-chains.json",
+      "metric": "pct_first_order_effects_with_assumptions",
+      "warn_threshold": 50,
+      "fail_threshold": 10,
+      "skip_in_modes": ["quick", "challenge"],
+      "remediation": "Verify persona-preamble.md rule 3 includes the canonical-schema clause requiring an `assumptions` array on every effect. Verify engine-protocol.md iter-2 carryforward includes the literal JSON example. If both are correct and personas still drop the field, escalate to: (a) wrap the persona prompt with an explicit Phase 2.5 schema-validation gate that re-spawns offending personas, mirroring the existing Pre-Synthesis Discipline Gate, OR (b) add Python-side normalization in synthesis that re-injects empty assumptions arrays."
     },
     "seeded_vocab_ignored": {
       "description": "The seeded `expected_effect_ids` per hypothesis (defined in hypotheses.json, populated by phases/hypothesize.md 'Shared Effect ID Vocabulary') are MEANT to make ~80% of synthesis mechanical: 5 personas seeing the same 4 seeded IDs SHOULD converge on those IDs and synthesis just merges by exact effect_id. When personas instead invent wordier descriptive IDs for the same concepts (e.g. seeded `earnout_lock_in_risk` becomes `earnout_and_retention_claw_back_value` in 4 personas with NO match to the seeded form), each invented ID becomes a council_agreement=1 island and synthesis dedup must work much harder. Even when 4-5 personas converge on the SAME invented ID, they get high mechanical agreement on that island but ZERO credit toward the seeded vocabulary mechanism. This check reads hypotheses.json's expected_effect_ids per hypothesis and inspects iteration-*/council/*.json for actual usage of those seeded IDs (handles both `hypotheses[]` and `effects_by_hypothesis{}` schema shapes). Computes adoption rate = seeded IDs that appeared in at least one persona's output / total seeded IDs across all hypotheses. WARN below warn_threshold (50%); HARD_FAIL below fail_threshold (20%). Sell-15m-vs-safe-30m run had 0/16 = 0% adoption → silent regression caught only by manual inspection.",

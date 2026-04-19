@@ -123,6 +123,28 @@ Medium and Full modes both run this gate.
 
 After all subagents complete, the orchestrator reads all `council/*.json` files and:
 
+0. **Shape-agnostic extraction (defense in depth against schema drift).** Personas
+   in the wild have shipped 4 distinct council JSON shapes (canonical
+   `hypotheses[]`, alt `effects_by_hypothesis{}`, dict-keyed `hypotheses{}` with
+   `first_order_effects`, dict-keyed with `first_order`). The persona-preamble
+   rule 3 + iter-2 carryforward example (in `engine-protocol.md` Shared Context)
+   tell personas to use the canonical shape — this synthesis step is the backstop
+   for when they don't.
+
+   For EACH council file, extract effects + assumptions using the same
+   shape-agnostic logic the validator's `_extract_first_order_per_hyp` uses
+   (in `scripts/validate-brief.py`). Specifically: try each shape in order
+   (canonical `hypotheses[]` → flat `effects_by_hypothesis{}` → dict-keyed
+   `hypotheses{}`), and for each, extract effects from any of these field names:
+   `effects`, `first_order_effects`, `first_order`. Pull `assumptions` from the
+   `assumptions` field if present; if absent (persona dropped the field),
+   default to `[]` and log a WARN line: "Persona X iter-N hypothesis Y dropped
+   assumptions field — defaulted to empty. The validator's
+   assumptions_field_missing check will surface this." This way the
+   synthesized `effects-chains.json` always has a structurally valid
+   `assumptions` array, even when personas misbehave, and the Judge's
+   assumption_stability metric stays meaningful.
+
 1. **Collect all unique `effect_id` values** across all 5 personas, across all
    hypotheses, across BOTH first-order and second-order slots.
 2. **Deduplicate by semantic similarity (within an order).** If two personas use
