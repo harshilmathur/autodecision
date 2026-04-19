@@ -254,7 +254,8 @@
     "recommendation_before_pos_12":"HARD_FAIL",
     "unsourced_dollar_figure":     "HARD_FAIL",
     "unsourced_numeric_claim":     "WARN",
-    "depends_on_missing_assumption":"HARD_FAIL"
+    "depends_on_missing_assumption":"HARD_FAIL",
+    "synthesis_dedup_skipped":     "HARD_FAIL"
   },
 
   "content_checks": {
@@ -270,6 +271,15 @@
       "description": "Every bullet in the Recommendation section's 'Depends on:' line must correspond to an assumption row in Key Assumptions (position 10). If the Recommendation names an assumption that doesn't appear in the table, either the table is missing a load-bearing assumption (add it) or the Recommendation is citing a phantom (rewrite).",
       "match_mode": "substring_presence",
       "threshold": "every depends-on item must match at least one Key Assumptions description via substring or semantic token overlap > 60%"
+    },
+    "synthesis_dedup_skipped": {
+      "description": "Synthesis must merge effects across personas via mechanical merge (exact effect_id) AND semantic dedup of novel IDs (see references/persona-council.md 'Synthesis Pass' and 'Mechanical merge' / 'Semantic dedup' steps). When dedup is skipped, each persona's near-duplicate effects sit as separate rows with council_agreement=1 each, instead of merging into one row with council_agreement>=2. The brief then shows inflated 1st-order effect counts and meaningless agreement signals — the visualization fans out to 25-30 dots per hypothesis, the Effects Map's High-Confidence section under-fills, and the Judge's effects_delta metric loses its meaning. This check reads iteration-{latest}/effects-chains.json and computes the average council_agreement across all 1st-order effects. Below the minimum threshold, synthesis was skipped or under-applied and the run must be re-synthesized before the brief is published.",
+      "source_file_glob": "iteration-*/effects-chains.json",
+      "metric": "avg_council_agreement_first_order",
+      "minimum": 1.50,
+      "warn_below": 2.00,
+      "skip_in_modes": ["quick"],
+      "remediation": "Re-run the synthesis step from references/persona-council.md 'Synthesis Pass'. Specifically perform Step 3 (Semantic dedup) — either inline if <=3 novel IDs OR by spawning a single dedup agent if >3. Then regenerate effects-chains.json and re-run the validator."
     }
   }
 }

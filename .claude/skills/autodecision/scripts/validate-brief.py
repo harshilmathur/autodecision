@@ -914,6 +914,105 @@ def parse_table_row(line: str) -> list[str]:
     return cells
 
 
+def check_synthesis_dedup_quality(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
+    """
+    Enforce content_checks.synthesis_dedup_skipped: synthesis must merge effects
+    across personas. Average council_agreement across 1st-order effects below the
+    minimum threshold means most effects are persona-unique islands and the
+    semantic dedup step from references/persona-council.md was skipped.
+    """
+    cfg = schema.get("content_checks", {}).get("synthesis_dedup_skipped")
+    if not cfg:
+        return
+    if mode in cfg.get("skip_in_modes", []):
+        return
+
+    # Find latest iteration-N/effects-chains.json
+    iter_dirs = sorted(
+        [d for d in run_dir.iterdir() if d.is_dir() and re.match(r"iteration-\d+$", d.name)],
+        key=lambda d: int(d.name.split("-")[1]),
+    )
+    ec_path = None
+    for d in reversed(iter_dirs):
+        candidate = d / "effects-chains.json"
+        if candidate.is_file():
+            ec_path = candidate
+            break
+    if not ec_path:
+        # No effects-chains.json — different check (intermediate-files gate) handles it
+        return
+
+    try:
+        ec = json.loads(ec_path.read_text())
+    except (json.JSONDecodeError, OSError) as e:
+        report.add(
+            "synthesis_dedup_skipped",
+            "FAIL", "WARN",
+            f"Could not read {ec_path}: {e}",
+        )
+        return
+
+    agreements: list[int] = []
+    for h in ec.get("hypotheses", []):
+        for e in h.get("effects", []):
+            agr = e.get("council_agreement")
+            if isinstance(agr, (int, float)):
+                agreements.append(int(agr))
+    if not agreements:
+        return  # nothing to measure
+    avg = sum(agreements) / len(agreements)
+    minimum = cfg.get("minimum", 1.5)
+    warn_below = cfg.get("warn_below", 2.0)
+    total_effects = len(agreements)
+    one_persona_only = sum(1 for a in agreements if a <= 1)
+    pct_islands = round(one_persona_only / total_effects * 100, 1)
+
+    if avg < minimum:
+        report.add(
+            "synthesis_dedup_skipped",
+            "FAIL",
+            schema.get("severity_on_fail", {}).get("synthesis_dedup_skipped", "HARD_FAIL"),
+            (
+                f"Avg council_agreement across {total_effects} first-order effects in "
+                f"{ec_path.name} is {avg:.2f} (minimum {minimum}). {one_persona_only}/{total_effects} "
+                f"({pct_islands}%) sit at council_agreement=1 — synthesis did NOT dedup novel IDs across "
+                f"personas. {cfg.get('remediation', 'Re-run synthesis with semantic dedup.')}"
+            ),
+            avg_council_agreement=round(avg, 2),
+            minimum=minimum,
+            total_first_order_effects=total_effects,
+            council_agreement_one_count=one_persona_only,
+            council_agreement_one_pct=pct_islands,
+            source=str(ec_path.relative_to(run_dir)),
+        )
+    elif avg < warn_below:
+        report.add(
+            "synthesis_dedup_skipped",
+            "PASS", "WARN",
+            (
+                f"Avg council_agreement {avg:.2f} (minimum {minimum}) is above the hard floor but "
+                f"below the warn threshold ({warn_below}). {pct_islands}% of effects are persona-unique. "
+                "Synthesis dedup looks light — consider an additional pass."
+            ),
+            avg_council_agreement=round(avg, 2),
+            minimum=minimum,
+            warn_below=warn_below,
+            council_agreement_one_pct=pct_islands,
+            source=str(ec_path.relative_to(run_dir)),
+        )
+    else:
+        report.add(
+            "synthesis_dedup_skipped",
+            "PASS", "INFO",
+            (
+                f"Avg council_agreement {avg:.2f} across {total_effects} first-order effects "
+                f"(minimum {minimum}). Synthesis dedup looks healthy."
+            ),
+            avg_council_agreement=round(avg, 2),
+            source=str(ec_path.relative_to(run_dir)),
+        )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--run-dir", required=True, type=Path,
@@ -950,6 +1049,8 @@ def main() -> int:
     if args.mode in ("full", "medium"):
         check_unsourced_numbers(md, schema, positions, report)
         check_depends_on_mirrors_assumptions(md, schema, positions, report)
+    # Synthesis dedup quality (skipped in quick mode where there is no council)
+    check_synthesis_dedup_quality(schema, run_dir, args.mode, report)
 
     out = run_dir / "validation-report.json"
     out.write_text(json.dumps(report.as_dict(), indent=2))

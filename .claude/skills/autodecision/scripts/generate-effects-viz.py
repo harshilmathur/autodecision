@@ -268,45 +268,56 @@ def _best_text_field(d: dict, keys: tuple, max_len: int = 300) -> str:
 
 
 def extract_threats_flat(adv: dict) -> tuple[list, list]:
-    """Return (worst_cases, black_swans) as lists. Handles multiple key conventions:
-    worst_cases / worst_case_scenarios / red_team_scenarios, and description / scenario / name.
-    Each item also carries `affected_options` or `which_options_exposed` if present — the viz
-    can match the worst case back to the specific hypothesis it threatens instead of
-    distributing round-robin."""
+    """Return (worst_cases, black_swans) as lists. Handles multiple key conventions
+    across schema versions:
+      - container key: worst_cases / worst_case_scenarios / red_team_scenarios; black_swans / black_swan_scenarios
+      - text field: description / scenario / name / event (current adversary.md spec uses `event` for black swans)
+      - severity score: lethality_score / probability_estimate (heuristic mapping from `severity` enum if absent)
+      - hypothesis link: affected_hypotheses (current spec) / invalidates (current spec for black swans) /
+                        affected_options / which_options_exposed / hypotheses (legacy)
+    """
+    def _affected_keys(o):
+        return (o.get("affected_hypotheses")
+                or o.get("invalidates")
+                or o.get("which_options_exposed")
+                or o.get("affected_options")
+                or o.get("hypotheses")
+                or [])
+
     wcs = []
     for wc in (adv.get("worst_cases") or adv.get("worst_case_scenarios") or adv.get("red_team_scenarios") or []):
         if not isinstance(wc, dict):
             continue
-        desc = _best_text_field(wc, ("description", "scenario", "name"))
+        desc = _best_text_field(wc, ("description", "scenario", "name", "event"))
         if not desc:
             continue
-        impact_str = (wc.get("impact") or "").lower()
+        impact_str = (wc.get("impact") or wc.get("severity") or "").lower()
         lethality = wc.get("lethality_score")
         if not lethality:
-            if "catastrophic" in impact_str or "existential" in impact_str:
-                lethality = 9
-            elif "severe" in impact_str or "major" in impact_str:
-                lethality = 7
+            if "catastrophic" in impact_str or "existential" in impact_str or impact_str == "high":
+                lethality = 8 if impact_str == "high" else 9
+            elif "severe" in impact_str or "major" in impact_str or impact_str == "med":
+                lethality = 6 if impact_str == "med" else 7
             else:
-                lethality = 6
+                lethality = 5
         wcs.append({
             "description": desc,
             "lethality": lethality,
-            "probability": wc.get("probability"),
-            "affected": wc.get("which_options_exposed") or wc.get("affected_options") or wc.get("hypotheses") or [],
+            "probability": wc.get("probability") or wc.get("probability_estimate"),
+            "affected": _affected_keys(wc),
         })
 
     bss = []
     for bs in (adv.get("black_swans") or adv.get("black_swan_scenarios") or []):
         if not isinstance(bs, dict):
             continue
-        desc = _best_text_field(bs, ("description", "scenario", "name"))
+        desc = _best_text_field(bs, ("description", "scenario", "name", "event"))
         if not desc:
             continue
         bss.append({
             "description": desc,
             "impact": _best_text_field(bs, ("impact",), max_len=200),
-            "affected": bs.get("affected_options") or bs.get("which_options_exposed") or bs.get("hypotheses") or [],
+            "affected": _affected_keys(bs),
         })
     return wcs, bss
 
