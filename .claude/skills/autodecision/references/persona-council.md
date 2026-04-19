@@ -215,7 +215,7 @@ For the field-level type spec independent of the prompt format, see
 
 Target: ~2000 tokens per persona per phase output. This means:
 - ~5-8 first-order effects per hypothesis
-- ~2-3 second-order effects per first-order effect
+- ~1-3 second-order effects per first-order effect (matches `persona-preamble.md` rule 6)
 - Each effect: ~50-80 tokens (ID, description, probability, assumptions)
 
 The 5-8 range allows tiered effect modeling and specialist insights without

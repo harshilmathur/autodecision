@@ -211,6 +211,38 @@ class SeededVocabCheckTests(unittest.TestCase):
         self.assertEqual(c["severity"], "WARN")
         self.assertIn("No seeded", c["detail"])
 
+    def test_seeded_extractor_accepts_both_id_and_hypothesis_id(self):
+        """Real-world: saas-founder iter-1 hypotheses.json used `id` instead of
+        `hypothesis_id`. The seeded extractor must accept both names."""
+        # Canonical: hypothesis_id
+        canonical = {"hypotheses": [
+            {"hypothesis_id": "h1", "expected_effect_ids": ["a", "b", "c"]},
+        ]}
+        out = vb._extract_seeded_per_hyp(canonical)
+        self.assertEqual(out["h1"], ["a", "b", "c"])
+
+        # Alt: id
+        alt = {"hypotheses": [
+            {"id": "h2", "expected_effect_ids": ["x", "y"]},
+        ]}
+        out = vb._extract_seeded_per_hyp(alt)
+        self.assertEqual(out["h2"], ["x", "y"])
+
+        # Both present — hypothesis_id wins (canonical takes precedence)
+        both = {"hypotheses": [
+            {"hypothesis_id": "h_canonical", "id": "h_alt", "expected_effect_ids": ["z"]},
+        ]}
+        out = vb._extract_seeded_per_hyp(both)
+        self.assertIn("h_canonical", out)
+        self.assertNotIn("h_alt", out)
+
+        # Neither present — skip the entry (don't crash)
+        missing = {"hypotheses": [
+            {"expected_effect_ids": ["w"]},  # no id at all
+        ]}
+        out = vb._extract_seeded_per_hyp(missing)
+        self.assertEqual(out, {})
+
     def test_iter1_fallback_when_iter2_uses_carryforward_schema(self):
         """Iter-2 hypotheses.json uses carryforward schema (carried_over /
         new_in_iter_2 instead of hypotheses[]). Check must fall back to iter-1's
