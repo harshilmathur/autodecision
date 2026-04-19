@@ -304,26 +304,109 @@ class PerPersonaOverproductionCheckTests(unittest.TestCase):
         alt = _make_council_effects_by_hypothesis("p", {"h1": 3, "h2": 5})
 
         for label, data in (("canonical", canonical), ("dict_keyed", dict_keyed), ("alt", alt)):
-            extracted = vb._extract_first_order_per_hyp(data)
+            extracted, recognized = vb._extract_first_order_per_hyp(data)
+            self.assertTrue(recognized, f"{label}: shape should be recognized")
             self.assertEqual(len(extracted["h1"]), 3, f"{label}: h1 count mismatch")
             self.assertEqual(len(extracted["h2"]), 5, f"{label}: h2 count mismatch")
 
     def test_helper_skips_malformed_silently(self):
-        """Garbage input must not crash — return empty dict."""
-        # Various malformed payloads
-        cases = [
+        """Garbage input must not crash. `recognized` reflects OUTER shape match;
+        bad inner content yields empty per-hypothesis lists (not crash)."""
+        # Outer shape NOT recognized: empty, wrong-type top-level fields
+        unrecognized_cases = [
             {},  # empty
-            {"hypotheses": "this is a string not a list or dict"},  # wrong type
-            {"hypotheses": [None, None]},  # list of nones
-            {"hypotheses": ["just_id_strings"]},  # list of strings
-            {"effects_by_hypothesis": "not a dict"},  # wrong type
-            {"hypotheses": {"h1": "not a dict or list"}},  # dict-keyed but bad inner
+            {"hypotheses": "this is a string not a list or dict"},
+            {"effects_by_hypothesis": "not a dict"},
+            {"random_field": [1, 2, 3]},
         ]
-        for i, data in enumerate(cases):
-            extracted = vb._extract_first_order_per_hyp(data)
-            # Either empty {} or {hyp_id: []} — never crash
+        for i, data in enumerate(unrecognized_cases):
+            extracted, recognized = vb._extract_first_order_per_hyp(data)
+            self.assertFalse(recognized, f"unrecognized case {i}: should NOT be recognized")
+            self.assertEqual(extracted, {}, f"unrecognized case {i}: should be empty")
+
+        # Outer shape RECOGNIZED but inner garbage: must not crash, yields empty/sparse output
+        recognized_but_garbage = [
+            {"hypotheses": [None, None]},
+            {"hypotheses": ["just_id_strings"]},
+            {"hypotheses": {"h1": "not a dict or list"}},
+            {"hypotheses": {"h1": {}}},  # dict-keyed but no effects field
+            {"effects_by_hypothesis": {"h1": "garbage"}},
+        ]
+        for i, data in enumerate(recognized_but_garbage):
+            extracted, recognized = vb._extract_first_order_per_hyp(data)
+            self.assertTrue(recognized, f"recognized-garbage case {i}: outer shape should match")
             for hid, effs in extracted.items():
                 self.assertIsInstance(effs, list, f"case {i}: effects must be list")
+                self.assertEqual(effs, [], f"case {i}: garbage inner yields empty list")
+
+    # ----- Schema variant 4: 'first_order' field name (saas-founder-20m run) -----
+
+    def test_dict_keyed_first_order_field_name(self):
+        """Real-world shape 4: dict-keyed hypotheses with `first_order` field
+        (NOT `first_order_effects`) — observed in saas-founder-20m-strategic-invest run."""
+        # Build manually since helper builders use first_order_effects
+        data = {
+            "persona": "regulator",
+            "hypotheses": {
+                "h1": {"first_order": [
+                    {"effect_id": "h1_e0", "description": "x", "probability": 0.5,
+                     "timeframe": "0-3 months", "assumptions": [], "children": []}
+                    for _ in range(3)
+                ]},
+                "h2": {"first_order": [
+                    {"effect_id": "h2_e0", "description": "x", "probability": 0.5,
+                     "timeframe": "0-3 months", "assumptions": [], "children": []}
+                    for _ in range(15)  # over the cap
+                ]},
+            },
+        }
+        extracted, recognized = vb._extract_first_order_per_hyp(data)
+        self.assertTrue(recognized)
+        self.assertEqual(len(extracted["h1"]), 3)
+        self.assertEqual(len(extracted["h2"]), 15)
+
+        # End-to-end through check_per_persona_overproduction
+        d = TemporaryDirectory()
+        self.addCleanup(d.cleanup)
+        run_dir = Path(d.name)
+        (run_dir / "iteration-1" / "council").mkdir(parents=True)
+        (run_dir / "iteration-1" / "council" / "regulator.json").write_text(json.dumps(data))
+        report = vb.Report(self.schema)
+        vb.check_per_persona_overproduction(self.schema, run_dir, "full", report)
+        c = next(c for c in report.as_dict()["checks"] if c["name"] == "per_persona_overproduction")
+        self.assertEqual(c["status"], "FAIL")
+        self.assertEqual(c["severity"], "HARD_FAIL")
+        # Should have detected h2 = 15 violation
+        sample_hyps = {v["hypothesis"] for v in c["sample_violations"]}
+        self.assertIn("h2", sample_hyps)
+
+    # ----- Unknown-shape WARN (silent miss is now visible) -----
+
+    def test_unknown_shape_logs_warn(self):
+        """Council file with unknown shape should produce WARN, not silent skip."""
+        d = TemporaryDirectory()
+        self.addCleanup(d.cleanup)
+        run_dir = Path(d.name)
+        (run_dir / "iteration-1" / "council").mkdir(parents=True)
+        # Write a valid council in a known shape
+        (run_dir / "iteration-1" / "council" / "good.json").write_text(
+            json.dumps(_make_council_file("good", {"h1": 5}))
+        )
+        # Write a council in unrecognized shape
+        weird_shape = {
+            "persona": "weird",
+            "iteration": 1,
+            "novel_field_we_dont_handle": {"h1": ["effect1", "effect2"]},
+        }
+        (run_dir / "iteration-1" / "council" / "weird.json").write_text(json.dumps(weird_shape))
+        report = vb.Report(self.schema)
+        vb.check_per_persona_overproduction(self.schema, run_dir, "full", report)
+        # Should produce a WARN entry mentioning unknown shape
+        warns = [c for c in report.as_dict()["checks"]
+                 if c["name"] == "per_persona_overproduction" and c["severity"] == "WARN"]
+        self.assertTrue(any("unknown_shape_count" in w for w in warns) or
+                        any("unrecognized" in w["detail"].lower() for w in warns),
+                        "Unknown-shape council file should produce a WARN")
 
 
 if __name__ == "__main__":

@@ -211,6 +211,54 @@ class SeededVocabCheckTests(unittest.TestCase):
         self.assertEqual(c["severity"], "WARN")
         self.assertIn("No seeded", c["detail"])
 
+    def test_iter1_fallback_when_iter2_uses_carryforward_schema(self):
+        """Iter-2 hypotheses.json uses carryforward schema (carried_over /
+        new_in_iter_2 instead of hypotheses[]). Check must fall back to iter-1's
+        seeded vocab rather than warning 'no seeded'.
+
+        Real-world case: ~/.autodecision/runs/saas-founder-20m-strategic-invest/
+        had iter-1 hypotheses.json with 5 seeded per hyp, iter-2 with carryforward
+        schema. Old check warned 'No seeded effect_ids' (false signal). New check
+        should find iter-1's seeded vocab and measure adoption against latest
+        iter's council files.
+        """
+        d = TemporaryDirectory()
+        self.addCleanup(d.cleanup)
+        run_dir = Path(d.name)
+        # iter-1: canonical hypotheses.json with seeded IDs
+        iter1 = run_dir / "iteration-1"
+        (iter1 / "council").mkdir(parents=True)
+        (iter1 / "hypotheses.json").write_text(json.dumps(_make_hypotheses_json(
+            {"h1": ["a", "b", "c", "d"]}
+        )))
+        (iter1 / "council" / "optimist.json").write_text(
+            json.dumps(_make_council_canonical("optimist", {"h1": ["a", "x"]}))
+        )
+        # iter-2: carryforward schema (no `hypotheses[]`) + council that uses
+        # iter-1's seeded vocab properly
+        iter2 = run_dir / "iteration-2"
+        (iter2 / "council").mkdir(parents=True)
+        (iter2 / "hypotheses.json").write_text(json.dumps({
+            "status": "complete",
+            "iteration": 2,
+            "carried_over": ["h1"],
+            "new_in_iter_2": [],
+            "iter1_vocabulary_summary": "see iter-1 hypotheses.json"
+        }))
+        # iter-2 council uses 4/4 seeded IDs from iter-1
+        (iter2 / "council" / "optimist.json").write_text(
+            json.dumps(_make_council_canonical("optimist", {"h1": ["a", "b", "c", "d"]}))
+        )
+        report = vb.Report(self.schema)
+        vb.check_seeded_vocab_adoption(self.schema, run_dir, "full", report)
+        c = next(c for c in report.as_dict()["checks"] if c["name"] == "seeded_vocab_ignored")
+        # Should find iter-1's seeded vocab, not warn 'no seeded'
+        self.assertNotIn("No seeded", c["detail"])
+        self.assertEqual(c["total_seeded"], 4)
+        # iter-2 council has 4/4 = 100% adoption
+        self.assertEqual(c["adoption_pct"], 100.0)
+        self.assertEqual(c["seeded_source_iteration"], "iteration-1")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

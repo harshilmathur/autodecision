@@ -1013,8 +1013,9 @@ def check_synthesis_dedup_quality(schema: dict, run_dir: Path, mode: str, report
         )
 
 
-def _extract_first_order_per_hyp(persona_data: dict) -> dict[str, list[dict]]:
-    """Return {hypothesis_id: [first_order_effect_dict, ...]} for a council file.
+def _extract_first_order_per_hyp(persona_data: dict) -> tuple[dict[str, list[dict]], bool]:
+    """Return ({hypothesis_id: [first_order_effect_dict, ...]}, recognized_shape)
+    for a council file.
 
     Robust to all observed schema shapes in the wild (catalogued from real runs):
 
@@ -1025,15 +1026,29 @@ def _extract_first_order_per_hyp(persona_data: dict) -> dict[str, list[dict]]:
        {"effects_by_hypothesis": {"h1": [...effects...]}}
        (or wrapped: {"effects_by_hypothesis": {"h1": {"effects": [...]}}})
 
-    3. DICT-KEYED — `hypotheses` as a dict keyed by hypothesis_id:
+    3. DICT-KEYED — `hypotheses` as a dict keyed by hypothesis_id, inner dict
+       contains an effects-list field:
+         "first_order_effects" — most common
+         "first_order"         — saas-founder-20m-strategic-invest run
+         "effects"             — legacy
        {"hypotheses": {"h1": {"first_order_effects": [...]}}}
-       (also seen with "effects" inner field)
+
+    Returns (per_hyp_dict, recognized_shape_bool). The bool is False when the
+    persona file doesn't match any known shape (e.g. malformed or genuinely
+    novel schema) — callers should surface this as a validator WARN rather
+    than silently treat as zero effects.
 
     Filters to first-order only (effect.order == 1, OR no order field when source
-    is a "first_order_effects" container which is implicitly first-order).
+    is a "first_order(_effects)" container which is implicitly first-order).
     Skips non-dict entries silently — never crashes on malformed input.
     """
     out: dict[str, list[dict]] = {}
+    recognized = False
+
+    # Effects-list field names known to contain first-order effects.
+    # Order matters: "first_order_effects" wins if both are present.
+    FO_CONTAINER_KEYS = ("first_order_effects", "first_order")
+    GENERIC_KEYS = ("effects",)
 
     def _filter_fo(effs, container_implies_fo: bool = False) -> list[dict]:
         if not isinstance(effs, list):
@@ -1054,10 +1069,12 @@ def _extract_first_order_per_hyp(persona_data: dict) -> dict[str, list[dict]]:
         if isinstance(v, list):
             return v, False  # bare list, rely on order field
         if isinstance(v, dict):
-            if "first_order_effects" in v:
-                return v["first_order_effects"] or [], True
-            if "effects" in v:
-                return v["effects"] or [], False
+            for k in FO_CONTAINER_KEYS:
+                if k in v:
+                    return v[k] or [], True
+            for k in GENERIC_KEYS:
+                if k in v:
+                    return v[k] or [], False
         return [], False
 
     hyp_field = persona_data.get("hypotheses")
@@ -1065,24 +1082,28 @@ def _extract_first_order_per_hyp(persona_data: dict) -> dict[str, list[dict]]:
 
     if isinstance(hyp_field, list):
         # Shape 1: canonical
+        recognized = True
         for h in hyp_field:
             if not isinstance(h, dict):
                 continue
             hid = h.get("hypothesis_id", "?")
-            effs, implies_fo = _unwrap_effects(h.get("effects") or h.get("first_order_effects") or [])
-            out[hid] = _filter_fo(effs, container_implies_fo=("first_order_effects" in h))
+            container = h.get("effects") or h.get("first_order_effects") or h.get("first_order") or []
+            implies_fo = ("first_order_effects" in h) or ("first_order" in h)
+            out[hid] = _filter_fo(container, container_implies_fo=implies_fo)
     elif isinstance(hyp_field, dict):
         # Shape 3: dict-keyed
+        recognized = True
         for hid, v in hyp_field.items():
             effs, implies_fo = _unwrap_effects(v)
             out[hid] = _filter_fo(effs, container_implies_fo=implies_fo)
     elif isinstance(ebh, dict):
         # Shape 2: flat alt
+        recognized = True
         for hid, v in ebh.items():
             effs, implies_fo = _unwrap_effects(v)
             out[hid] = _filter_fo(effs, container_implies_fo=implies_fo)
 
-    return out
+    return out, recognized
 
 
 def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
@@ -1120,6 +1141,7 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
     violations: list[dict] = []  # rows: {iter, persona, hypothesis, count, severity}
     council_files_seen = 0
     council_files_unreadable: list[str] = []
+    council_files_unknown_shape: list[str] = []
     for d in iter_dirs:
         council_dir = d / "council"
         if not council_dir.is_dir():
@@ -1132,8 +1154,13 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
                 council_files_unreadable.append(f"{council_file.relative_to(run_dir)}: {e}")
                 continue
             persona = data.get("persona") or council_file.stem
-            # Use the universal helper (handles all 3 schema shapes — see _extract_first_order_per_hyp)
-            per_hyp = _extract_first_order_per_hyp(data)
+            # Use the universal helper (handles all known schema shapes)
+            per_hyp, recognized = _extract_first_order_per_hyp(data)
+            if not recognized:
+                council_files_unknown_shape.append(
+                    f"{council_file.relative_to(run_dir)} (top keys: {list(data.keys())[:6]})"
+                )
+                continue
             for hyp_id, fo_effects in per_hyp.items():
                 count = len(fo_effects)
                 if count > fail_threshold:
@@ -1163,6 +1190,20 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
             "per_persona_overproduction",
             "FAIL", "WARN",
             f"Could not read {len(council_files_unreadable)} council file(s): {council_files_unreadable[:3]}",
+        )
+
+    if council_files_unknown_shape:
+        report.add(
+            "per_persona_overproduction",
+            "PASS", "WARN",
+            (
+                f"{len(council_files_unknown_shape)} council file(s) had unrecognized schema "
+                f"shape — counts excluded from overproduction check. Examples: "
+                f"{council_files_unknown_shape[:3]}. Update _extract_first_order_per_hyp in "
+                f"validate-brief.py to support this shape if it recurs."
+            ),
+            unknown_shape_count=len(council_files_unknown_shape),
+            samples=council_files_unknown_shape[:5],
         )
 
     fail_violations = [v for v in violations if v["severity"] == "FAIL"]
@@ -1230,14 +1271,48 @@ def check_per_persona_overproduction(schema: dict, run_dir: Path, mode: str, rep
 def _extract_council_effect_ids_per_hyp(persona_data: dict) -> dict[str, set]:
     """Return {hypothesis_id: set(effect_id, ...)} of first-order IDs in a council file.
 
-    Thin wrapper around _extract_first_order_per_hyp — handles all 3 schema shapes
+    Thin wrapper around _extract_first_order_per_hyp — handles all schema shapes
     catalogued there. Returns sets of effect_ids (strings only, skips malformed).
     """
-    per_hyp = _extract_first_order_per_hyp(persona_data)
+    per_hyp, _recognized = _extract_first_order_per_hyp(persona_data)
     return {
         hid: {e["effect_id"] for e in effs if isinstance(e.get("effect_id"), str)}
         for hid, effs in per_hyp.items()
     }
+
+
+def _extract_seeded_per_hyp(hypotheses_data: dict) -> dict[str, list[str]]:
+    """Return {hypothesis_id: [seeded_effect_id, ...]} from a hypotheses.json file.
+
+    Robust to multiple shapes:
+    - CANONICAL: {"hypotheses": [{"hypothesis_id": ..., "expected_effect_ids": [...]}]}
+    - ITER-2 CARRYFORWARD: {"carried_over": [...], "new_in_iter_2": [...]} (no
+      `expected_effect_ids` field — caller should fall back to iter-1 in this case).
+    - DICT-KEYED: {"hypotheses": {hyp_id: {"expected_effect_ids": [...]}}}
+
+    Returns {} when no recognized seeded vocabulary is found — caller decides
+    whether to fall back to an earlier iteration.
+    """
+    out: dict[str, list[str]] = {}
+    hyp = hypotheses_data.get("hypotheses")
+    if isinstance(hyp, list):
+        for h in hyp:
+            if not isinstance(h, dict):
+                continue
+            # Accept both `hypothesis_id` (canonical) and `id` (saas-founder run uses this)
+            hid = h.get("hypothesis_id") or h.get("id")
+            if not hid:
+                continue
+            ids = h.get("expected_effect_ids") or []
+            if isinstance(ids, list):
+                out[hid] = [i for i in ids if isinstance(i, str)]
+    elif isinstance(hyp, dict):
+        for hid, v in hyp.items():
+            if isinstance(v, dict):
+                ids = v.get("expected_effect_ids") or []
+                if isinstance(ids, list):
+                    out[hid] = [i for i in ids if isinstance(i, str)]
+    return out
 
 
 def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: Report) -> None:
@@ -1265,7 +1340,8 @@ def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: 
     if not iter_dirs:
         return
 
-    # Use latest iteration that has BOTH hypotheses.json and council/*.json
+    # Use latest iteration that has BOTH hypotheses.json and council/*.json for the
+    # USAGE side (the brief reflects the latest iteration).
     latest = None
     for d in reversed(iter_dirs):
         if (d / "hypotheses.json").is_file() and (d / "council").is_dir():
@@ -1274,27 +1350,40 @@ def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: 
     if not latest:
         return  # nothing to check (other gates handle missing data)
 
-    try:
-        hyp = json.loads((latest / "hypotheses.json").read_text())
-    except (json.JSONDecodeError, OSError) as e:
-        report.add(
-            "seeded_vocab_ignored",
-            "FAIL", "WARN",
-            f"Could not read {(latest / 'hypotheses.json').relative_to(run_dir)}: {e}",
-        )
-        return
+    # Try the latest iteration's hypotheses.json for SEEDED vocab. If it uses the
+    # carryforward schema (no `expected_effect_ids` per hypothesis — has
+    # `carried_over` / `new_in_iter_2` instead), fall back to the earliest iter
+    # that has actual seeded vocab. Iter-1's seeded list is the canonical
+    # vocabulary that personas should adopt across all iterations.
+    seeded_by_hyp: dict[str, set] = {}
+    seeded_source_iter = None
+    for d_try in [latest] + [d for d in iter_dirs if d != latest]:
+        hyp_path = d_try / "hypotheses.json"
+        if not hyp_path.is_file():
+            continue
+        try:
+            hyp = json.loads(hyp_path.read_text())
+        except (json.JSONDecodeError, OSError) as e:
+            if d_try == latest:
+                report.add(
+                    "seeded_vocab_ignored",
+                    "FAIL", "WARN",
+                    f"Could not read {hyp_path.relative_to(run_dir)}: {e}",
+                )
+            continue
+        per_hyp_seeded = _extract_seeded_per_hyp(hyp)
+        per_hyp_seeded = {hid: set(ids) for hid, ids in per_hyp_seeded.items() if ids}
+        if per_hyp_seeded:
+            seeded_by_hyp = per_hyp_seeded
+            seeded_source_iter = d_try.name
+            break
 
-    seeded_by_hyp: dict[str, set] = {
-        h["hypothesis_id"]: set(h.get("expected_effect_ids", []) or [])
-        for h in hyp.get("hypotheses", [])
-        if h.get("hypothesis_id")
-    }
     total_seeded = sum(len(s) for s in seeded_by_hyp.values())
     if total_seeded == 0:
         report.add(
             "seeded_vocab_ignored",
             "PASS", "WARN",
-            "No seeded effect_ids in hypotheses.json — Shared Effect ID Vocabulary mechanism (phases/hypothesize.md) is not being used. Personas have no shared vocabulary to converge on.",
+            "No seeded effect_ids found in any iteration's hypotheses.json — Shared Effect ID Vocabulary mechanism (phases/hypothesize.md) is not being used. Personas have no shared vocabulary to converge on.",
         )
         return
 
@@ -1362,6 +1451,7 @@ def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: 
             council_files_inspected=council_files_seen,
             per_hypothesis_breakdown=per_hyp_breakdown,
             iteration=latest.name,
+            seeded_source_iteration=seeded_source_iter,
         )
     elif adoption_pct < warn_threshold:
         report.add(
@@ -1381,6 +1471,7 @@ def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: 
             council_files_inspected=council_files_seen,
             per_hypothesis_breakdown=per_hyp_breakdown,
             iteration=latest.name,
+            seeded_source_iteration=seeded_source_iter,
         )
     else:
         report.add(
@@ -1396,6 +1487,7 @@ def check_seeded_vocab_adoption(schema: dict, run_dir: Path, mode: str, report: 
             total_seeded=total_seeded,
             council_files_inspected=council_files_seen,
             iteration=latest.name,
+            seeded_source_iteration=seeded_source_iter,
         )
 
 
