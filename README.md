@@ -149,7 +149,11 @@ The system scopes, grounds, simulates, critiques, stress-tests, and produces a D
 - **Adversarial red team** exposed a correlated risk: the scenario where you lose H1B sponsorship IS the scenario where your Indian portfolio is also down 30%
 - Final: a **staged real-options approach** with buy-small as the default endpoint
 
-**[10% vs 30% Price Cut Comparison](examples/comparison-10pct-vs-30pct.md)** (compare mode) — Both reach "don't cut" but for **fundamentally different reasons**: 10% fails by being too small, 30% by being too large. Both converge on the same alternative. Full gallery: **[EXAMPLES.md](EXAMPLES.md)**.
+**[10% vs 30% Price Cut Comparison](examples/comparison-10pct-vs-30pct.md)** (compare mode) — Both reach "don't cut" but for **fundamentally different reasons**: 10% fails by being too small, 30% by being too large. Both converge on the same alternative.
+
+### → See the full gallery: [EXAMPLES.md](EXAMPLES.md)
+
+Prompt patterns, decision types, and additional briefs across pricing, hiring, fundraising, build-vs-buy, and market expansion.
 
 ### Try these
 
