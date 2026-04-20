@@ -82,6 +82,57 @@ What the council surfaced:
 
 ---
 
+### Adobe agentic CC vs UI-first Photoshop
+
+> "Should Adobe go all-in on agentic Creative Cloud and deprecate Photoshop's UI-first model within 3 years?"
+
+**[Full brief →](examples/adobe-deprecate-photoshop-ui.md)**
+
+What the council surfaced:
+
+- **The brief ran 3 days after Adobe publicly answered the question** — Firefly AI Assistant launched April 15, 2026 as an *additive* layer, not a replacement. The data foundation flags this as `CONFLICT-2`, making the brief a stress-test of the road not taken.
+- **Agentic inference COGS is the silent killer** — agentic sessions cost 10-50x more compute than direct manipulation; at 41M subscribers even modest adoption creates substantial new COGS that none of the personas modeled at first
+- **Regulator persona ranked #1 by peers** — generated the two structural alternatives (dual-SKU + binding reversal triggers) that became the recommendation. Constraint analysts rarely drive creative synthesis; here they did.
+- **The 3-year deprecation guarantees a "partial-agentic awkward state"** at P=0.55 — agentic parity with 30 years of Photoshop workflow primitives is more realistic at 60-72 months. Once announced, deprecation is a one-way door (P=0.75 irreversibility).
+
+**Final recommendation:** dual-SKU (Photoshop Pro with binding 10-year UI LTS + Photoshop Agentic), binding reversal triggers tied to NPS and Digital Media growth, quarterly user council of 50 working pros.
+
+---
+
+### $50B buyback vs AI moonshot
+
+> "Should a $1T-cap big tech company spend $50B on share buybacks vs build a frontier AI moonshot?"
+
+**[Full brief →](examples/bigtech-buyback-vs-ai-moonshot.md)**
+
+What the council surfaced:
+
+- **Pure $50B moonshot is eliminated by Reality Labs, not theory** — Meta burned $69-77B cumulative on a comparable bet and still has under $5B revenue. The pattern, not the math, is the kill signal.
+- **$50B is less than half of a single hyperscaler's annual AI capex** ($120-200B) — a "moonshot" budget that's structurally underfunded against the actual frontier. Most readers assume $50B is big AI money. It isn't.
+- **Five personas converged on the same hybrid synthesis from different starting points** — Optimist via spin-out/JV, Pessimist via scaled buyback + partnership, Competitor via partnership-first, etc. The convergence across value systems is the strong signal.
+- **The promoted path mirrors Microsoft-OpenAI specifically** — $13B → $150B+ value creation. Survives 12/12 adversarial scenarios. Single binary gate: whether a frontier lab will accept minority equity without exclusivity (P=0.50).
+
+**Final recommendation:** $10-15B equity in a frontier lab + $30-35B continued buyback + $5B vertical AI bet, with explicit kill criteria per tranche (no >$10B burn without $1B ARR, etc.) and a fallback to a higher buyback if the partnership gate doesn't open.
+
+---
+
+### University optional in-person attendance
+
+> "Should a research university make in-person attendance optional across all undergraduate programs in the AI tutoring era?"
+
+**[Full brief →](examples/university-optional-inperson-ai-era.md)**
+
+What the council surfaced:
+
+- **Universal optional attendance is *regressive* within a tuition tier** — it redistributes value from first-gen and struggling students toward already-high-performers without lowering price. Counterintuitive and underexplored in public debate.
+- **Regulatory cliff is the most decisive in the corpus** — F-1 SEVP visa violation at P=0.85 risking $30-150M international revenue, and Title IV RSI reclassification at P=0.65 risking $50-300M federal aid. Same root cause: insufficient in-person structure. One structural fix defuses both.
+- **De facto already optional, but the policy signal still matters** — 73-83% post-COVID absence rates show students have voted, but *formalizing* what already happens still triggers regulatory and reputational consequences elite peers will weaponize as an admissions advantage (P=0.85)
+- **Harvard 2025 RCT is the factual anchor** — AI tutoring effect size 0.73-1.3 SD, the strongest learning-outcome data in the corpus. Cuts both ways: it justifies the question *and* shows what's at risk if implementation is botched.
+
+**Final recommendation:** phased opt-in pilot (CS + Philosophy first, ~150 students), with quantitative kill criteria including >5% drop in first-gen retention. Six named action steps, eight monitor signals, seven explicit review triggers.
+
+---
+
 ## Comparison mode
 
 ### 10% vs 30% price cut
