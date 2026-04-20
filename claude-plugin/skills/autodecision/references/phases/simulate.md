@@ -147,18 +147,115 @@ After all subagents complete, the orchestrator reads all `council/*.json` files 
 
 1. **Collect all unique `effect_id` values** across all 5 personas, across all
    hypotheses, across BOTH first-order and second-order slots.
-2. **Deduplicate by semantic similarity (within an order).** If two personas use
-   different IDs for the same effect at the same order (e.g., `acq_increase` and
-   `customer_growth_surge` both as 1st-order), merge them:
-   - Use the ID chosen by more personas
-   - If tied, use the shorter/clearer ID
-3. **For each unique effect:**
+
+2. **Dedup pass — mechanical first, then semantic, with a binding delegation gate.**
+
+   **Step 2a: Mechanical merge (exact ID match).** Group all effects by exact
+   `effect_id` within each (hypothesis_id, order). For each group, compute:
+   - `probability` = median of persona estimates
+   - `probability_range` = [min, max]
+   - `council_agreement` = count of distinct personas
+   - `description` = description from the persona with highest agreement
+   - `assumptions` = union across personas
+
+   **Step 2b: DECISION GATE — count singletons after mechanical merge.** Compute
+   `singleton_pct = count(effects where council_agreement == 1) / total_effects`
+   and `singleton_count = count(effects where council_agreement == 1)`.
+
+   | Singleton state | Action |
+   |---|---|
+   | `singleton_pct < 50%` | Skip semantic dedup. Proceed to Step 3 below. |
+   | `singleton_pct >= 50% AND singleton_count <= 20` | Do semantic dedup INLINE per Step 2c. |
+   | `singleton_pct >= 50% AND singleton_count > 20` | **MANDATORY** semantic dedup via spawned agent per Step 2d. |
+
+   This gate is binding, not a suggestion. The historical failure mode
+   (apple-buy-perplexity-full: 93% singletons, 270+ novel effects, synthesis
+   collapsed to 145 first-order effects with avg council_agreement 1.08) came
+   from skipping this step because the previous protocol said "if > 3 novel
+   effects, delegate" without enforcement. The numbers above are the
+   enforcement.
+
+   **Step 2c: Inline semantic dedup (≤ 20 singletons).** For each pair of
+   singletons within the same (hypothesis_id, order):
+   - >70% token overlap on stem-normalized words → merge under canonical ID
+   - Direct synonym/antonym pairs naming the same outcome (e.g.,
+     `google_tac_hedge` ↔ `google_tac_exposure_unhedged`,
+     `integration_speedup` ↔ `integration_culture_damage`,
+     `optionality_preserved` ↔ `optionality_is_inaction`) → merge under the
+     seeded ID if present, else the shorter ID
+   - Probability disagreement is the REASON to merge, not to keep separate —
+     the [min, max] range becomes the council uncertainty signal
+   - Canonical ID preference: seeded `expected_effect_ids` first, then ID with
+     most persona uses, then shortest
+
+   Update council_agreement, range, assumptions per merged group.
+
+   **Step 2d: Spawned dedup agent (> 20 singletons).** Inline dedup with > 20
+   candidates is unreliable — the orchestrator's working memory cannot hold
+   the full set while reasoning about pairwise similarity. Spawn ONE agent
+   (NOT five — this is a deterministic merge, not a council debate) with this
+   prompt:
+
+   ```
+   You are a semantic dedup agent for an autodecision council synthesis.
+
+   INPUT: {N} first-order effects from 5 personas, grouped by hypothesis_id.
+   {M} of these are singletons (only 1 persona generated each). Many are
+   conceptually identical but were renamed by different personas — e.g.,
+   `google_tac_hedge` (optimist) and `google_tac_exposure_unhedged` (pessimist)
+   describe the same effect with different framings.
+
+   SEEDED VOCABULARY (use these IDs as the canonical when any singleton
+   semantically matches): {paste expected_effect_ids per hypothesis from
+   hypotheses.json}
+
+   TASK: Group conceptually identical singletons within the same hypothesis_id.
+   Output JSON only.
+
+   RULES:
+   - Two effects are the same iff they describe the same real-world outcome,
+     even with opposite framings (hedge vs exposure, speedup vs damage)
+   - Same verb on different objects is NOT the same effect (revenue_up from
+     acquisition ≠ revenue_up from upsell — check assumption overlap)
+   - Probability disagreement is the REASON to merge — the [min, max] range
+     becomes the council signal
+   - Canonical ID preference: seeded ID > ID with most persona uses > shortest
+   - When unsure, DO NOT merge — preserve singleton over false-merge
+
+   OUTPUT FORMAT (strict JSON):
+   {
+     "merges": [
+       {
+         "hypothesis_id": "h1_full_acquire_integrate",
+         "canonical_id": "google_tac_hedge",
+         "member_ids": ["google_tac_hedge", "google_tac_exposure_unhedged"],
+         "reason": "Same effect — both rate TAC exposure impact on search moat. Optimist framed as hedge (probability 0.40), Pessimist as exposure (probability 0.75). Range [0.40, 0.75] is the council signal."
+       }
+     ]
+   }
+   ```
+
+   The orchestrator applies the merges to in-memory effects, recomputes
+   probability/range/agreement per merged group, then proceeds.
+
+3. **For each unique effect (after Step 2):**
    - `probability` = median of all persona estimates
    - `probability_range` = [min, max] of all persona estimates
-   - `council_agreement` = count of personas who generated this effect
+   - `council_agreement` = count of personas who generated this effect (or
+     contributed via merge)
    - `description` = description from the persona with the highest council agreement
    - `assumptions` = union of all assumption keys across personas for this effect
+
 4. **Merge 2nd-order effects** similarly (by `effect_id`, with parent tracking).
+   Apply the same Step 2 gate independently to second-order effects.
+
+5. **Sanity check after dedup.** Compute avg council_agreement across all
+   first-order effects. If `avg_agreement < 1.5`, the dedup failed — either
+   the spawned agent was too conservative (re-spawn with stronger merge bias)
+   OR personas genuinely wrote divergently. In the latter case, write a WARN
+   line to the orchestrator log: "Council ran in low-agreement mode (avg <
+   1.5) — Convergence Log should flag this as fragile signal. The Phase 8.5
+   `synthesis_dedup_skipped` validator will HARD_FAIL until resolved."
 
 ### Step 3.5: Cross-Order Dedup (Canonicalize the Map)
 

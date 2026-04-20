@@ -43,16 +43,39 @@ RULES — read these before generating any output:
    Effect CONTENT is unconstrained: discover new effects, new assumptions, new
    mechanisms freely. The constraint is purely structural — match canonical shape.
 
-   PREFER SEEDED IDs WHEN APPLICABLE. The seeded `expected_effect_ids` list per
-   hypothesis (in shared-context.md or hypotheses.json) is your shared vocabulary
-   with the other 4 personas. When a seeded ID matches a concept you want to
-   express, use it verbatim — synthesis merges by exact effect_id, so shared
-   vocabulary directly improves council_agreement signal. Coin new IDs freely for
-   genuine specialist insights, tiered effects (e.g. multiple cash-tier variants
-   of one outcome), or novel mechanisms the seeded list doesn't cover. The
-   `seeded_vocab_ignored` validator WARN fires below 50% adoption (HARD_FAIL
-   below 20%) — well below either threshold means you're routinely renaming
-   shared concepts.
+   REQUIRE SEEDED IDs WHEN ANY SEEDED ID SEMANTICALLY APPLIES. The seeded
+   `expected_effect_ids` list per hypothesis (in shared-context.md or
+   hypotheses.json) is your shared vocabulary with the other 4 personas.
+   Synthesis merges by exact `effect_id` — if you coin a novel ID for a concept
+   that a seeded ID already covers, your perspective becomes a singleton even
+   when 4 other personas independently see the same effect. The whole council
+   signal collapses.
+
+   THE TEST: before coining any new effect_id, scan ALL seeded IDs for that
+   hypothesis. If ANY seeded ID could plausibly cover the concept (even partially,
+   even with different framing) — USE THE SEEDED ID. Examples of WRONG behavior:
+   - Coining `google_tac_exposure_unhedged` when seeded ID `google_tac_hedge`
+     exists. Use `google_tac_hedge`. Express your "exposure" framing in the
+     `description` field, not by renaming the ID.
+   - Coining `integration_culture_damage` when seeded ID `integration_speedup`
+     exists. Use `integration_speedup`. Set probability low. Your pessimism
+     about integration is a probability disagreement, NOT a different effect.
+   - Coining `optionality_is_inaction_in_disguise` when seeded ID
+     `optionality_preserved` exists. Use the seeded ID. Your contrarian framing
+     belongs in `description` and `assumptions`, not in the ID.
+
+   You may coin a new ID ONLY if NO seeded ID covers the concept. Allowed novel
+   IDs: domain-specific regulatory mechanisms (`ai_act_gpai_inherited`),
+   tiered variants (`cash_tier_1`, `cash_tier_2`, `cash_tier_3` for the same
+   outcome at different price points), or `alt_*`-prefixed creative alternatives
+   per rule 8. Most other "new" IDs are renames of seeded concepts and degrade
+   the council signal.
+
+   The `seeded_vocab_ignored` validator WARN fires below 50% council-wide
+   adoption (HARD_FAIL below 20%). But council-wide is a weak gate: it can pass
+   even when one persona uses 12/26 seeded IDs and another uses 3/26. The real
+   test is whether YOUR persona's effect_ids overlap with the other personas'.
+   Aim for 60%+ adoption per persona.
 
    For iteration 2+: same rule for iter-1 effect_ids carried forward — reuse the
    SAME ID for the same conceptual effect even if you'd prefer different naming.

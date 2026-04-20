@@ -188,16 +188,20 @@ This makes ~80% of the merge mechanical (shared IDs match directly). The remaini
 After all subagents complete in Phase 3:
 
 1. Read all `council/*.json` files.
-2. **Mechanical merge (shared IDs):** For effects using the seeded vocabulary, merge
-   directly — compute median probability, [min,max] range, council_agreement count.
-3. **Semantic dedup (novel IDs):** For effects NOT in the shared vocabulary, check if
-   any two describe the same outcome with different IDs. If yes, merge under the
-   clearer ID. This step requires reasoning — if there are > 3 novel effects to
-   dedup, delegate to a single synthesis agent rather than doing it inline.
-4. Tag effects with `specialist_insight: true` where applicable (see effects-chain-spec.md).
-5. Tag effects with `source_persona` when council_agreement is 1 or 2.
-6. Build `all_assumptions` map from all assumption keys referenced.
-7. Write `effects-chains.json` with the synthesized output.
+2. **Mechanical merge → singleton-rate gate → semantic dedup.** The full
+   procedure (with the binding delegation gate at >20 singletons that triggers
+   a spawned dedup agent) lives in `phases/simulate.md` Step 3, sub-step 2.
+   Do not duplicate the procedure here — read it there. The short version:
+   - Mechanical exact-ID merge first
+   - If `singleton_pct >= 50%`, do semantic dedup (inline if ≤20 candidates,
+     spawned single-agent if >20)
+   - After dedup, avg `council_agreement` must be ≥ 1.5 or the run is
+     flagged as low-agreement and `synthesis_dedup_skipped` HARD_FAILs at
+     Phase 8.5
+3. Tag effects with `specialist_insight: true` where applicable (see effects-chain-spec.md).
+4. Tag effects with `source_persona` when council_agreement is 1 or 2.
+5. Build `all_assumptions` map from all assumption keys referenced.
+6. Write `effects-chains.json` with the synthesized output.
 
 ## JSON Schema for Persona Output
 
