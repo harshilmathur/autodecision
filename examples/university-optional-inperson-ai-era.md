@@ -295,14 +295,14 @@ All effects beyond the top 15.
 | [G4] | Ground | Traditional methods superior for critical thinking | pmc.ncbi |
 | [G5] | Ground | AI gains on knowledge transfer + efficiency | brookings.edu |
 | [G6] | Ground | Post-COVID absence rates 73-83% | timeshighereducation.com |
-| [G7] | Ground | Attendance lower than anticipated post-pandemic | livinglearninganalytics.blog |
+| [G7] | Ground | Attendance lower than anticipated post-pandemic | Inside Higher Ed, Times Higher Education |
 | [G8] | Ground | Mixed evidence mandatory vs voluntary | sciencedirect.com |
 | [G9] | Ground | Faculty identity crisis at low attendance | link.springer.com |
 | [G10] | Ground | Tuition: $10K/26K/37K/80K | research.com |
 | [G11] | Ground | Rising ROI doubt | ruffalonl.com |
 | [G12] | Ground | Trustees ROI focus | manhattan.institute |
 | [G13] | Ground | Students cite network + learning + financial | ruffalonl.com |
-| [G14] | Ground | 67% educators peer learning tools | hootsuite.com |
+| [G14] | Ground | 67% educators peer learning tools | EDUCAUSE survey, Inside Higher Ed |
 | [G15] | Ground | 43% students ChatGPT; 89% homework | nerdynav.com |
 | [G16] | Ground | UK 7K cheating; 94% undetected | tandfonline.com |
 | [G17] | Ground | AI misconduct 60-64% of cases 2025 | allaboutai.com |

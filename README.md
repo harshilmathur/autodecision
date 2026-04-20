@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">autodecision</h1>
   <p align="center">
-    <b>A decision operating system for high-stakes choices</b> — business, strategy, career.<br />
+    <b>A decision operating system for high-stakes choices.</b> Business, strategy, career.<br />
     Simulates disagreement, stress-tests assumptions, and converges on what actually holds up.
     <br /><br />
     <sub>Applies <a href="https://github.com/karpathy/autoresearch">Karpathy's autoresearch</a> + <a href="https://github.com/karpathy/llm-council">LLM Council</a> patterns to decisions.</sub>
@@ -13,14 +13,14 @@
 <p align="center">
   <img src="docs/effects-viz-preview.gif" alt="Orbital effects map: hypotheses on the inner ring, 1st- and 2nd-order effects fanning outward, worst-case diamonds and black-swan comets on the outer rings" width="900">
   <br />
-  <sub>Preview: full possibility map for one decision — 5 hypotheses, ~110 effects, worst cases, black swans. Interactive viewer ships next on a feature branch.</sub>
+  <sub>Static preview of the full possibility map for one decision: 5 hypotheses, ~110 effects, worst cases, black swans. Interactive viewer in development.</sub>
 </p>
 
 ---
 
 ## Why decisions fail
 
-Most bad decisions don't look bad upfront. They fail later — in second-order effects, edge cases, and under stress.
+Most bad decisions don't look bad upfront. They fail later, in second-order effects, edge cases, and under stress.
 
 People routinely:
 
@@ -31,7 +31,7 @@ People routinely:
 
 By the time these failure modes appear, the decision is already in motion and hard to reverse.
 
-Autodecision exists because these failure modes are predictable — if you force yourself to look for them.
+Autodecision exists because these failure modes are predictable, if you force yourself to look for them.
 
 ---
 
@@ -57,7 +57,7 @@ OUTER (runs once):
   Phase 8    DECIDE      Produce Decision Brief
 ```
 
-The 5 personas run as parallel subagents — each with its own context window, genuinely unable to see the others:
+The 5 personas run as parallel subagents, each with its own context window, genuinely unable to see the others:
 
 | Persona | Sees | Blind Spot |
 |---------|------|------------|
@@ -75,10 +75,10 @@ If iterations hit the cap without converging, the orchestrator pauses, shows the
 
 ## Best for
 
-- **Strategic business decisions** — pricing, expansion, M&A, capital allocation, build-vs-buy, senior hires
-- **Career decisions with asymmetric outcomes** — role moves, relocation, founder vs operator, fundraising terms
-- **Situations with second-order effects** — where the obvious answer isn't the robust answer
-- **Hard-to-reverse decisions** — where you only get one shot and want to stress-test it first
+- **Strategic business decisions**: pricing, expansion, M&A, capital allocation, build-vs-buy, senior hires
+- **Career decisions with asymmetric outcomes**: role moves, relocation, founder vs operator, fundraising terms
+- **Situations with second-order effects**: where the obvious answer isn't the robust answer
+- **Hard-to-reverse decisions**: where you only get one shot and want to stress-test it first
 
 Skip it for simple factual questions (one LLM call is fine), low-stakes everyday choices (overhead isn't worth it), and decisions you already have high conviction on (this will just slow you down).
 
@@ -95,7 +95,7 @@ Works with [Claude Code](https://claude.ai/code) and [Claude Cowork](https://cla
 /plugin install autodecision@autodecision
 ```
 
-Commands land under `/autodecision:` — the main loop is `/autodecision:autodecision`. Subcommands share the same prefix.
+Commands land under `/autodecision:`. The main loop is `/autodecision:autodecision`. Subcommands share the same prefix.
 
 ### In Claude Cowork
 
@@ -135,21 +135,21 @@ The system scopes, grounds, simulates, critiques, stress-tests, and produces a D
 
 ### Full loop (5 personas, 2 iterations, adversarial stress-testing)
 
-**[Law Firm AI Replacement](examples/law-firm-ai-replacement.md)** — Should a mid-sized law firm replace all first-year associates with Claude + senior review?
+**[Law Firm AI Replacement](examples/law-firm-ai-replacement.md)**: Should a mid-sized law firm replace all first-year associates with Claude + senior review?
 
-- Full replacement was **unanimously ranked last** — pipeline rupture in year 3, malpractice risk, and ranking damage all compound
-- The winning recommendation **didn't exist in any single persona's output** — it was synthesized from three independent alternatives (pessimist + customer advocate + regulator)
+- Full replacement was **unanimously ranked last**: pipeline rupture in year 3, malpractice risk, and ranking damage all compound
+- The winning recommendation **didn't exist in any single persona's output**. It was synthesized from three independent alternatives (pessimist + customer advocate + regulator)
 - **Regulator surfaced Utah vs Arizona sandbox distinction**, WARN Act compliance, and MRPC 5.3 supervision analysis
 - Final: a **wrapped 18-month pilot** cutting the 1Y class 50-60% with binding kill criteria, anchor-client co-design, and regulatory sandbox cover
 
-**[Buy vs Rent vs Relocate](examples/buy-vs-rent-vs-relocate.md)** — A dual-tech-income couple evaluates buying a house in Bangalore (10 Cr), renting + investing the delta, or relocating to San Francisco.
+**[Buy vs Rent vs Relocate](examples/buy-vs-rent-vs-relocate.md)**: A dual-tech-income couple evaluates buying a house in Bangalore (10 Cr), renting + investing the delta, or relocating to San Francisco.
 
 - Council surfaced a **creative alternative** (buy small + invest the rest) that outperformed all three original options on stress resilience
 - **SF savings corrected** from $150-250K to $80-120K after modeling actual CA taxes, childcare, and living costs
 - **Adversarial red team** exposed a correlated risk: the scenario where you lose H1B sponsorship IS the scenario where your Indian portfolio is also down 30%
 - Final: a **staged real-options approach** with buy-small as the default endpoint
 
-**[10% vs 30% Price Cut Comparison](examples/comparison-10pct-vs-30pct.md)** (compare mode) — Both reach "don't cut" but for **fundamentally different reasons**: 10% fails by being too small, 30% by being too large. Both converge on the same alternative.
+**[10% vs 30% Price Cut Comparison](examples/comparison-10pct-vs-30pct.md)** (compare mode): Both reach "don't cut" but for **fundamentally different reasons**: 10% fails by being too small, 30% by being too large. Both converge on the same alternative.
 
 ### → See the full gallery: [EXAMPLES.md](EXAMPLES.md)
 
@@ -171,7 +171,7 @@ Prompt patterns, decision types, and additional briefs across pricing, hiring, f
 
 | Command | What | Time |
 |---------|------|------|
-| `/autodecision` | Full loop — 5 personas, 2 iterations, convergence | ~15 min |
+| `/autodecision` | Full loop, 5 personas, 2 iterations, convergence | ~15 min |
 | `/autodecision:quick` | Single-pass, no council | ~2 min |
 | `/autodecision:challenge` | Adversary-only stress test of a proposed action | ~5 min |
 | `/autodecision:compare` | Side-by-side comparison of two decisions | ~5 min |
@@ -205,7 +205,7 @@ Pre-built templates: `--template pricing | expansion | build-vs-buy | hiring`.
 /autodecision --skip-elicit "decision"
 ```
 
-**Attach context documents** (Claude Code only — supports `.md`, `.txt`, `.pdf`, `.csv`, `.json`, images):
+**Attach context documents** (Claude Code only, supports `.md`, `.txt`, `.pdf`, `.csv`, `.json`, images):
 
 ```
 /autodecision "Should we take the Series A?" --context term-sheet.pdf
@@ -220,7 +220,7 @@ The engine extracts key data points, tags them `[D#]`, and threads them through 
 
 ## Data storage
 
-All decisions live in `~/.autodecision/runs/{slug}/` (user-level, never in your repo). A cross-decision `journal.jsonl` tracks outcomes; `assumptions.jsonl` tracks which assumptions held or broke across decisions — it compounds over time.
+All decisions live in `~/.autodecision/runs/{slug}/` (user-level, never in your repo). A cross-decision `journal.jsonl` tracks outcomes; `assumptions.jsonl` tracks which assumptions held or broke across decisions, it compounds over time.
 
 ---
 

@@ -436,16 +436,18 @@ claude-plugin/                        # CANONICAL — edit here
 
 ## How to Modify
 
+All paths below are in `claude-plugin/` (canonical). After editing, run `./scripts/sync.sh` to mirror to `.claude/` (legacy install path). Never edit `.claude/` directly.
+
 | Change | File to Edit |
 |--------|-------------|
-| Loop structure | `references/engine-protocol.md` |
-| Personas | `references/persona-council.md` |
-| JSON schemas | `references/effects-chain-spec.md` |
-| Brief format | `references/output-format.md` |
-| Add a template | Create `references/templates/{name}.md` |
-| Add a command | Create `commands/autodecision/{name}.md` |
-| Change convergence thresholds | `references/phases/converge.md` |
-| Change iteration modes | `references/engine-protocol.md` (Iteration Modes section) |
+| Loop structure | `claude-plugin/skills/autodecision/references/engine-protocol.md` |
+| Personas | `claude-plugin/skills/autodecision/references/persona-council.md` |
+| JSON schemas | `claude-plugin/skills/autodecision/references/effects-chain-spec.md` |
+| Brief format | `claude-plugin/skills/autodecision/references/output-format.md` |
+| Add a template | Create `claude-plugin/skills/autodecision/references/templates/{name}.md` |
+| Add a command | Create `claude-plugin/commands/{name}.md` (flat — plugin namespace adds the prefix) |
+| Change convergence thresholds | `claude-plugin/skills/autodecision/references/phases/converge.md` |
+| Change iteration modes | `claude-plugin/skills/autodecision/references/engine-protocol.md` (Iteration Modes section) |
 
 ---
 
@@ -465,13 +467,11 @@ claude-plugin/                        # CANONICAL — edit here
 
 ## Roadmap
 
-See [TODOS.md](TODOS.md). Key v2 features:
+See [TODOS.md](TODOS.md). Three bets:
 
-- **Codex adversarial review** after loop converges
-- **OpenRouter multi-model council** (GPT + Gemini + Claude + Grok)
-- **Backtesting** on historical decisions with known outcomes
-- **EV computation** when financial data is available
-- **Mermaid visualization** of effects trees
+- **Compounding flywheel** — journal + assumption library feed back into future runs (decision similarity detection + assumption feedback loop)
+- **Multi-model council** — replace same-model role-played personas with GPT + Gemini + Claude + Grok via OpenRouter
+- **Backtesting** — run on historical decisions with known outcomes to calibrate confidence
 
 ---
 

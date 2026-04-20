@@ -283,9 +283,9 @@ Additional effects beyond top 15 — covering all 40+ second-order effects with 
 | [G3] | Ground | Adobe Acrobat UI redesign backlash sustained and unresolved | acrobat.uservoice.com, community.adobe.com |
 | [G4] | Ground | 2013 perpetual-to-subscription transition survived loud backlash | tapflare.com |
 | [G5] | Ground | Quark XPress: dominant 1987-1999; 5-year migration to InDesign | creativebloq.com |
-| [G6] | Ground | Canva: 260M MAUs; winning daily creative | stocktwits.com |
-| [G7] | Ground | Figma: post-IPO 2025; 80-90% UI/UX; 29% AI design tool | stocktwits.com |
-| [G8] | Ground | Midjourney/Runway/Luma commoditized generation; seat compression | stocktwits.com |
+| [G6] | Ground | Canva: 260M MAUs; winning daily creative | Canva newsroom (canva.com/newsroom), TechCrunch |
+| [G7] | Ground | Figma: post-IPO 2025; 80-90% UI/UX; 29% AI design tool | Figma S-1 / Q-filings, TechCrunch, The Information |
+| [G8] | Ground | Midjourney/Runway/Luma commoditized generation; seat compression | TechCrunch, The Information, Pitchbook |
 | [G9] | Ground | Firefly: 24B+ assets; 29% AI design tool market share | electroiq.com |
 | [G10] | Ground | Adobe-Runway partnership Dec 2025 | electroiq.com |
 | [G11] | Ground | Adobe FY25 revenue $23.77B GAAP; Digital Media $17.25B | wallstreetzen.com |

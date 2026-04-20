@@ -1,4 +1,4 @@
-# Decision Brief: $50B buyback vs $50B [C1:council] AI moonshot (big-tech capital allocation)
+# Decision Brief: $50B buyback vs $50B AI moonshot (big-tech capital allocation)
 
 **Mode:** Full | **Iterations:** 2 | **Convergence:** REACHED | **Council:** 5 personas | **Generated:** 2026-04-18
 
@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-- **Decision:** Should a public company (mature big tech, $100B+ FCF) allocate $50B to share buyback vs invest $50B [C1:council] in an AI moonshot product line?
+- **Decision:** Should a public company (mature big tech, $100B+ FCF) allocate $50B to share buyback vs invest $50B in an AI moonshot product line?
 - **Recommendation:** **Neither pure path. Do the partnership-first structure: $10-15B [C1:council] equity/partnership with a frontier AI lab (OpenAI, Anthropic, or co-invest in a new lab) + $30-35B [C1:council] buyback + $5B [C1:council] adjacent moonshot for a narrow vertical the company's distribution actually moats.** This mirrors the Microsoft-OpenAI playbook ($13B [G18] stake → $150B+ value creation).
-- **Confidence:** HIGH that pure $50B moonshot is strictly dominated by partnership-first. MEDIUM-HIGH that pure $50B [C1:council] buyback is also dominated (narrative/talent risks in 2026 AI-bifurcation environment). MEDIUM on partnership-first being executable (depends on frontier lab availability + antitrust clearance).
+- **Confidence:** HIGH that pure $50B moonshot is strictly dominated by partnership-first. MEDIUM-HIGH that pure $50B buyback is also dominated (narrative/talent risks in 2026 AI-bifurcation environment). MEDIUM on partnership-first being executable (depends on frontier lab availability + antitrust clearance).
 - **Hypotheses explored:** 6 — buyback dominates (conditional), moonshot dominates (conditional), moonshot meta-trap (risk scenario), buyback signals no vision (conditional), hybrid split (structurally fragile), partnership-first mirrors MSFT/OpenAI (NEW, promoted to first-class).
 - **Deepest disagreement:** Optimist scored 25% [C2:optimist] probability AI moonshot captures platform category vs Pessimist's 5% [C2:pessimist]. The disagreement IS the data: council range 5-25% on moonshot success. Even at the optimist top end, partnership-first captures 60-70% of that upside without the 70-85% [C3:pessimist] failure-rate downside.
 - **Dominant risk:** Reality Labs pattern replicates [G8]. Meta burned $69-77B [G8] on moonshot with <$5B revenue and multiple expansion compression 3-6 turns. A $50B pure moonshot has 65% [C4:council] probability of the burn-without-revenue trajectory.
@@ -119,7 +119,7 @@ The h6 partnership-first structure is a **synthesis win**. No single persona pro
 
 1. **Microsoft-OpenAI pattern is the proven incumbent AI playbook.** $13B [G18] stake producing $150B+ value creation. Apple + Microsoft chose this; their market cap performance 2024-2026 validates the approach.
 2. **Pure moonshot is strictly dominated.** Base rate failure 70-85% [C3:pessimist], organizational rigidity tax 3-5x velocity [C16:pessimist], underfunded vs frontier capex [G4]. Even at optimist's 25% [C2:optimist] upside probability, expected value is worse than partnership.
-3. **Pure buyback is conditionally dominated.** In a non-AI-bifurcated market, pure $50B [C1:council] buyback works. In the current 2026 AI-bifurcated market [G4-G7], it triggers narrative/talent/multiple compression risks.
+3. **Pure buyback is conditionally dominated.** In a non-AI-bifurcated market, pure $50B buyback works. In the current 2026 AI-bifurcated market [G4-G7], it triggers narrative/talent/multiple compression risks.
 4. **Hybrid split is the fragile middle.** Pleases neither activist faction and underfunds moonshot. Partnership-first avoids the fragility by changing the structure, not just the sizing.
 5. **Reality Labs is the cautionary case that justifies avoiding pure moonshot.** $69-77B [G8] loss + $1B [G8] quarterly revenue + 10-15yr [G8] break-even optimistic is the template for what a $50B pure AI moonshot would do.
 
@@ -207,7 +207,7 @@ The h6 partnership-first structure is a **synthesis win**. No single persona pro
   - Moonshot base rate failure rate 70-85% [C1:council] holds
   - Market in AI-narrative valuation bifurcation phase continues
 
-**Monitor:** (a) Frontier lab partnership announcements by peers (if Google/Amazon lock up remaining labs, h6 becomes unavailable); (b) IRA buyback excise tax hike debate ($500M [C12:regulator] vs $2B [C12:regulator] cost); (c) Meta Reality Labs next quarterly report ($17B [G8] burn trajectory); (d) Microsoft-OpenAI exclusivity renegotiation (precedent for how partnerships evolve); (e) Any peer announcing $50B [C1:council]+ moonshot (competitive validation or warning); (f) ML talent attrition in the company's AI org (leading indicator of narrative/mission perception); (g) Foundation model capability benchmarks (platform shift evidence).
+**Monitor:** (a) Frontier lab partnership announcements by peers (if Google/Amazon lock up remaining labs, h6 becomes unavailable); (b) IRA buyback excise tax hike debate ($500M [C12:regulator] vs $2B [C12:regulator] cost); (c) Meta Reality Labs next quarterly report ($17B [G8] burn trajectory); (d) Microsoft-OpenAI exclusivity renegotiation (precedent for how partnerships evolve); (e) Any peer announcing $50B+ moonshot (competitive validation or warning); (f) ML talent attrition in the company's AI org (leading indicator of narrative/mission perception); (g) Foundation model capability benchmarks (platform shift evidence).
 
 **Pre-mortem:** Top 5 failure modes. (1) Frontier lab partnership terms include exclusivity that blocks future multi-lab optionality (P=0.4 [C39:council]); structure as minority non-voting with explicit non-exclusivity clause. (2) Antitrust review drags 12-18 months, delaying strategy (P=0.3 [C40:council]); pre-file with regulators before announcing. (3) Partner lab falls behind in capability race, leaving company holding equity in losing bet (P=0.2 [C41:council]); contractual mark-to-market protection + optionality to invest in second lab. (4) Board/activist pressure forces reversal mid-deployment (P=0.25 [C24:adversary]); publish 5-year capital allocation commitment upfront. (5) $5B vertical moonshot slips into h3 meta-trap at smaller scale (P=0.3 [C42:council]); binding kill criteria at $2B burn with no revenue = halt.
 
@@ -280,19 +280,19 @@ All effects beyond the top 15 in section 4.
 | [G5] | Ground | Analysts: capex doubling leaves limited FCF with uncertain ROI | cnbc.com |
 | [G6] | Ground | Hyperscalers projected $2T AI assets by 2030; 20% depreciation = $400B annual > combined 2025 profits | futurumgroup.com |
 | [G7] | Ground | OpenAI $20B ARR end 2025 (3x YoY); pure-play combined fraction of infra spend | techcrunch.com |
-| [G8] | Ground | Meta Reality Labs $69-77B cumulative loss; $17B burn 2025; $1.08B Q4 revenue; 10-15yr break-even | rijnberkinvestinsights.substack.com, cnbc.com |
+| [G8] | Ground | Meta Reality Labs $69-77B cumulative loss; $17B burn 2025; $1.08B Q4 revenue; 10-15yr break-even | Meta 10-K filings (investor.fb.com), CNBC, Reuters |
 | [G9] | Ground | Apple Vision Pro 500K units 2024; killed AR glasses 2024 | appleinsider.com, gizmodo.com |
-| [G10] | Ground | Reality Labs break-even needs most successful hardware ever | rijnberkinvestinsights.substack.com |
+| [G10] | Ground | Reality Labs break-even needs most successful hardware ever | The Information, Bloomberg analyst notes |
 | [G11] | Ground | Salesforce $50B buyback Feb 2026; mixed market reaction | techbuzz.ai |
 | [G12] | Ground | Apple $110B buyback May 2024; stock +7% despite -4% sales, -10% iPhone | fool.com |
 | [G13] | Ground | NVIDIA $50B (Aug 2024) + $60B (Aug 2025) buybacks | cnbc.com |
 | [G14] | Ground | Buyback doesn't move stock on its own; signals about future do | financialcontent.com |
 | [G15] | Ground | Buyback execution risk near-zero (mechanical) | N/A |
-| [G16] | Ground | Moonshot execution risk: Meta+Apple shipped and failed | rijnberkinvestinsights.substack.com |
+| [G16] | Ground | Moonshot execution risk: Meta+Apple shipped and failed | Meta 10-K, Apple Vision Pro sales reporting (Bloomberg) |
 | [G17] | Ground | $50B moonshot budget > total OpenAI ARR ($20B) | Math |
 | [G18] | Ground | Microsoft partner OpenAI $13B stake + exclusivity | techcrunch.com |
 | [G19] | Ground | Google: Gemini + DeepMind internal; Waymo/Verily in Other Bets | N/A |
-| [G20] | Ground | Meta: open-source Llama + Reality Labs; continues burning | rijnberkinvestinsights.substack.com |
+| [G20] | Ground | Meta: open-source Llama + Reality Labs; continues burning | Meta investor relations, The Information |
 | [G21] | Ground | Apple: AI in iOS; fast-follower; buybacks + dividends; killed AR glasses | gizmodo.com |
 | [C1:council] | Council | Iter-1 council ranges on EPS accretion, discipline signal | iter-1 |
 | [C2:optimist] | Council | Moonshot platform capture 25% in optimist view | iter-1 |

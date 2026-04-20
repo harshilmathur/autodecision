@@ -123,7 +123,7 @@ clearer, more actionable, or more consistent, that's the highest-leverage contri
 
 ## Style guide
 
-- **Markdown only.** No code, no scripts (except `install.sh`), no dependencies.
+- **Markdown only for the skill.** The skill itself ships as protocol files. The only repo scripts are `install.sh` (legacy install path), `scripts/sync.sh` (canonical → `.claude/` mirror), `scripts/build-plugin-zip.sh` (release zip builder), and the validator at `claude-plugin/skills/autodecision/scripts/validate-brief.py` (Phase 8.5 brief validator). No runtime dependencies.
 - **One concept per file.** Each phase, spec, or template gets its own `.md` file.
 - **Instructions, not descriptions.** Write "Do X" not "X should be done."
   The reader is an AI agent that will follow these instructions literally.
