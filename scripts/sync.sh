@@ -27,6 +27,16 @@ rsync -a --delete \
   --exclude='.DS_Store' \
   "$SRC/skills/autodecision/" "$DST/skills/autodecision/"
 
+# Agents tree (team-mode persona definitions) — identical in both layouts.
+# Guarded with -d test so this script remains backwards-compatible with branches
+# that do not have an agents/ directory yet.
+if [ -d "$SRC/agents" ]; then
+  mkdir -p "$DST/agents"
+  rsync -a --delete \
+    --exclude='.DS_Store' \
+    "$SRC/agents/" "$DST/agents/"
+fi
+
 # Commands tree needs a structural transform: flat plugin-root → nested under autodecision/.
 # Wipe the legacy command directory, recreate it, copy each top-level plugin command in.
 rm -rf "$DST/commands/autodecision"
@@ -41,7 +51,13 @@ shopt -u nullglob
 # Count what we wrote so humans can sanity-check.
 SKILL_COUNT=$(find "$DST/skills/autodecision" -type f | wc -l | tr -d ' ')
 CMD_COUNT=$(find "$DST/commands/autodecision" -type f | wc -l | tr -d ' ')
+if [ -d "$DST/agents" ]; then
+  AGENT_COUNT=$(find "$DST/agents" -type f | wc -l | tr -d ' ')
+else
+  AGENT_COUNT=0
+fi
 
 echo "Synced claude-plugin/ → .claude/"
 echo "  Skills:   $SKILL_COUNT files"
+echo "  Agents:   $AGENT_COUNT files"
 echo "  Commands: $CMD_COUNT files"
