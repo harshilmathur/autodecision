@@ -199,6 +199,47 @@ After all subagents complete in Phase 3:
 6. Build `all_assumptions` map from all assumption keys referenced.
 7. Write `effects-chains.json` with the synthesized output.
 
+## Team Mode Spawning
+
+When `config.json` has `"team_mode": true`, Phase 3 routes to `phases/simulate-team.md` instead of spawning subagents via the Agent tool. Personas become persistent teammates in a Claude Code Agent Team. The lead (main conversation) orchestrates. Teammates retain their context across iterations.
+
+**Authoritative persona definitions.** Each persona is a standalone subagent definition file:
+
+```
+claude-plugin/agents/optimist.md
+claude-plugin/agents/pessimist.md
+claude-plugin/agents/competitor.md
+claude-plugin/agents/regulator.md
+claude-plugin/agents/customer.md
+```
+
+Filenames use the lowercase short tags from the Canonical Persona Names table. Each file contains YAML frontmatter (`name`, `description`, `tools`) plus a Role block (copied verbatim from the persona blocks above) and a Process block. These definitions are reusable in both modes:
+
+- **Non-team mode:** The orchestrator MAY use them as subagent definitions when spawning via the Agent tool, but continues to inline the persona prompts for backwards compatibility.
+- **Team mode:** The lead spawns teammates with `Using the {short-tag} agent type, ...` — Agent Teams resolves the definition file and creates a teammate with the Role block appended to the teammate's system prompt.
+
+**Frontmatter caveat (per Agent Teams docs):**
+
+> The `skills` and `mcpServers` frontmatter fields in a subagent definition are not applied when that definition runs as a teammate. Teammates load skills and MCP servers from your project and user settings, the same as a regular session.
+
+The autodecision persona definitions do NOT use `skills` or `mcpServers` frontmatter fields — all logic lives in the body and references precomputed files (`shared-context.md`, `hypotheses.json`). This makes them compatible with both subagent and teammate spawning without modification.
+
+**Tools allowlist.** The `tools:` frontmatter lists `Read, Write, Bash`. Per Agent Teams docs:
+
+> Team coordination tools such as `SendMessage` and the task management tools are always available to a teammate even when `tools` restricts other tools.
+
+So teammates automatically get `SendMessage`, task list read/write, and other team coordination tools in team mode — regardless of what the `tools:` allowlist says. Do not list team-coordination tools in the agent file; they would be no-ops in non-team mode.
+
+**The 6th persona (Adversary).** Team mode may spawn an additional 6th teammate during Phase 5 ADVERSARY for live red-teaming. This is optional and documented in `phases/adversary.md`. The 5-persona table above is the council baseline; the Adversary is a specialist invoked on demand.
+
+**Lifecycle.**
+
+- Iteration 1: team is created after HYPOTHESIZE, persists for the rest of the run.
+- Iteration 2+: teammates are NOT respawned. The lead broadcasts the convergence summary and posts iter-N tasks to the shared task list. Teammates self-claim.
+- Post-run (Phase 9): lead prompts user to keep team alive or clean up. See `team-mode.md` "Cleanup Protocol."
+
+**Reference:** Full team-mode protocol is in `references/team-mode.md`. Per-phase team-mode variants are in `phases/clarify-team.md`, `phases/simulate-team.md`, `phases/critique-team.md`.
+
 ## JSON Schema for Persona Output
 
 The full schema (with concrete example and the 8 numbered persona rules — no hedging,

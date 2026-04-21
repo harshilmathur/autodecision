@@ -28,6 +28,12 @@ gates:
 
 # Phase 3: SIMULATE
 
+## STOP — Team Mode Routing Gate (MUST RUN FIRST)
+
+Before following any instruction in this file, read `~/.autodecision/runs/{slug}/config.json`. If `team_mode` is `true`, STOP reading this file and load `phases/simulate-team.md` instead. Team mode uses `TeamCreate` to spawn persistent teammates and has a mandatory Phase 2.5 CLARIFY step that the team-mode variant of this phase enforces via a pre-simulate gate. Running the non-team variant in a team-mode run silently skips CLARIFY.
+
+If `team_mode` is `false` or absent, proceed with this file as written below.
+
 ## Purpose
 Each persona independently simulates the effects of each hypothesis, producing
 structured effects chains with probabilities and assumptions.

@@ -36,7 +36,21 @@ from the main conversation.
 ```
 /autodecision "Should we cut pricing by 20%?"
 /autodecision --template pricing "Should we cut pricing by 20%?"
+/autodecision --team "Should we cut pricing by 20%?"       # opt in to Agent Teams council (experimental)
 ```
+
+## Flags
+
+| Flag | Purpose |
+|------|---------|
+| `--iterations N` | Inner-loop iterations (default 2, cap 5). `--iterations 1` = medium mode (no convergence check). |
+| `--template <name>` | Pre-populate Phase 0 SCOPE with a decision template (`pricing`, `expansion`, `build-vs-buy`, `hiring`). |
+| `--context <files>` | Attach one or more documents for extraction (Claude Code only). Supported: `.md`, `.txt`, `.pdf`, `.csv`, `.json`, images. |
+| `--skip-elicit` | Skip Phase 1.5 user review of assumptions and personas. |
+| `--team` | Run the council via Claude Code Agent Teams instead of subagents. Personas become persistent teammates you can message directly. Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and Claude Code v2.1.32+. See `references/team-mode.md`. |
+| `--skip-clarify` | (Team mode only) Skip Phase 2.5 where teammates ask clarifying questions before simulating. Ignored without `--team`. |
+
+When `--team` is passed but the experimental env var is unset, the orchestrator prints a warning and falls back to standard subagent mode. It does not fail.
 
 ## CRITICAL: You are the orchestrator
 
@@ -58,16 +72,22 @@ The correct pattern:
 ## Execution
 
 1. Read the skill definition at `.claude/skills/autodecision/SKILL.md`
-2. Read `references/engine-protocol.md` for the full loop protocol
+2. Read `references/engine-protocol.md` for the full loop protocol (includes the **Team Mode Routing** section that governs `--team` behavior)
 3. Initialize the progress tracker (TodoWrite) with the full loop template
 4. Execute all 10 phases in sequence, following the protocol exactly
 5. Load each phase's reference file as you enter that phase
 6. For Phase 3 (SIMULATE): spawn 5 persona subagents via the Agent tool
    as specified in `references/persona-council.md`. YOU spawn them directly.
+   **In team mode (`--team`):** do NOT skip from HYPOTHESIZE straight to SIMULATE. Team mode inserts TWO phases:
+     - Phase 2.2 SPAWN TEAM — inline: create the Agent Team and spawn 5 teammates from `agents/*.md` (runs once, iter-1 only).
+     - Phase 2.5 CLARIFY — follow `references/phases/clarify-team.md` (skippable with `--skip-clarify` or if no teammate asks a question).
+     Then run Phase 3 per `references/phases/simulate-team.md`. Teammates persist across iterations. See `references/team-mode.md` for prerequisites and cleanup.
 7. For Phase 4+5: spawn critique + adversary agents in parallel. YOU spawn them.
+   **In team mode:** Phase 4 follows `references/phases/critique-team.md` — rotating peer reviews with bounded cross-teammate debate.
 8. Run quality gates after Phase 3 (diversity check) and after synthesis (depth check)
 9. Write all outputs to `~/.autodecision/runs/{decision-slug}/`
 10. Print the final Decision Brief to the conversation
+11. **In team mode:** after Phase 8.5 VALIDATE, prompt the user to keep the team alive for follow-up Q&A or clean it up. See `references/team-mode.md` "Cleanup Protocol."
 
 ## Phase 8 + 8.5 — the two rules that keep getting broken
 

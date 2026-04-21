@@ -10,6 +10,10 @@ reads:
   - user decision statement (from /autodecision invocation)
   - optional: --template flag (pricing | expansion | build-vs-buy | hiring)
   - optional: --context flag (one or more file paths, resolved relative to cwd)
+  - optional: --team flag (opt in to Agent Teams council)
+  - optional: --skip-clarify flag (team mode only — skip Phase 2.5)
+  - optional: --skip-elicit flag (skip Phase 1.5 user review)
+  - optional: --iterations N flag
   - if template: references/templates/{template}.md
 writes:
   - ~/.autodecision/runs/{slug}/config.json
@@ -18,6 +22,7 @@ gates:
   - Input quality gate passes (decision clarity + scope fit)
   - At least 2 sub-questions identified
   - Decision tilt set (default "balanced" if user did not specify)
+  - If --team: prerequisite env var check runs after config.json write (see Team Mode Prerequisite Check)
 -->
 
 # Phase 0: SCOPE
@@ -234,6 +239,56 @@ corresponding template file from `references/templates/{name}.md` and pre-popula
 the sub-questions and constraints. The user can then modify them.
 
 If no template is specified, decompose from scratch.
+
+## Team Mode Flag Parsing
+
+Recognize two additional flags during the Phase 0 flag parse:
+
+- `--team` — activates Agent Teams council mode. Sets `"team_mode": true` in `config.json`.
+- `--skip-clarify` — skips Phase 2.5 CLARIFY in team mode. Sets `"skip_clarify": true` in `config.json`. Ignored (treated as false) when `--team` is absent.
+
+Also recognize `--skip-elicit` (already supported elsewhere) and `--iterations N` (same).
+
+Write all flags into `config.json`:
+
+```json
+{
+  "team_mode": true,
+  "skip_clarify": false,
+  "skip_elicit": false,
+  "iterations": 2,
+  "template_used": null,
+  "context_files": []
+}
+```
+
+## Team Mode Prerequisite Check
+
+If `team_mode` is `true` after the Phase 0 flag parse, run this check before proceeding to Phase 1:
+
+1. Log: *"Team mode requested. Verifying CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS..."*
+2. Check the environment variable:
+   ```bash
+   printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
+   ```
+3. **If the output is `1`:** log *"Team mode active."* and continue to Phase 1.
+4. **If the output is missing or any other value:** print this warning (do NOT fail):
+   > ⚠️ Team mode requested via `--team`, but `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is not set to `1`. Falling back to standard subagent mode. To enable team mode, add this to your `settings.json` `env` block:
+   > ```json
+   > { "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
+   > ```
+   > See `references/team-mode.md` for full setup instructions.
+
+   Then update `config.json`:
+   ```json
+   {
+     "team_mode": false,
+     "team_fallback_reason": "env_var_missing"
+   }
+   ```
+   Continue to Phase 1 in standard mode.
+
+Do not re-run this check in later phases. The decision is final for this run.
 
 ## Example Output
 

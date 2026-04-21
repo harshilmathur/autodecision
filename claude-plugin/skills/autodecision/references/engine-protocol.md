@@ -52,6 +52,54 @@ Default is 2 iterations. Iteration 1 is always FULL (all phases). Iteration 2+ i
 For `--iterations 1` (medium mode): run all phases 0-6 once, skip Phase 7 (CONVERGE),
 go directly to Phase 8 (DECIDE). The brief notes "1 iteration, no convergence check."
 
+## Team Mode Routing
+
+Team mode is an opt-in execution path activated by `--team`. It replaces the fire-and-forget subagent council in Phase 3 with a persistent Claude Code Agent Team. Full architectural overview lives in `references/team-mode.md` — read that file once when `--team` is active.
+
+**Flag detection.** Phase 0 SCOPE recognizes `--team` and `--skip-clarify`. It writes `"team_mode": true` (or `false`) and `"skip_clarify": true|false` into `config.json`. No other phase parses these flags directly — they read `config.json`.
+
+**Prerequisite check (Phase 0.1).** On run start, if `team_mode=true`:
+
+1. Verify the environment variable `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set to `1`. If unset or set to anything else, print the warning:
+   > Team mode requested via `--team`, but `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is not set. Falling back to standard subagent mode. To enable team mode, add the variable to your `settings.json` `env` block. See `references/team-mode.md` for setup.
+2. On fallback, update `config.json`: `"team_mode": false, "team_fallback_reason": "env_var_missing"`. Continue the run using standard subagent orchestration. Do NOT fail.
+3. If the variable is set, log "Team mode active" and proceed.
+
+The prerequisite check runs once at the start of a run. Do not re-check in later phases — the decision is final for this run.
+
+**Phase routing when team mode is active.** Read the team-mode phase variants instead of the standard phase files:
+
+| Phase | Standard file | Team-mode file |
+|-------|---------------|----------------|
+| 0 SCOPE | `phases/scope.md` | `phases/scope.md` (parses flag; no variant) |
+| 1 GROUND | `phases/ground.md` | `phases/ground.md` (no variant) |
+| 1.5 ELICIT | `phases/elicit.md` | `phases/elicit.md` (no variant) |
+| 2 HYPOTHESIZE | `phases/hypothesize.md` | `phases/hypothesize.md` (no variant) |
+| 2.2 SPAWN TEAM | — | Inline, see "Phase 2.2 Protocol" below. MUST use the `TeamCreate` tool, NOT the `Agent` tool. |
+| 2.5 CLARIFY | — | `phases/clarify-team.md` (NEW; skippable with `--skip-clarify`) |
+| 3 SIMULATE | `phases/simulate.md` | `phases/simulate-team.md` |
+| 4 CRITIQUE | `phases/critique.md` | `phases/critique-team.md` |
+| 5–8.5 | unchanged | unchanged — JSON artifacts are identical in both modes |
+| 9 POST-RUN | — | Inline: prompt user to keep team alive for follow-up or clean up. See `team-mode.md` "Cleanup Protocol." |
+
+Phases 5 (ADVERSARY), 6 (SENSITIVITY), 7 (CONVERGE), 8 (DECIDE), 8.5 (VALIDATE) read the same input files and write the same output files regardless of mode. The Convergence Judge and the brief validator are mode-agnostic — this is the core non-invasiveness property of the integration.
+
+### Phase 2.2 Protocol: SPAWN TEAM (mandatory for team mode)
+
+Runs once on iteration 1, after Phase 2 HYPOTHESIZE writes `hypotheses.json`. Subsequent iterations REUSE the live team.
+
+1. Invoke `TeamCreate` with 5 teammates, one per persona. Reference each by the short-tag `subagent_type`: `optimist`, `pessimist`, `competitor`, `regulator`, `customer`. These names must match the files in `agents/*.md` exactly.
+2. Each teammate's spawn prompt must reference `~/.autodecision/runs/{slug}/shared-context.md` as its primary input.
+3. If `TeamCreate` fails or is unavailable, update `config.json` to `"team_mode": false, "team_fallback_reason": "team_create_failed: <reason>"` and continue in standard subagent mode. Do not fabricate a team-mode narrative in the brief.
+
+**Next step is NOT Phase 3.** After Phase 2.2 completes successfully, the next phase is **Phase 2.5 CLARIFY** (`phases/clarify-team.md`), not Phase 3 SIMULATE. Skipping Phase 2.5 is the primary failure mode — the team-mode variant of SIMULATE has a structural gate that will catch this and force CLARIFY to run first, but the cleaner path is for the orchestrator to not skip it in the first place.
+
+**Communication tool:** Use `SendMessage` (via the team mailbox) for all lead↔teammate communication in Phases 2.5, 3, and 4.
+
+**Team lifecycle.** The team is spawned at Phase 2.2 (after HYPOTHESIZE on iteration 1). It persists through all subsequent phases of the run. At Phase 9 POST-RUN, the lead offers cleanup vs keep-alive. If the user keeps it alive, the team lives until the Claude Code session ends or the user manually runs `/cleanup`.
+
+**Non-team mode is byte-for-byte unchanged.** Without `--team`, the orchestrator follows the exact protocol documented below — no new phases, no new file reads, no new artifacts beyond `team_mode: false` in `config.json`.
+
 ## The Loop
 
 ```
@@ -67,8 +115,15 @@ OUTER (runs once):
 
 INNER (max {iterations} times, default 2):
   Phase 2: HYPOTHESIZE ────────→ iteration-{N}/hypotheses.json
+  [TEAM MODE ONLY, iter-1 only]
+  Phase 2.2: SPAWN TEAM ───────→ lead creates Agent Team, spawns 5 teammates from agents/*.md
+  [TEAM MODE ONLY, iter-1 primarily — skip if --skip-clarify]
+  Phase 2.5: CLARIFY ──────────→ iteration-{N}/clarify-questions.json
+                                  iteration-{N}/clarify-answers.json
+                                  (see phases/clarify-team.md)
   Phase 3: SIMULATE ───────────→ iteration-{N}/council/*.json
                                   iteration-{N}/effects-chains.json
+                                  (team mode: use phases/simulate-team.md instead of simulate.md)
   Phase 4: CRITIQUE ───────────→ iteration-{N}/peer-review.json
                                   iteration-{N}/critique.json
   Phase 5: ADVERSARY ──────────→ iteration-{N}/adversary.json
@@ -125,6 +180,8 @@ collapses, convergence is fake, and the analysis is shallow.
 **The practical rule:** Follow the phases step by step in the main conversation.
 Use the Agent tool to spawn tasks (persona analysis, critique, adversary, decide).
 NEVER spawn a single agent to "run everything" or "do phases 3-8."
+
+**In team mode (`--team`), the main conversation is still the orchestrator — it becomes the team lead.** Teammates never delegate the full loop, and teammates cannot spawn sub-teams (Agent Teams disallows nested teams). The lead posts tasks to the shared task list, broadcasts messages, relays user-facing questions, and performs all synthesis inline. This is the same rule as non-team mode, just expressed through the Agent Teams surface instead of the Agent tool. See `references/team-mode.md` for the lead/teammate architecture.
 
 ## Phase Execution Rules
 

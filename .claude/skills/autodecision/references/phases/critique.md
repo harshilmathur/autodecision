@@ -22,6 +22,13 @@ gates:
 
 # Phase 4: CRITIQUE
 
+## STOP — Team Mode Routing Gate (MUST RUN FIRST)
+
+Before following any instruction in this file, read `~/.autodecision/runs/{slug}/config.json`.
+
+- **If `team_mode` is `true`:** STOP reading this file. Load `phases/critique-team.md` and follow it instead. Team mode uses rotating per-reviewer peer reviews with bounded cross-teammate debate — NOT single-reviewer anonymized review. Writing `peer-review.json` with an `anonymization_mapping` in a team-mode run is a signal that this gate was missed.
+- **If `team_mode` is `false` (or absent):** proceed with this file as written below.
+
 ## Purpose
 Anonymized peer review. Each persona reviews the others' analyses, ranks them,
 and identifies flaws. This surfaces genuine disagreements and evaluates arguments

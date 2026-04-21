@@ -112,6 +112,16 @@ USER-PROVIDED CONTEXT (treat as high-confidence, more reliable than web search):
 - {data point 2}
 ```
 
+Plus any team-mode CLARIFY answers (team mode only — appended to `shared-context.md` by Phase 2.5):
+
+```
+USER-PROVIDED CONTEXT (from CLARIFY, iteration {N}):
+- [For {persona}] {persona-specific answer — treat as high-confidence for your lens}
+- [General] {answer applicable to all personas}
+```
+
+Each persona treats `[For <own-short-tag>]` and `[General]` entries as high-confidence data for its own analysis. Entries tagged for other personas are context but not primary data for this persona.
+
 Plus iteration context (if iteration 2+):
 
 ```
