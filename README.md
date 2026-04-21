@@ -205,6 +205,15 @@ Pre-built templates: `--template pricing | expansion | build-vs-buy | hiring`.
 /autodecision --skip-elicit "decision"
 ```
 
+**Team mode (experimental).** Run the council as a persistent Claude Code Agent Team instead of fire-and-forget subagents. Each persona becomes a live teammate you can message directly (`Shift+Down`), and a new Phase 2.5 lets personas batch clarifying questions about your business context before simulating:
+
+```
+/autodecision --team "Should we cut pricing by 20%?"
+/autodecision --team --skip-clarify "..."
+```
+
+Requires Claude Code v2.1.32+ and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in your `settings.json` `env` block. If the env var is missing, autodecision falls back to standard subagent mode with a warning. See `claude-plugin/skills/autodecision/references/team-mode.md`.
+
 **Attach context documents** (Claude Code only, supports `.md`, `.txt`, `.pdf`, `.csv`, `.json`, images):
 
 ```
