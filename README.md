@@ -86,7 +86,7 @@ Skip it for simple factual questions (one LLM call is fine), low-stakes everyday
 
 ## Quick start
 
-Works with [Claude Code](https://claude.ai/code) and [Claude Cowork](https://claude.com/product/cowork).
+Works with [Claude Code](https://claude.ai/code), [Claude Cowork](https://claude.com/product/cowork), and [OpenCode](https://opencode.ai).
 
 ### In Claude Code
 
@@ -101,6 +101,18 @@ Commands land under `/autodecision:`. The main loop is `/autodecision:autodecisi
 
 1. **Customize → Create plugin → Add marketplace**, paste `https://github.com/harshilmathur/autodecision`
 2. **Customize → Add plugin → Personal → autodecision → Install**
+
+### In OpenCode
+
+OpenCode auto-discovers skills under `.claude/skills/` as well as `.opencode/skills/`, so one clone + two copies installs everything:
+
+```bash
+git clone https://github.com/harshilmathur/autodecision.git
+cp -r autodecision/.opencode      /path/to/your/project/.opencode
+cp -r autodecision/.claude/skills /path/to/your/project/.claude/skills
+```
+
+Commands use hyphens instead of colons: `/autodecision`, `/autodecision-quick`, `/autodecision-challenge`, etc. Full install + command map + limitations: [OPENCODE.md](OPENCODE.md).
 
 <details>
 <summary>Other install paths (legacy skill, offline zip)</summary>
@@ -122,9 +134,15 @@ Bare `/autodecision "..."` works in this mode. If both paths are installed, the 
 ### Then run
 
 ```
+# Claude Code / Cowork (colon namespace):
 /autodecision:autodecision "Should we cut pricing by 20%?"
 /autodecision:quick "Should we launch in Southeast Asia?"
 /autodecision:challenge "We're dropping UPI fees to zero next month"
+
+# OpenCode (hyphenated — no colon):
+/autodecision "Should we cut pricing by 20%?"
+/autodecision-quick "Should we launch in Southeast Asia?"
+/autodecision-challenge "We're dropping UPI fees to zero next month"
 ```
 
 The system scopes, grounds, simulates, critiques, stress-tests, and produces a Decision Brief.
