@@ -66,8 +66,12 @@ OUTER (runs once):
                                   (ELICIT runs AFTER GROUND because it shows grounding data to user)
 
 INNER (max {iterations} times, default 2):
-  Phase 2: HYPOTHESIZE ────────→ iteration-{N}/hypotheses.json
-  Phase 3: SIMULATE ───────────→ iteration-{N}/council/*.json
+  Phase 2:   HYPOTHESIZE ──────→ iteration-{N}/hypotheses.json
+  Phase 2.5: CLARIFY ──────────→ iteration-1/clarify-questions.json
+                                  iteration-1/clarify-answers.json
+                                  (iter-1 ONLY; skipped on --skip-clarify, in quick mode,
+                                   and auto-skipped when clarifier returns zero questions)
+  Phase 3:   SIMULATE ─────────→ iteration-{N}/council/*.json
                                   iteration-{N}/effects-chains.json
   Phase 4: CRITIQUE ───────────→ iteration-{N}/peer-review.json
                                   iteration-{N}/critique.json
@@ -206,6 +210,7 @@ Contents of `shared-context.md`:
 - Decision tilt (from config.json)
 - User-provided domain knowledge (from user-inputs.md, if any)
 - Document context (from context-extracted.md, if --context was provided — see below)
+- Clarify answers (from iteration-1/clarify-answers.json, if Phase 2.5 CLARIFY ran — see below)
 - Key data points from ground-data.md (include ALL key findings, not a lossy summary)
 - Hypotheses with expected effect IDs (from hypotheses.json)
 - Persona preamble rules (from persona-preamble.md)
@@ -243,6 +248,25 @@ and assertions as assumptions to stress-test in your analysis.
 ```
 
 Budget: ~300-500 tokens for the document block. Read from `context-extracted.md`.
+
+**Clarify block (if Phase 2.5 CLARIFY produced answers).** Include after the
+document context block and before hypotheses. Skip entirely if CLARIFY was
+skipped or produced no questions.
+
+```
+## USER-PROVIDED CONTEXT (from CLARIFY)
+
+Treat these as high-confidence — more reliable than web search or inference.
+Every persona should use these in their simulation instead of fabricating.
+
+- [C1] What is your current monthly customer churn rate? → About 8% monthly, stable.
+- [C2] Which jurisdictions does this decision apply to? → India and Singapore only.
+- ...
+```
+
+Budget: ~200-400 tokens. Read from `iteration-1/clarify-answers.json`.
+On iter-2+, re-include the same block verbatim — answers do not change across
+iterations, they were given once at the start.
 
 Target: ~1500 tokens in iter-1 without docs, ~1800-2000 with docs, ~2500-3000
 in iter-2+ with docs (the previous-iter ID and assumption blocks add ~500-1000

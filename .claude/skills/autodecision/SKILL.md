@@ -86,6 +86,7 @@ Read on-demand as each phase begins. Each phase file opens with a self-describin
 | Phase 1: Ground | `references/phases/ground.md` |
 | Phase 1.5: Elicit | `references/phases/elicit.md` |
 | Phase 2: Hypothesize | `references/phases/hypothesize.md` |
+| Phase 2.5: Clarify | `references/phases/clarify.md` (iter-1 only; skippable with `--skip-clarify`) |
 | Phase 3: Simulate | `references/phases/simulate.md` |
 | Phase 4: Critique | `references/phases/critique.md` |
 | Phase 5: Adversary | `references/phases/adversary.md` |

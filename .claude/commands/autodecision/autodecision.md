@@ -36,7 +36,17 @@ from the main conversation.
 ```
 /autodecision "Should we cut pricing by 20%?"
 /autodecision --template pricing "Should we cut pricing by 20%?"
+/autodecision --skip-clarify "..."          # skip Phase 2.5 CLARIFY
+/autodecision --skip-elicit --skip-clarify "..."  # fully autonomous run
 ```
+
+## Flags
+
+- `--iterations N` — inner-loop iteration cap (default 2)
+- `--template {pricing|expansion|build-vs-buy|hiring}` — pre-populate decomposition
+- `--context file1 [file2 ...]` — attach context documents (Claude Code only)
+- `--skip-elicit` — skip Phase 1.5 ELICIT (user review of assumptions, personas, data)
+- `--skip-clarify` — skip Phase 2.5 CLARIFY (post-hypothesis business-context questions)
 
 ## CRITICAL: You are the orchestrator
 

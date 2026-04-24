@@ -112,6 +112,19 @@ USER-PROVIDED CONTEXT (treat as high-confidence, more reliable than web search):
 - {data point 2}
 ```
 
+Plus any Phase 2.5 CLARIFY answers (if CLARIFY ran — appended by the orchestrator
+when it rebuilds shared-context.md before Phase 3):
+
+```
+USER-PROVIDED CONTEXT (from CLARIFY):
+- [C1] {question} → {user's answer}
+- [C2] {question} → {user's answer}
+```
+
+Treat `[C#]`-tagged items the same as [U#]-tagged items: high-confidence, more
+reliable than web search. Cite `[C#]` in effect descriptions where the number
+drives the conclusion.
+
 Plus iteration context (if iteration 2+):
 
 ```
