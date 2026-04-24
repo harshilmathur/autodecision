@@ -256,8 +256,12 @@ See `references/persona-council.md` for the full subagent protocol.
 Key rules:
 - Spawn 5 subagents in PARALLEL as FOREGROUND agents (multiple Agent tool calls
   in one message, `run_in_background: false` or omit — foreground is default).
-- Each subagent reads `shared-context.md` (precomputed above) + its persona-specific
-  block, and writes to `council/{persona}.json`.
+- Each Agent call sets `subagent_type` to the persona's short tag (`optimist`,
+  `pessimist`, `competitor`, `regulator`, `customer`). Claude Code loads the
+  definition from `agents/{tag}.md`, which carries the persona role block,
+  tool allowlist, and process instructions.
+- Each subagent reads `shared-context.md` (precomputed above) and writes to
+  `council/{tag}.json`.
 - Subagents have their own context windows and CANNOT see each other's outputs.
 
 **If Agent tool is unavailable** (e.g., running inside a subagent):

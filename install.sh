@@ -37,12 +37,23 @@ mkdir -p "$TARGET/skills" "$TARGET/commands"
 rsync -a --delete "$SCRIPT_DIR/.claude/skills/autodecision/" "$TARGET/skills/autodecision/"
 rsync -a --delete "$SCRIPT_DIR/.claude/commands/autodecision/" "$TARGET/commands/autodecision/"
 
+# Agents tree (optional — older checkouts without agents/ skip this block).
+if [ -d "$SCRIPT_DIR/.claude/agents" ]; then
+  mkdir -p "$TARGET/agents"
+  rsync -a --delete "$SCRIPT_DIR/.claude/agents/" "$TARGET/agents/"
+fi
+
 # Count files installed
 SKILL_COUNT=$(find "$TARGET/skills/autodecision" -type f | wc -l | tr -d ' ')
 CMD_COUNT=$(find "$TARGET/commands/autodecision" -type f | wc -l | tr -d ' ')
+AGENT_COUNT=0
+if [ -d "$TARGET/agents" ]; then
+  AGENT_COUNT=$(find "$TARGET/agents" -type f | wc -l | tr -d ' ')
+fi
 
 echo "Installed autodecision to $TARGET"
-echo "  Skills: $SKILL_COUNT files"
+echo "  Skills:   $SKILL_COUNT files"
 echo "  Commands: $CMD_COUNT files"
+echo "  Agents:   $AGENT_COUNT files"
 echo ""
 echo "Restart your Claude Code session to pick up the changes."

@@ -10,8 +10,9 @@ reads:
   - ~/.autodecision/runs/{slug}/shared-context.md (precomputed by orchestrator)
   - ~/.autodecision/runs/{slug}/iteration-{N}/hypotheses.json
   - ~/.autodecision/runs/{slug}/context-extracted.md (if --context was provided — included in shared-context.md)
-  - references/persona-council.md
-  - references/persona-preamble.md
+  - agents/{tag}.md × 5 (persona subagent definitions; loaded at spawn by Claude Code)
+  - references/persona-council.md (protocol and tag mapping)
+  - references/persona-preamble.md (bundled into shared-context.md)
   - references/effects-chain-spec.md
 writes:
   - ~/.autodecision/runs/{slug}/iteration-{N}/council/{tag}.json × 5 (full/medium — tags from persona-council.md Canonical Persona Names)
@@ -44,18 +45,28 @@ structured effects chains with probabilities and assumptions.
 
 ### Step 1: Spawn 5 Persona Subagents (PARALLEL)
 
-Use the Agent tool to spawn 5 subagents simultaneously. Each subagent receives:
+Use the Agent tool to spawn 5 subagents simultaneously, ONE Agent call per persona in a single message. Each call MUST set `subagent_type` to the persona's short tag — the definitions live in the plugin's top-level `agents/` directory and carry the persona role block, tool allowlist, and process instructions:
 
-1. The persona's system prompt (from `references/persona-council.md`)
-2. Instructions to read the shared context files:
-   - `~/.autodecision/runs/{slug}/config.json`
-   - `~/.autodecision/runs/{slug}/ground-data.md`
-   - `~/.autodecision/runs/{slug}/iteration-{N}/hypotheses.json`
-   - (If iteration > 1) `~/.autodecision/runs/{slug}/iteration-{N-1}/convergence-summary.md`
-3. The effects chain JSON schema (from `references/effects-chain-spec.md`)
-4. Instructions to write output to `~/.autodecision/runs/{slug}/iteration-{N}/council/{persona}.json`
+- `subagent_type: "optimist"`  → `agents/optimist.md`
+- `subagent_type: "pessimist"` → `agents/pessimist.md`
+- `subagent_type: "competitor"` → `agents/competitor.md`
+- `subagent_type: "regulator"` → `agents/regulator.md`
+- `subagent_type: "customer"` → `agents/customer.md`
 
-Each subagent MUST:
+The orchestrator only supplies the per-spawn `prompt`: the run's `{slug}`, the current iteration number `{N}`, and (for iteration 2+) a one-line pointer to the prior `convergence-summary.md`. Everything else — persona role, rules, probability format, JSON schema, ground data, hypotheses, assumption-key stability block — lives in `shared-context.md`, which the subagent reads.
+
+Example (pseudocode for the orchestrator — all 5 in ONE message, all `run_in_background: false`):
+
+```
+Agent(subagent_type="optimist",   prompt="Run slug: {slug}. Iteration: {N}. Read shared-context.md and hypotheses.json per your agent definition, then write council/optimist.json.", name="optimist")
+Agent(subagent_type="pessimist",  prompt="Run slug: {slug}. Iteration: {N}. ...", name="pessimist")
+Agent(subagent_type="competitor", prompt="Run slug: {slug}. Iteration: {N}. ...", name="competitor")
+Agent(subagent_type="regulator",  prompt="Run slug: {slug}. Iteration: {N}. ...", name="regulator")
+Agent(subagent_type="customer",   prompt="Run slug: {slug}. Iteration: {N}. ...", name="customer")
+```
+
+Each subagent MUST (rules enforced by the agent definition + shared-context.md):
+
 - Generate effects for EVERY hypothesis in `hypotheses.json`
 - Assign stable `effect_id` values (snake_case, max 30 chars)
 - Assign probabilities in 0.05 increments (0.05 to 0.95)

@@ -27,6 +27,16 @@ rsync -a --delete \
   --exclude='.DS_Store' \
   "$SRC/skills/autodecision/" "$DST/skills/autodecision/"
 
+# Agents tree is identical in both layouts (flat {tag}.md files).
+# Guarded — older checkouts without agents/ skip this block cleanly.
+if [ -d "$SRC/agents" ]; then
+  rm -rf "$DST/agents"
+  mkdir -p "$DST/agents"
+  rsync -a --delete \
+    --exclude='.DS_Store' \
+    "$SRC/agents/" "$DST/agents/"
+fi
+
 # Commands tree needs a structural transform: flat plugin-root → nested under autodecision/.
 # Wipe the legacy command directory, recreate it, copy each top-level plugin command in.
 rm -rf "$DST/commands/autodecision"
@@ -41,7 +51,12 @@ shopt -u nullglob
 # Count what we wrote so humans can sanity-check.
 SKILL_COUNT=$(find "$DST/skills/autodecision" -type f | wc -l | tr -d ' ')
 CMD_COUNT=$(find "$DST/commands/autodecision" -type f | wc -l | tr -d ' ')
+AGENT_COUNT=0
+if [ -d "$DST/agents" ]; then
+  AGENT_COUNT=$(find "$DST/agents" -type f | wc -l | tr -d ' ')
+fi
 
 echo "Synced claude-plugin/ → .claude/"
 echo "  Skills:   $SKILL_COUNT files"
 echo "  Commands: $CMD_COUNT files"
+echo "  Agents:   $AGENT_COUNT files"

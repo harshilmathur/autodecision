@@ -109,31 +109,39 @@ message. Each Agent call MUST specify `run_in_background: false` (or omit the pa
 since foreground is the default). Do NOT use `run_in_background: true` — background
 agents cause straggler notifications that arrive after results are consumed.
 
+**Each persona is defined as a reusable subagent at the plugin top level.** The 5 files
+are `agents/optimist.md`, `agents/pessimist.md`, `agents/competitor.md`, `agents/regulator.md`,
+`agents/customer.md`. Each file carries the persona role block (role, optimize-for, blind
+spot, contrarian question), the tool allowlist (`Read, Write, Bash`), and process
+instructions (which files to read, what to write). The orchestrator spawns by
+`subagent_type: "{short-tag}"` and Claude Code loads the definition from those files.
+
 **Each persona reads `shared-context.md`** (precomputed by the orchestrator before
-spawning — see engine-protocol.md "Shared Context File"). This single file replaces
-3-4 separate file reads per persona, cutting input tokens and spawn time.
+spawning — see engine-protocol.md "Shared Context File"). This single file carries
+rules, probability format, JSON schema, ground data, hypotheses, and (iter-2+) the
+prior `all_assumptions` map. The per-spawn `prompt` is just the run slug and iteration
+number — the persona role lives in the agent file, the context lives in shared-context.md.
 
 Example (pseudocode for the orchestrator):
 ```
 # Step 0: orchestrator writes shared-context.md to the run directory
 
-# Step 1: spawn all 5 in ONE message
-Agent(prompt="[persona-specific block only — 4 lines]\n\nRead shared-context.md at
-  ~/.autodecision/runs/{slug}/shared-context.md for all rules, context, and schema.
-  Then write your analysis to council/optimist.json", name="optimist")
+# Step 1: spawn all 5 in ONE message, by subagent_type
+Agent(subagent_type="optimist",
+      prompt="Run slug: {slug}. Iteration: {N}. Read shared-context.md and hypotheses.json per your agent definition, then write council/optimist.json.",
+      name="optimist")
 
-Agent(prompt="[pessimist block]\n\nRead shared-context.md...", name="pessimist")
-Agent(prompt="[competitor block]\n\nRead shared-context.md...", name="competitor")
-Agent(prompt="[regulator block]\n\nRead shared-context.md...", name="regulator")
-Agent(prompt="[customer block]\n\nRead shared-context.md...", name="customer")
+Agent(subagent_type="pessimist",  prompt="Run slug: {slug}. Iteration: {N}. ...", name="pessimist")
+Agent(subagent_type="competitor", prompt="Run slug: {slug}. Iteration: {N}. ...", name="competitor")
+Agent(subagent_type="regulator",  prompt="Run slug: {slug}. Iteration: {N}. ...", name="regulator")
+Agent(subagent_type="customer",   prompt="Run slug: {slug}. Iteration: {N}. ...", name="customer")
 
 # All 5 in ONE message. All complete before orchestrator continues.
 ```
 
-Per-persona prompt is now ~150 tokens (persona block + file read instruction).
-The shared-context.md file carries the other ~1500 tokens of rules, schema, and data.
-
-Repeat for all 5 personas, each with their own persona-specific block but the same shared-context.md.
+Per-spawn prompt is now a handful of tokens (slug + iteration pointer). The persona role
+and rules live in the agent file; the ground data, hypotheses, and schema live in
+shared-context.md. Previously the persona block was duplicated into every prompt inline.
 
 ### Phase 4: CRITIQUE (Anonymized Peer Review)
 
