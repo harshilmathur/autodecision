@@ -422,7 +422,7 @@ def add_two_column_slide(prs, title, left_header, left_items, right_header,
     rule_y = _add_action_title(s, title, size=22, prefix=prefix)
     body_y = _body_top(rule_y)
 
-    col_w = (SLIDE_W - MARGIN_L - MARGIN_R - Inches(0.4)) / 2
+    col_w = Emu(int((SLIDE_W - MARGIN_L - MARGIN_R - Inches(0.4)) / 2))
 
     _add_textbox(s, MARGIN_L, body_y, col_w, Inches(0.4),
                  left_header, font=BODY_FONT, size=13, bold=True, color=MCK_BLUE)
@@ -453,7 +453,7 @@ def add_three_column_grid(prs, title, columns, source, page_num, *, prefix=None)
     body_y = _body_top(rule_y)
     n = len(columns)
     gap = Inches(0.3)
-    col_w = (SLIDE_W - MARGIN_L - MARGIN_R - gap * (n - 1)) / n
+    col_w = Emu(int((SLIDE_W - MARGIN_L - MARGIN_R - gap * (n - 1)) / n))
 
     for i, (header, color, items) in enumerate(columns):
         x = MARGIN_L + i * (col_w + gap)
@@ -493,7 +493,9 @@ def add_table_slide(prs, title, headers, rows, col_widths, source, page_num,
     # is 0.28" so dense source tables (12-15 rows) still fit cleanly.
     if row_h is None:
         avail = FOOTER_Y - (table_top + Inches(0.55)) - Inches(0.45)
-        per_row = avail / max(len(rows), 1)
+        # Coerce to int — Python 3 division returns float, but EMU values
+        # MUST be integers (PowerPoint flags fractional EMU as malformed).
+        per_row = Emu(int(avail / max(len(rows), 1)))
         row_h = min(Inches(0.55), max(Inches(0.28), per_row))
 
     y = table_top + Inches(0.55)
@@ -548,7 +550,7 @@ def add_recommendation_slide(prs, title, action, fields, source, page_num,
                  action, font=TITLE_FONT, size=17, bold=True, color=WHITE)
 
     grid_top = body_y + box_h + Inches(0.25)
-    cell_w = (SLIDE_W - MARGIN_L - MARGIN_R - Inches(0.4)) / 3
+    cell_w = Emu(int((SLIDE_W - MARGIN_L - MARGIN_R - Inches(0.4)) / 3))
     cell_h = Inches(1.65)
     for idx, (label, value, color) in enumerate(fields):
         col = idx % 3
@@ -1474,6 +1476,7 @@ def build_adobe_deck(out_path: Path):
     )
 
     _fill_root_group_xfrm(prs)
+    _add_missing_end_para_rpr(prs)
     prs.save(out_path)
     print(f"Wrote {out_path}")
 
@@ -1685,6 +1688,30 @@ def _normalize_slide_size(prs):
     sldSz = prs.element.find(qn("p:sldSz"))
     if sldSz is not None and "type" in sldSz.attrib:
         del sldSz.attrib["type"]
+
+
+def _add_missing_end_para_rpr(prs):
+    """Append <a:endParaRPr/> to every <a:p> that lacks one.
+
+    OOXML's CT_TextParagraph schema lists endParaRPr as optional, but
+    PowerPoint expects every paragraph to declare the run properties of
+    its implied trailing newline. python-pptx skips emitting it; the
+    paragraph closes right after the last <a:r>. PowerPoint "repairs"
+    by inserting `<a:endParaRPr/>` at the close of every such paragraph.
+
+    We pre-populate so the deck opens cleanly. Walks every slide; safe
+    to call multiple times (idempotent — skips paragraphs that already
+    have endParaRPr).
+    """
+    from lxml import etree
+    a_ns = "http://schemas.openxmlformats.org/drawingml/2006/main"
+    p_tag = f"{{{a_ns}}}p"
+    end_para_rpr_tag = f"{{{a_ns}}}endParaRPr"
+    for slide in prs.slides:
+        for p in slide.element.iter(p_tag):
+            if p.find(end_para_rpr_tag) is not None:
+                continue
+            etree.SubElement(p, end_para_rpr_tag)
 
 
 def _fill_root_group_xfrm(prs):
@@ -1923,6 +1950,7 @@ def build_from_spec(spec, out_path):
             raise ValueError(f"Unknown slide type: {t!r}")
 
     _fill_root_group_xfrm(prs)
+    _add_missing_end_para_rpr(prs)
     prs.save(out_path)
     print(f"Wrote {out_path}")
 
