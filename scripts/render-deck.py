@@ -24,6 +24,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
+# Disable `$...$` math-mode parsing globally so dollar signs in chart
+# labels render literally. Decision-brief content uses "$80-120K", "$50B"
+# patterns extensively; without this, every other `$` would italicise
+# the text between them and strip the dollar signs.
+# Applies to ALL charts the moment matplotlib is imported, including
+# the matrix 2x2 slide which doesn't go through `_mck_chart_setup`.
+plt.rcParams["text.parse_math"] = False
+
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
@@ -553,7 +561,14 @@ def add_recommendation_slide(prs, title, action, fields, source, page_num,
 # ---------------------------------------------------------------------------
 
 def _mck_chart_setup():
-    """Apply McKinsey-ish chart defaults to a fresh figure."""
+    """Apply McKinsey-ish chart defaults to a fresh figure.
+
+    Critically, disables matplotlib's `$...$` math-mode parsing so dollar
+    signs in chart labels render literally. Decision-brief content is
+    full of "$80-120K" and "$50B" patterns; without this, every other
+    `$` would italicise the text between them and strip the dollar
+    signs, producing nonsense like "80 − 120Kcorrectedfrom150-250K".
+    """
     plt.rcParams.update({
         "font.family": ["Helvetica", "Arial", "sans-serif"],
         "font.size": 9,
@@ -568,6 +583,9 @@ def _mck_chart_setup():
         "axes.grid.axis": "y",
         "grid.color": "#E9ECEF",
         "grid.linewidth": 0.5,
+        # Treat $ as a literal character, not math-mode delimiter.
+        # Requires matplotlib >= 3.4.
+        "text.parse_math": False,
     })
 
 
