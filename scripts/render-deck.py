@@ -123,7 +123,6 @@ def _add_filled_rect(slide, x, y, w, h, color):
     shape.fill.solid()
     shape.fill.fore_color.rgb = color
     shape.line.fill.background()
-    shape.shadow.inherit = False
     return shape
 
 
@@ -133,7 +132,6 @@ def _add_circle_badge(slide, x, y, size, label, *, fill=NAVY, txt=WHITE):
     shape.fill.solid()
     shape.fill.fore_color.rgb = fill
     shape.line.fill.background()
-    shape.shadow.inherit = False
     tf = shape.text_frame
     tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
     tf.vertical_anchor = MSO_ANCHOR.MIDDLE
@@ -159,7 +157,11 @@ def _add_status_pill(slide, x, y, w, label, *, color):
     disc.fill.solid()
     disc.fill.fore_color.rgb = color
     disc.line.fill.background()
-    disc.shadow.inherit = False
+    # Note: do NOT call `disc.shadow.inherit = False` here — python-pptx's
+    # setter writes `<a:effectLst/>` which some PowerPoint versions flag
+    # at open time ("file needs repair"). Inherited shadow is barely
+    # visible on a 0.13" disc; we accept it to keep the deck opening
+    # cleanly across PowerPoint, Keynote, and Google Slides.
     # Adaptive font size: 10pt for short status, 9pt for medium, 8.5pt for long
     n = len(label)
     if n <= 22:
