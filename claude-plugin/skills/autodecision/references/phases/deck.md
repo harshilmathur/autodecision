@@ -239,3 +239,29 @@ Do not retry silently.
   consistency. Hex is reserved for matrix/radar where matplotlib
   consumes them directly.
 - Long slide titles. Hard cap is 14 words; aim for 10-12.
+
+---
+
+## Authoring guidance (avoid common spec bugs)
+
+- **Cover title** — keep it ≤65 chars total. The renderer auto-shrinks
+  the font (38pt / 32pt / 28pt) based on the longest \\n-split line, but
+  short and punchy beats long-and-shrunk. Don't insert manual `\n`
+  unless you're sure each split fits in the 5.8" title gutter at the
+  selected font size.
+- **Hypothesis status pills** — keep status text ≤22 chars (one short
+  phrase like "Conditional", "Risk if unilateral", "Leading · 5/5"). The
+  renderer auto-shrinks longer text but a one-line pill always reads
+  cleaner. Put longer status nuance in the "Key assumptions" column.
+- **2×2 matrix bubbles** — never place a bubble within 0.05 of x=0.5 or
+  y=0.5 (the quadrant dividers). The renderer auto-nudges anything
+  within 0.04, but plotting consciously off the dividers gives you
+  control over which quadrant the bubble belongs to. A bubble on the
+  line reads as "doesn't fit anywhere" and undermines the matrix.
+- **Sources table col_widths** — when council tags include the long
+  `iter2council` form (e.g., `C13:iter2council`), use widths
+  `[1.7, 1.0, 7.0, 2.6]` instead of the default `[0.7, 1.2, 7.5, 2.9]`.
+  The default fits short tags only.
+- **Sources row count** — the auto-row-height now floors at 0.28", so
+  13-15 rows fit. Beyond 15, split into two slides or trim to the most
+  load-bearing tags.

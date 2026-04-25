@@ -130,15 +130,27 @@ def _add_circle_badge(slide, x, y, size, label, *, fill=NAVY, txt=WHITE):
 
 
 def _add_status_pill(slide, x, y, w, label, *, color):
-    """Subtle status indicator: small colored disc + label."""
+    """Subtle status indicator: small colored disc + label.
+
+    Auto-shrinks font for long text so the pill stays one row visually
+    even when callers pass status copy beyond ~22 chars.
+    """
     disc = slide.shapes.add_shape(MSO_SHAPE.OVAL, x, y + Inches(0.05),
                                   Inches(0.13), Inches(0.13))
     disc.fill.solid()
     disc.fill.fore_color.rgb = color
     disc.line.fill.background()
     disc.shadow.inherit = False
-    _add_textbox(slide, x + Inches(0.22), y, w - Inches(0.22), Inches(0.4),
-                 label, font=BODY_FONT, size=10, color=color, bold=True)
+    # Adaptive font size: 10pt for short status, 9pt for medium, 8.5pt for long
+    n = len(label)
+    if n <= 22:
+        size = 10
+    elif n <= 32:
+        size = 9
+    else:
+        size = 8.5
+    _add_textbox(slide, x + Inches(0.22), y, w - Inches(0.22), Inches(0.5),
+                 label, font=BODY_FONT, size=size, color=color, bold=True)
 
 
 def _set_bg(slide, color):
@@ -152,7 +164,10 @@ def _add_footer(slide, page_num, source=None, brand="Autodecision"):
     if source:
         _add_textbox(slide, MARGIN_L, FOOTER_Y, Inches(9), Inches(0.25),
                      source, font=BODY_FONT, size=8, color=GREY_FOOT)
-    # Right footer: brand + page number with generous spacing
+    # Right footer: small brand mark + brand + page number
+    slide.shapes.add_picture(_make_brand_mark_small(),
+                             Inches(11.05), Inches(FOOTER_Y.inches - 0.04),
+                             width=Inches(0.18), height=Inches(0.18))
     _add_textbox(slide, Inches(10.0), FOOTER_Y, Inches(3.0), Inches(0.25),
                  f"{brand}     {page_num}",
                  font=BODY_FONT, size=8, color=GREY_FOOT, align=PP_ALIGN.RIGHT)
@@ -235,33 +250,26 @@ def add_title_cover(prs, title, subtitle, footer_org, date):
     s = prs.slides.add_slide(prs.slide_layouts[6])  # blank
     _set_bg(s, WHITE)
 
-    # Top-left brand mark
-    _add_textbox(s, MARGIN_L, Inches(0.45), Inches(4), Inches(0.7),
+    # Top-left brand mark — small graphic mark + wordmark
+    s.shapes.add_picture(_make_brand_mark_small(),
+                         MARGIN_L, Inches(0.48),
+                         width=Inches(0.36), height=Inches(0.36))
+    _add_textbox(s, Inches(MARGIN_L.inches + 0.45), Inches(0.45),
+                 Inches(4), Inches(0.7),
                  footer_org, font=TITLE_FONT, size=20, bold=True, color=NAVY)
 
-    # Decorative arc — wide sweep from bottom-left anchor outward, mimicking
-    # the McKinsey signature element on cover pages
-    fig = plt.figure(figsize=(7, 7), dpi=220)
-    ax = fig.add_axes([0, 0, 1, 1])
-    import numpy as np
-    for t in np.linspace(0, 1, 110):
-        x0, y0 = 0.02, 0.02
-        # Wider angular sweep (~95°) and longer rays for more drama
-        angle = np.pi * (0.02 + 0.52 * t)
-        x1 = 0.02 + 1.05 * np.cos(angle)
-        y1 = 0.02 + 1.05 * np.sin(angle)
-        # Subtle gradient — slightly darker rays in the middle of the sweep
-        a = 0.30 + 0.30 * np.sin(np.pi * t)
-        ax.plot([x0, x1], [y0, y1], color=(0.05, 0.40, 0.85, a),
-                linewidth=0.45)
-    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    buf = io.BytesIO(); fig.savefig(buf, format="png", transparent=True); plt.close(fig)
-    buf.seek(0)
-    s.shapes.add_picture(buf, Inches(6.0), Inches(-0.2),
-                         width=Inches(7.5), height=Inches(7.5))
+    # Cover graphic — the autodecision "Council to Synthesis" mark.
+    # Five colored persona nodes in a pentagon converge via gradient
+    # lines on a central synthesis node. The mark IS the methodology.
+    s.shapes.add_picture(_make_council_mark(),
+                         Inches(6.5), Inches(0.7),
+                         width=Inches(6.4), height=Inches(6.4))
 
-    # Title — sized to fit a generous two-line area, no overflow
-    title_tb = s.shapes.add_textbox(MARGIN_L, Inches(2.6), Inches(8.0), Inches(3.0))
+    # Title — left half of the cover only; right half is the council mark.
+    # Width capped at 5.8" so long titles wrap before reaching the graphic
+    # (which starts at 6.5"), keeping a clean gutter on every cover. Font
+    # adapts to title length so long titles don't break into >3 lines.
+    title_tb = s.shapes.add_textbox(MARGIN_L, Inches(2.4), Inches(5.8), Inches(3.4))
     tf = title_tb.text_frame
     tf.word_wrap = True
     tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
@@ -270,7 +278,17 @@ def add_title_cover(prs, title, subtitle, footer_org, date):
     run = p.add_run()
     run.text = title
     run.font.name = TITLE_FONT
-    run.font.size = Pt(38)
+    # Pick a font that lets each line of the title fit in the 5.8" box.
+    # Width budget per char (Georgia bold): ~0.18" at 38pt, ~0.15" at 32pt,
+    # ~0.13" at 28pt. Decision made on the longest line (split on \n) so
+    # explicit breaks don't get punished for total length.
+    longest_line = max((len(line) for line in title.split("\n")), default=0)
+    if longest_line <= 18:
+        run.font.size = Pt(38)
+    elif longest_line <= 30:
+        run.font.size = Pt(32)
+    else:
+        run.font.size = Pt(28)
     run.font.bold = True
     run.font.color.rgb = INK
     p.line_spacing = 1.05
@@ -444,10 +462,12 @@ def add_table_slide(prs, title, headers, rows, col_widths, source, page_num,
               color=GREY_RULE, weight=1)
 
     # Auto-fit row height to available space if not specified, leaving
-    # ample margin above the footer so source line never collides
+    # ample margin above the footer so source line never collides. Floor
+    # is 0.28" so dense source tables (12-15 rows) still fit cleanly.
     if row_h is None:
         avail = FOOTER_Y - (table_top + Inches(0.55)) - Inches(0.45)
-        row_h = min(Inches(0.55), max(Inches(0.36), avail / max(len(rows), 1)))
+        per_row = avail / max(len(rows), 1)
+        row_h = min(Inches(0.55), max(Inches(0.28), per_row))
 
     y = table_top + Inches(0.55)
     for row in rows:
@@ -540,6 +560,157 @@ def _mck_chart_setup():
     })
 
 
+def _make_council_mark(*, dpi=220):
+    """The autodecision cover mark — 'Council to Synthesis'.
+
+    Center synthesis node, inner pentagon of 5 persona dots (1st-order
+    effects in each persona's color), and an outer ring of 2nd-order
+    effects fanning out from each persona. Encodes the methodology
+    visually: independent perspectives → 1st-order effects → 2nd-order
+    cascade.
+
+    Returns a transparent PNG buffer.
+    """
+    import numpy as np
+    fig = plt.figure(figsize=(6, 6), dpi=dpi)
+    ax = fig.add_axes([0, 0, 1, 1])
+
+    # Persona palette — matches the radar chart elsewhere in the deck so
+    # the cover and the council-depth slide read as one system.
+    persona_colors = [
+        ("#F39C12", "Optimist"),
+        ("#C0392B", "Pessimist"),
+        ("#9B59B6", "Competitor"),
+        ("#054AD8", "Regulator"),
+        ("#1F7A44", "Customer"),
+    ]
+
+    # Two rings: 1st-order (personas) and 2nd-order (effects cascade)
+    n = 5
+    r1 = 0.30
+    r2 = 0.46
+    cx, cy = 0.5, 0.5
+    angles = [np.pi / 2 + 2 * np.pi * i / n for i in range(n)]
+    points = [(cx + r1 * np.cos(a), cy + r1 * np.sin(a)) for a in angles]
+
+    # Faint guide rings at both orbital radii
+    theta = np.linspace(0, 2 * np.pi, 200)
+    for r in (r1, r2):
+        ax.plot(cx + r * np.cos(theta), cy + r * np.sin(theta),
+                color=(0.05, 0.30, 0.85, 0.12),
+                linewidth=0.5, linestyle=(0, (2, 5)), zorder=0)
+
+    # 2nd-order effects: 3 small dots fanning from each persona's angle.
+    # Drawn before convergence rays so the rays sit on top.
+    fan = (-0.18, 0.0, 0.18)
+    for i, a in enumerate(angles):
+        color = persona_colors[i][0]
+        x1, y1 = points[i]
+        for da in fan:
+            ang2 = a + da
+            x2 = cx + r2 * np.cos(ang2)
+            y2 = cy + r2 * np.sin(ang2)
+            ax.plot([x1, x2], [y1, y2], color=color, alpha=0.32,
+                    linewidth=0.9, solid_capstyle="round", zorder=1)
+            ax.scatter([x2], [y2], s=70, color=color, alpha=0.70,
+                       edgecolor="none", zorder=4)
+
+    # Convergence rays — each persona to the synthesis center, gradient
+    # from the persona's color (at outer end) toward navy (at center).
+    # Render as many short segments to fake the gradient.
+    SEGMENTS = 40
+    for (px, py), (color, _) in zip(points, persona_colors):
+        # Convert color hex → rgb 0-1
+        cr = int(color[1:3], 16) / 255
+        cg = int(color[3:5], 16) / 255
+        cb = int(color[5:7], 16) / 255
+        # Navy center color
+        nr, ng, nb = 0x05 / 255, 0x1C / 255, 0x2C / 255
+        for k in range(SEGMENTS):
+            t0 = k / SEGMENTS
+            t1 = (k + 1) / SEGMENTS
+            x0 = px + (cx - px) * t0
+            y0 = py + (cy - py) * t0
+            x1 = px + (cx - px) * t1
+            y1 = py + (cy - py) * t1
+            # Color along the line: persona at t=0, navy at t=1
+            t_mid = (t0 + t1) / 2
+            r = cr + (nr - cr) * t_mid
+            g = cg + (ng - cg) * t_mid
+            b = cb + (nb - cb) * t_mid
+            # Alpha is highest in the middle of the line, fading near ends
+            a = 0.35 + 0.35 * np.sin(np.pi * t_mid)
+            # Line tapers thinner near the center node
+            lw = 1.6 * (1.0 - 0.55 * t_mid)
+            ax.plot([x0, x1], [y0, y1],
+                    color=(r, g, b, a), linewidth=lw, solid_capstyle="round",
+                    zorder=2)
+
+    # Persona dots — clean colored discs with white stroke
+    for (px, py), (color, _) in zip(points, persona_colors):
+        ax.scatter([px], [py], s=380, color=color,
+                   edgecolor="white", linewidth=2.5, zorder=4)
+        # Subtle outer halo for premium feel
+        ax.scatter([px], [py], s=900, color=color,
+                   alpha=0.10, edgecolor="none", zorder=3)
+
+    # Synthesis center — larger navy disc with white stroke + accent ring
+    ax.scatter([cx], [cy], s=1400, color="#051C2C",
+               edgecolor="white", linewidth=3.0, zorder=6)
+    # Inner accent dot in McKinsey-blue (subtle)
+    ax.scatter([cx], [cy], s=180, color="#054AD8",
+               edgecolor="none", zorder=7)
+    # Faint navy halo
+    ax.scatter([cx], [cy], s=2800, color="#051C2C",
+               alpha=0.08, edgecolor="none", zorder=5)
+
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
+    ax.set_aspect("equal")
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", transparent=True,
+                bbox_inches="tight", pad_inches=0.05)
+    plt.close(fig)
+    buf.seek(0)
+    return buf
+
+
+def _make_brand_mark_small(*, dpi=220):
+    """Compact brand mark — center synthesis + 5 persona dots only.
+
+    Drops the convergence rays, second-order ring, and halos so the
+    mark stays legible at ~0.3 inch. Used for slide headers/footers
+    next to the wordmark.
+
+    Returns a transparent PNG buffer.
+    """
+    import numpy as np
+    fig = plt.figure(figsize=(2, 2), dpi=dpi)
+    ax = fig.add_axes([0, 0, 1, 1])
+
+    persona_colors = ["#F39C12", "#C0392B", "#9B59B6", "#054AD8", "#1F7A44"]
+    n = 5
+    cx, cy = 0.5, 0.5
+    r = 0.34
+    angles = [np.pi / 2 + 2 * np.pi * i / n for i in range(n)]
+
+    for color, a in zip(persona_colors, angles):
+        x, y = cx + r * np.cos(a), cy + r * np.sin(a)
+        ax.scatter([x], [y], s=140, color=color, edgecolor="none", zorder=2)
+
+    ax.scatter([cx], [cy], s=320, color="#051C2C", edgecolor="none", zorder=3)
+
+    ax.set_xlim(0.05, 0.95); ax.set_ylim(0.05, 0.95); ax.axis("off")
+    ax.set_aspect("equal")
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", transparent=True,
+                bbox_inches="tight", pad_inches=0.02)
+    plt.close(fig)
+    buf.seek(0)
+    return buf
+
+
 def make_effects_bar_chart(effects, *, w=8.5, h=5.0):
     """Horizontal bars: probability (with range), color by council_agreement."""
     _mck_chart_setup()
@@ -548,10 +719,16 @@ def make_effects_bar_chart(effects, *, w=8.5, h=5.0):
     probs = [e["p"] for e in effects]
     agree = [e["agree"] for e in effects]
     y = list(range(len(labels)))
-    # Color scale: 5 = navy, 4 = blue, 3 = bright blue, lower = pale
-    palette = {5: "#051C2C", 4: "#054AD8", 3: "#2196F3", 2: "#9DC3E6", 1: "#D4D9DD"}
+    # Color scale: 5 = navy, 4 = blue, 3 = bright blue, 2 = pale blue,
+    # 1 = pale blue with grey outline (so the bar doesn't disappear into
+    # the slide background for single-persona "specialist insight" effects).
+    palette = {5: "#051C2C", 4: "#054AD8", 3: "#2196F3", 2: "#9DC3E6", 1: "#C9D6E2"}
     colors = [palette.get(a, "#9DC3E6") for a in agree]
-    bars = ax.barh(y, probs, color=colors, edgecolor="white", height=0.62)
+    # 1-agreement bars get a subtle outline so they remain readable on
+    # white background; higher-agreement bars use white edge (invisible).
+    edge_colors = ["#7A8B9C" if a == 1 else "white" for a in agree]
+    bars = ax.barh(y, probs, color=colors, edgecolor=edge_colors,
+                   linewidth=0.8, height=0.62)
     # Probability range overlay (thin black line)
     for i, e in enumerate(effects):
         if e.get("range"):
@@ -700,6 +877,14 @@ def add_matrix_2x2_slide(prs, title, axes, items, source, page_num, *,
         "right":  (0.04,  0,     "left",   "center"),
     }
     for it in items:
+        # Guardrail: never plot a bubble exactly on the quadrant dividers
+        # (x=0.5 or y=0.5). A bubble on the line reads as ambiguous between
+        # two quadrants, defeating the matrix's purpose. Nudge by 0.05 in
+        # whichever direction the bubble was leaning.
+        if abs(it["x"] - 0.5) < 0.04:
+            it = dict(it, x=0.45 if it["x"] < 0.5 else 0.55)
+        if abs(it["y"] - 0.5) < 0.04:
+            it = dict(it, y=0.45 if it["y"] < 0.5 else 0.55)
         c = it.get("color", "#054AD8")
         ax.scatter(it["x"], it["y"], s=it["size"] * 25, color=c,
                    edgecolor="white", linewidth=1.4, zorder=3, alpha=0.85)

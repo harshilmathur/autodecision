@@ -1,0 +1,293 @@
+{
+  "meta": {
+    "title": "$50B buyback vs $50B AI moonshot — big-tech capital allocation",
+    "subtitle": "Decision Brief — possibility map and recommendation",
+    "brand": "Autodecision",
+    "date": "April 2026",
+    "run_slug": "bigtech-buyback-vs-ai-moonshot"
+  },
+  "slides": [
+    {
+      "type": "title_cover",
+      "title": "$50B buyback vs $50B\nAI moonshot",
+      "subtitle": "Decision Brief — possibility map and recommendation",
+      "date": "April 2026",
+      "brand": "Autodecision"
+    },
+    {
+      "type": "toc_dark",
+      "page_num": 2,
+      "items": [
+        {"label": "Recommendation", "pages": "3"},
+        {"label": "How we explored this decision", "pages": "4 – 7"},
+        {"label": "What the council found", "pages": "8 – 13"},
+        {"label": "Path forward", "pages": "14 – 15"},
+        {"label": "Appendix — Sources", "pages": "16"}
+      ]
+    },
+    {
+      "type": "recommendation",
+      "page_num": 3,
+      "prefix": "1/  RECOMMENDATION",
+      "title": "Pure $50B moonshot is dominated; mirror the Microsoft-OpenAI partnership-first structure instead",
+      "action": "Execute partnership-first structure: $10-15B equity in a frontier AI lab + $30-35B buyback + $5B adjacent moonshot in a vertical the company's distribution actually moats. Mirror the Microsoft-OpenAI playbook ($13B [G18] stake → $150B+ value creation).",
+      "fields": [
+        {"label": "CONFIDENCE",          "value": "HIGH that pure $50B moonshot is strictly dominated · MEDIUM-HIGH that pure $50B buyback is dominated in 2026 AI-bifurcated regime · MEDIUM on partnership-first executability (gated by lab availability + antitrust)", "color": "MCK_BLUE"},
+        {"label": "DEPENDS ON",          "value": "Frontier lab accepts minority non-voting equity without exclusivity [C5:council] · Antitrust clears $10-15B stake · AI is a platform shift · Moonshot base rate 70-85% failure holds · Staged deployment kill criteria board-credible", "color": "MCK_BLUE_BR"},
+        {"label": "MONITOR",             "value": "Frontier lab partnership announcements by peers · IRA buyback excise tax debate · Meta Reality Labs quarterly burn · Microsoft-OpenAI exclusivity renegotiation · Peer $50B+ moonshots · ML talent attrition · Foundation model benchmarks", "color": "ACCENT_CORAL"},
+        {"label": "PRE-MORTEM",          "value": "Exclusivity locks multi-lab optionality (P=0.40) · Antitrust drag 12-18 months (P=0.30) · Partner lab falls behind in capability race (P=0.20) · Activist forces reversal mid-deployment (P=0.25) · Vertical moonshot slips into meta-trap (P=0.30)", "color": "MCK_BLUE_BR"},
+        {"label": "DEEPEST DISAGREEMENT","value": "Optimist: 25% [C2:optimist] AI moonshot platform capture. Pessimist: 5% [C2:pessimist]. Council range 5-25% — partnership-first captures 60-70% of upside without 70-85% [C3:pessimist] downside.", "color": "MCK_BLUE"},
+        {"label": "REVIEW TRIGGER",      "value": "Frontier lab terms include problematic exclusivity · AI platform shift weakens · Activist 13D on big tech · Meta reverses Reality Labs · Microsoft-OpenAI renegotiation · IRA buyback hike passes", "color": "ACCENT_CORAL"}
+      ],
+      "source": "Source: Decision Brief (full mode, 2 iterations, council 5/5 endorsement on h6, 12/12 adversarial survival) · [G18], [C5:council], [C9:council], [C10:council]"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 4,
+      "section_num": "2",
+      "section_title": "How we explored\nthis decision",
+      "lead_question": "A 5-persona council, 6 competing hypotheses, two iterations to convergence, and 12 adversarial stress scenarios — what survived?"
+    },
+    {
+      "type": "action_text",
+      "page_num": 5,
+      "prefix": "2.1/  HOW WE ANALYZED",
+      "title": "Two iterations of a 5-persona council and 12 adversarial scenarios converged on partnership-first structure",
+      "bullets": [
+        "5 personas spawned as separate subagents — Optimist, Pessimist, Competitor, Regulator, Customer — each with independent context",
+        "6 hypotheses generated, ranging from pure buyback (h1) and pure moonshot (h2) to hybrid split (h5) to the synthesis winner (h6 partnership-first, MSFT-OpenAI mirror)",
+        "2 iterations — convergence reached at iteration 2 with 85% assumption stability, 1 productive contradiction remaining",
+        "Adversary phase generated 12 stress scenarios across worst-cases, black swans, and irrational actors — h6 survives 12/12 [C10:council]",
+        "Sensitivity analysis on 8 key assumptions — 4 high-sensitivity, 3 medium, 1 low",
+        "Real-world anchor: Microsoft-OpenAI partnership ($13B [G18] stake → $150B+ value creation) is the proven incumbent AI playbook the recommendation mirrors"
+      ],
+      "source": "Source: Decision Brief Convergence Log; engine-protocol.md"
+    },
+    {
+      "type": "table",
+      "page_num": 6,
+      "prefix": "2.2/  HYPOTHESES",
+      "title": "Six hypotheses surfaced; only h6 (partnership-first) survived 5/5 council and 12/12 adversarial scenarios",
+      "headers": ["#", "Hypothesis", "Status", "Key assumptions"],
+      "col_widths": [0.5, 4.5, 2.7, 4.6],
+      "rows": [
+        ["1", "Buyback dominates (pure $50B return)", ["Conditional on AI = utility", "GREY_FOOT", "pill"], "AI is utility not platform · Market rewards discipline · Mature company can't ship moonshot"],
+        ["2", "Moonshot dominates (pure $50B AI bet)", ["Conditional · joint P 5-25%", "RED", "pill"], "AI is platform shift · Mature company can ship · Incumbent distribution advantage"],
+        ["3", "Moonshot meta-trap (Reality Labs pattern)", ["Risk path of h2", "RED", "pill"], "Reality Labs pattern applies · Org rigidity real · No partnership available"],
+        ["4", "Buyback signals no vision", ["Conditional on AI bifurcation", "GREY_FOOT", "pill"], "Market punishes no narrative · AI-era valuation bifurcation · Talent flight"],
+        ["5", "Hybrid split (buyback + moonshot)", ["Structurally fragile · pleases neither", "AMBER", "pill"], "Market accepts hybrid · Split strategy credible · Underfunded moonshot fails same way"],
+        ["6", "Partnership-first (MSFT-OpenAI mirror)", ["Leading · 5/5 council, 12/12 adversarial", "GREEN", "pill"], "Frontier lab accepts partnership · No exclusivity blocks optionality · Antitrust clears minority stake"]
+      ],
+      "source": "Source: Decision Brief — Hypotheses Explored"
+    },
+    {
+      "type": "matrix_2x2",
+      "page_num": 7,
+      "prefix": "2.3/  STRATEGIC POSITIONING",
+      "title": "Plotted on capital at risk × optionality preserved, h6 captures the AI upside without sitting where Reality Labs failed",
+      "axes": {
+        "x_label": "Strategic optionality preserved",
+        "y_label": "Capital at risk if wrong",
+        "x_low": "Low (locked in)",
+        "x_high": "High (multi-path)",
+        "y_low": "Contained",
+        "y_high": "Catastrophic"
+      },
+      "quadrant_labels": {
+        "tl": "AVOID",
+        "tr": "MANAGE WITH RIGOR",
+        "bl": "MONITOR",
+        "br": "DEFAULT"
+      },
+      "items": [
+        {"label": "h2", "x": 0.10, "y": 0.85, "size": 7,  "color": "#C0392B", "label_pos": "right", "legend": "Pure $50B moonshot — Reality Labs pattern, 70-85% base rate failure [C3:pessimist]"},
+        {"label": "h3", "x": 0.20, "y": 0.78, "size": 5,  "color": "#E08673", "label_pos": "right", "legend": "Moonshot meta-trap — risk scenario of h2, organizational rigidity tax 3-5×"},
+        {"label": "h4", "x": 0.55, "y": 0.50, "size": 6,  "color": "#9CA3AF", "label_pos": "left",  "legend": "Buyback signals no vision — narrative compression in AI-bifurcated market"},
+        {"label": "h5", "x": 0.42, "y": 0.62, "size": 7,  "color": "#F39C12", "label_pos": "right", "legend": "Hybrid split — pleases neither activist faction, underfunds the moonshot"},
+        {"label": "h1", "x": 0.85, "y": 0.20, "size": 9,  "color": "#1F7A44", "label_pos": "below", "legend": "Pure $50B buyback — mechanical EPS accretion 8-12% [C1:council], capital not at risk"},
+        {"label": "h6", "x": 0.93, "y": 0.38, "size": 16, "color": "#054AD8", "label_pos": "left", "note": "RECOMMENDED", "legend": "Partnership-first — $10-15B equity + $30-35B buyback + $5B vertical · captures 30-50% [C9:council] of AI upside"}
+      ],
+      "source": "Source: Synthesis from Decision Brief — bubble size = council_agreement × dominant probability of the hypothesis"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 8,
+      "section_num": "3",
+      "section_title": "What the council\nfound",
+      "lead_question": "Where the personas converged, where they diverged, and what the disagreement itself reveals about the decision."
+    },
+    {
+      "type": "chart_bar",
+      "page_num": 9,
+      "prefix": "3.1/  EFFECTS MAP",
+      "title": "The mechanical buyback (P=0.85) and the moonshot burn pattern (P=0.65) are the two highest-confidence signals",
+      "effects": [
+        {"label": "EPS accretion 8-12% from $50B buyback (mechanical)",        "p": 0.85, "agree": 5, "range": [0.75, 0.92]},
+        {"label": "Buyback captures capital return signal at smaller size [h6]","p": 0.80, "agree": 5, "range": [0.72, 0.88]},
+        {"label": "Adversary-resistant structure — h6 survives 12/12 [h6]",     "p": 0.75, "agree": 4, "range": [0.65, 0.85]},
+        {"label": "Moonshot base rate failure 70-85% (incumbent pattern)",      "p": 0.75, "agree": 4, "range": [0.65, 0.85]},
+        {"label": "Capital discipline signal preservation",                     "p": 0.70, "agree": 4, "range": [0.55, 0.80]},
+        {"label": "Moonshot burn-without-revenue (Reality Labs pattern)",       "p": 0.65, "agree": 5, "range": [0.55, 0.78]},
+        {"label": "Multiple compression 3-6 turns ($200-400B erasure)",          "p": 0.60, "agree": 4, "range": [0.45, 0.72]},
+        {"label": "Partnership structural antifragility [h6]",                   "p": 0.60, "agree": 4, "range": [0.50, 0.70]},
+        {"label": "Activist pressure year 2-3 (13D filing)",                     "p": 0.55, "agree": 4, "range": [0.45, 0.68]},
+        {"label": "Balanced signal from hybrid (pleases both narratives)",       "p": 0.55, "agree": 4, "range": [0.45, 0.65]},
+        {"label": "Adjacent vertical moonshot $5B captures narrow market [h6]",  "p": 0.55, "agree": 4, "range": [0.45, 0.65]},
+        {"label": "Partnership captures 30-50% of AI upside [h6]",               "p": 0.50, "agree": 5, "range": [0.40, 0.62]}
+      ],
+      "commentary_lines": [
+        "Top 12 effects ranked by council_agreement × probability",
+        "Bar color = council agreement (navy = 5/5, fading to pale = 1/5)",
+        "Black bracket = persona disagreement range — width is the uncertainty signal",
+        "Two of the three highest-agreement effects (5/5) belong to h6 partnership-first",
+        "The Reality Labs burn pattern (P=0.65, 5/5) dominates pure-moonshot risk math"
+      ],
+      "source": "Source: Decision Brief — Effects Map (top 15 by council_agreement × probability) · [C1:council], [C9:council], [C10:council]"
+    },
+    {
+      "type": "two_column",
+      "page_num": 10,
+      "prefix": "3.2/  COUNCIL DYNAMICS",
+      "title": "Optimist's 25% vs Pessimist's 5% on AI-as-platform IS the data — partnership-first dominates either world",
+      "left_header": "STRONGEST: COMPETITOR (#1 PEER RANK)",
+      "left_items": [
+        "Won on second-order competitive dynamics and the Microsoft-OpenAI partnership-first synthesis",
+        "Spotted the structural asymmetry: $50B is HALF of frontier capex per hyperscaler [G4] — pure moonshot starts underfunded",
+        "Surfaced the Bing counter-example as analog — 20 years of Microsoft distribution couldn't overcome Google's category lock-in",
+        "Authored the alt_partnership_first_moonshot_second variant that synthesized into h6"
+      ],
+      "right_header": "KEY DIVIDE: AI PLATFORM SHIFT REALITY",
+      "right_items": [
+        "Optimist: 25% [C2:optimist] AI moonshot category capture probability",
+        "Pessimist: 5% [C2:pessimist] AI moonshot category capture probability",
+        "Council range 5-25% on the moonshot upside — the disagreement IS the data",
+        "Customer was weakest (#5 peer rank) — public-equity decision had more signaling weight than product-side insights",
+        "BLIND SPOT: 4/5 personas inflated option-value probabilities on moonshot upside; underfunded-vs-frontier point fixed in h6"
+      ],
+      "source": "Source: Decision Brief — Council Dynamics · [C2:optimist], [C2:pessimist], [G4], [G18]"
+    },
+    {
+      "type": "radar",
+      "page_num": 11,
+      "prefix": "3.3/  COUNCIL DEPTH",
+      "title": "Competitor topped peer rank on second-order dynamics; Customer's narrow product lens drove its #5 placement",
+      "axes": ["Effects", "Range width", "Adversarial", "Counter-factual", "Quant. rigor"],
+      "personas": [
+        {"name": "Optimist",   "scores": [3, 2, 2, 2, 3], "color": "#F39C12"},
+        {"name": "Pessimist",  "scores": [4, 4, 5, 4, 4], "color": "#C0392B"},
+        {"name": "Competitor", "scores": [5, 4, 4, 5, 4], "color": "#054AD8"},
+        {"name": "Regulator",  "scores": [3, 3, 3, 3, 5], "color": "#9B59B6"},
+        {"name": "Customer",   "scores": [2, 2, 2, 2, 2], "color": "#1F7A44"}
+      ],
+      "commentary_lines": [
+        "Each persona scored 1-5 across five rigor dimensions, derived from peer-review and critique outputs",
+        "Competitor's structural depth surfaced the partnership-first alternative that synthesized into h6 — Microsoft-OpenAI mirror",
+        "Pessimist's adversarial coverage anchored the Reality Labs precedent and 70-85% [C3:pessimist] base rate failure rate",
+        "Regulator's quantitative rigor scored highest on antitrust and IRA tax structural workarounds",
+        "Customer's narrow lens (#5 peer rank) is structural — public-equity decisions weight signaling over product"
+      ],
+      "source": "Source: Synthesized from Decision Brief — Council Dynamics + Critique outputs"
+    },
+    {
+      "type": "three_column",
+      "page_num": 12,
+      "prefix": "3.4/  ADVERSARIAL PRESSURE",
+      "title": "Twelve adversarial scenarios — h6 survives 12/12; pure moonshot survives only 5/12",
+      "columns": [
+        {"header": "WORST CASES", "color": "MCK_BLUE", "items": [
+          "Foundation model plateau 2027-2028 (P=0.20)",
+          "Activist 13D year 2 forcing reversal (P=0.35)",
+          "$30B write-off year 4 (P=0.30)",
+          "Key CTO departure post-announcement (P=0.25)"
+        ]},
+        {"header": "BLACK SWANS", "color": "ACCENT_CORAL", "items": [
+          "OpenAI/Anthropic IPO at $3T valuation (P=0.15)",
+          "AI liability suit hits moonshot mid-development (P=0.18)",
+          "Stock market correction compresses all multiples (P=0.25)",
+          "CEO health crisis mid-transition (P=0.08)"
+        ]},
+        {"header": "IRRATIONAL ACTORS", "color": "MCK_BLUE_BR", "items": [
+          "Activist hostile bid for the company (P=0.10)",
+          "Competitor launches $100B buyback + AI partnership same week (P=0.12)",
+          "Key AI researcher publicly trashes moonshot on social (P=0.22)",
+          "Trump admin AI import tariff (P=0.30)"
+        ]}
+      ],
+      "source": "Source: Decision Brief — Adversarial Scenarios · [C23:adversary] through [C34:adversary]"
+    },
+    {
+      "type": "chart_tornado",
+      "page_num": 13,
+      "prefix": "3.5/  SENSITIVITY",
+      "title": "Four high-sensitivity assumptions are load-bearing — if any one fails, partnership-first becomes the staged-hybrid fallback",
+      "assumptions": [
+        {"label": "AI is a platform shift (not commoditized utility)",         "sensitivity": "HIGH",   "effects": 2},
+        {"label": "Moonshot base rate failure rate 70-85%",                    "sensitivity": "HIGH",   "effects": 2},
+        {"label": "Frontier AI lab accepts partnership/minority equity",       "sensitivity": "HIGH",   "effects": 1},
+        {"label": "Antitrust approval for $10-15B frontier lab investment",    "sensitivity": "HIGH",   "effects": 2},
+        {"label": "Market in AI-narrative valuation bifurcation",              "sensitivity": "MEDIUM", "effects": 2},
+        {"label": "Mature-company organizational rigidity 3-5× velocity tax",   "sensitivity": "MEDIUM", "effects": 2},
+        {"label": "Staged deployment kill criteria board-credible",            "sensitivity": "MEDIUM", "effects": 1},
+        {"label": "IRA Section 4501 1% excise tax on buybacks persists",        "sensitivity": "LOW",    "effects": 1}
+      ],
+      "commentary_lines": [
+        "Bar length = sensitivity weight × number of effects impacted",
+        "Dark-blue bar = HIGH sensitivity, lighter = MEDIUM, palest = LOW",
+        "Three of four HIGH-sensitivity assumptions are external — gated by frontier labs and regulators",
+        "If frontier lab partnership is unavailable (all labs exclusive), h6 collapses to staged-hybrid fallback",
+        "Antitrust review timing alone can drag 12-18 months [C40:council] — pre-filing with regulators before announcement is the mitigation"
+      ],
+      "source": "Source: Decision Brief — Key Assumptions · sensitivity per effects-impacted × HIGH/MEDIUM/LOW weight"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 14,
+      "section_num": "4",
+      "section_title": "Path forward",
+      "lead_question": "Seven checkpoints from Month 0 board approval to Month 60 review — every gate has a kill criterion before the next commitment."
+    },
+    {
+      "type": "table",
+      "page_num": 15,
+      "prefix": "4.1/  ROADMAP",
+      "title": "The recommendation maps to a seven-checkpoint roadmap with binding kill criteria at every gate",
+      "subtitle": "Failure at any gate triggers either reversion to staged-hybrid fallback or capital redeployment",
+      "headers": ["When", "Action", "Decision point", "Kill criteria"],
+      "col_widths": [1.0, 3.6, 3.5, 4.2],
+      "rows": [
+        ["Month 0",     "Board approval on partnership-first structure",          "Framework approved",                  ["Board rejection → staged-hybrid", "RED"]],
+        ["Month 1-3",   "Explore frontier lab partnership terms",                  "LOI signed with at least one lab",     ["No lab accepts → staged-hybrid", "RED"]],
+        ["Month 3-6",   "Antitrust pre-filing + structure optimization",          "Regulator signals approval path",       ["Regulator block → minority passive structure", "RED"]],
+        ["Month 6-9",   "Close partnership + announce buyback program",           "Official announcements",                ["Partnership close slips > 9 months → staged-hybrid", "RED"]],
+        ["Month 9-24",  "Execute $30-35B buyback; vertical moonshot tranche 1",   "Tranche 1 milestones met",              ["Vertical team can't be hired → skip moonshot", "GREY_FOOT"]],
+        ["Month 24-36", "Vertical moonshot tranche 2 ($2.5B) gated on milestones","ARR > $500M [C1:council]",              ["ARR < $100M → halt", "RED"]],
+        ["Month 36-60", "Evaluate partnership renewal; moonshot expansion",       "5-year review",                         ["Partner falls behind; moonshot fails → redeploy capital", "GREEN"]]
+      ],
+      "source": "Source: Decision Brief — Appendix A: Decision Timeline · binding kill criteria per [C38:council]"
+    },
+    {
+      "type": "table",
+      "page_num": 16,
+      "prefix": "APPENDIX  SOURCES",
+      "title": "Selected sources",
+      "subtitle": "Tags appear inline throughout the deck — [G#] = ground data, [C#:persona] = council finding, [C#:adversary] = adversarial scenario",
+      "headers": ["Tag", "Type", "Claim", "Source"],
+      "col_widths": [0.7, 1.2, 7.5, 2.9],
+      "rows": [
+        ["G4",  "Ground",   "2026 hyperscaler capex: AMZN $200B, GOOG $175-185B, META $115-135B, MSFT $120B+, ORCL $50B; collective $660-690B", "techcrunch.com, futurumgroup.com"],
+        ["G7",  "Ground",   "OpenAI $20B ARR end 2025 (3× YoY); pure-play AI revenue is fraction of infra spend",                                "techcrunch.com"],
+        ["G8",  "Ground",   "Meta Reality Labs: $69-77B cumulative loss; $17B 2025 burn; $1.08B Q4 revenue; 10-15yr break-even (cautionary)",   "Meta 10-K, CNBC, Reuters"],
+        ["G12", "Ground",   "Apple $110B buyback May 2024 → stock +7% despite -4% sales, -10% iPhone",                                          "fool.com"],
+        ["G18", "Ground",   "Microsoft-OpenAI: $13B stake + exclusivity → $150B+ value creation (the partnership-first proof point)",            "techcrunch.com"],
+        ["C2:opt", "Council",  "Moonshot platform capture P=0.25 in optimist view",                                                              "iter-1 optimist"],
+        ["C2:pess","Council", "Moonshot platform capture P=0.05 in pessimist view",                                                              "iter-1 pessimist"],
+        ["C3:pess","Council", "Incumbent moonshot base rate failure 70-85%",                                                                     "iter-1 pessimist"],
+        ["C5",  "Council",  "Frontier lab partnership availability P=0.5 (range 0.3-0.65) — binary precondition for h6",                          "iter-1 council"],
+        ["C9",  "Council",  "Partnership captures 30-50% of AI upside without organizational rigidity burden",                                   "iter-2 council"],
+        ["C10", "Council",  "h6 adversary-resistance: survives 12/12 stress scenarios",                                                          "iter-2 council"],
+        ["C24", "Adversary","Activist 13D year 2 forcing reversal P=0.35 (worst case)",                                                          "iter-1 adversary"]
+      ],
+      "source": "Source: Decision Brief — Sources (full list in companion brief markdown)"
+    }
+  ]
+}
