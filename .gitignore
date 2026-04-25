@@ -19,3 +19,6 @@ __pycache__/
 # Built plugin zips (regenerate via ./scripts/build-plugin-zip.sh)
 dist/
 *.zip
+
+# Deck reference materials (large PDFs, not committed)
+references/consulting-decks/
