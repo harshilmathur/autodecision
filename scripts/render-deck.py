@@ -37,6 +37,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.util import Inches, Pt, Emu
+from pptx.oxml.ns import qn
 
 
 # ---------------------------------------------------------------------------
@@ -59,9 +60,14 @@ ACCENT_CORAL= RGBColor(0xE8, 0x9B, 0xC7)  # contrast accent
 TITLE_FONT  = "Georgia"
 BODY_FONT   = "Helvetica"   # falls back to Arial on non-Mac
 
-# Slide geometry — 16:9, 13.333 × 7.5 inches
-SLIDE_W = Inches(13.333)
-SLIDE_H = Inches(7.5)
+# Slide geometry — 16:9 widescreen using exact PowerPoint EMU values.
+# Inches(13.333) gives 12,191,695 EMU, but PowerPoint's canonical
+# widescreen is exactly 12,192,000 × 6,858,000. The 305-EMU drift
+# combined with the default template's type="screen4x3" attribute is
+# what triggers the "repair" prompt — PowerPoint sees declared type
+# inconsistent with actual aspect. Use the exact canonical values.
+SLIDE_W = Emu(12192000)
+SLIDE_H = Emu(6858000)
 
 MARGIN_L = Inches(0.55)
 MARGIN_R = Inches(0.55)
@@ -1069,6 +1075,7 @@ def build_adobe_deck(out_path: Path):
     prs.slide_width = SLIDE_W
     prs.slide_height = SLIDE_H
     _strip_printer_settings(prs)
+    _normalize_slide_size(prs)
 
     # --- 1. Cover
     add_title_cover(
@@ -1665,6 +1672,20 @@ def _strip_printer_settings(prs):
             pres_part.rels.pop(rel.rId)
 
 
+def _normalize_slide_size(prs):
+    """Drop the stale `type="screen4x3"` attribute from <p:sldSz>.
+
+    python-pptx's default template declares the slide size type as 4:3.
+    We use 16:9 widescreen dimensions, which leaves the declared type
+    inconsistent with the actual aspect — and PowerPoint flags that on
+    open. Removing the attribute (rather than setting it to
+    "screen16x9") matches what PowerPoint's repair pass produces.
+    """
+    sldSz = prs.element.find(qn("p:sldSz"))
+    if sldSz is not None and "type" in sldSz.attrib:
+        del sldSz.attrib["type"]
+
+
 def build_from_spec(spec, out_path):
     """Render a deck from a JSON spec dict. See deck-spec.md for schema.
 
@@ -1684,6 +1705,7 @@ def build_from_spec(spec, out_path):
     prs.slide_width = SLIDE_W
     prs.slide_height = SLIDE_H
     _strip_printer_settings(prs)
+    _normalize_slide_size(prs)
     meta = spec.get("meta", {})
     brand = meta.get("brand", "Autodecision")
 
