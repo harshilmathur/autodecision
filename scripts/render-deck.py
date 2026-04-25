@@ -1068,6 +1068,7 @@ def build_adobe_deck(out_path: Path):
     prs = Presentation()
     prs.slide_width = SLIDE_W
     prs.slide_height = SLIDE_H
+    _strip_printer_settings(prs)
 
     # --- 1. Cover
     add_title_cover(
@@ -1648,6 +1649,22 @@ def validate_spec(spec):
     return errors, warnings
 
 
+def _strip_printer_settings(prs):
+    """Remove the default-template printerSettings binary.
+
+    python-pptx's default template ships with a Windows DEVMODE binary
+    blob (`ppt/printerSettings/printerSettings1.bin`). PowerPoint on
+    macOS flags this as an invalid record at open time and prompts the
+    user to "repair" the file. The repair just strips the reference,
+    which is what we do here at render time so the deck opens cleanly
+    everywhere.
+    """
+    pres_part = prs.part
+    for rel in list(pres_part.rels.values()):
+        if "printerSettings" in rel.reltype:
+            pres_part.rels.pop(rel.rId)
+
+
 def build_from_spec(spec, out_path):
     """Render a deck from a JSON spec dict. See deck-spec.md for schema.
 
@@ -1666,6 +1683,7 @@ def build_from_spec(spec, out_path):
     prs = Presentation()
     prs.slide_width = SLIDE_W
     prs.slide_height = SLIDE_H
+    _strip_printer_settings(prs)
     meta = spec.get("meta", {})
     brand = meta.get("brand", "Autodecision")
 
