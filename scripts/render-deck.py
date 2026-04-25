@@ -1473,6 +1473,7 @@ def build_adobe_deck(out_path: Path):
         page_num=16,
     )
 
+    _fill_root_group_xfrm(prs)
     prs.save(out_path)
     print(f"Wrote {out_path}")
 
@@ -1686,6 +1687,43 @@ def _normalize_slide_size(prs):
         del sldSz.attrib["type"]
 
 
+def _fill_root_group_xfrm(prs):
+    """Populate every slide's empty <p:grpSpPr/> with a zero <a:xfrm>.
+
+    python-pptx writes the slide root group as `<p:grpSpPr/>` (empty,
+    self-closing). The OOXML schema allows this, but PowerPoint flags
+    it as malformed at open time and offers to "repair" by filling in:
+
+        <p:grpSpPr><a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm></p:grpSpPr>
+
+    We pre-populate this so the deck opens cleanly without prompting.
+    Call AFTER all slides have been added.
+    """
+    from lxml import etree
+    a_ns = "http://schemas.openxmlformats.org/drawingml/2006/main"
+    for slide in prs.slides:
+        spTree = slide.element.find(qn("p:cSld")).find(qn("p:spTree"))
+        if spTree is None:
+            continue
+        grpSpPr = spTree.find(qn("p:grpSpPr"))
+        if grpSpPr is None or grpSpPr.find(qn("a:xfrm")) is not None:
+            continue  # already populated, skip
+        xfrm = etree.SubElement(grpSpPr, f"{{{a_ns}}}xfrm")
+        for tag in ("off", "ext", "chOff", "chExt"):
+            child = etree.SubElement(xfrm, f"{{{a_ns}}}{tag}")
+            if tag in ("off", "chOff"):
+                child.set("x", "0")
+                child.set("y", "0")
+            else:
+                child.set("cx", "0")
+                child.set("cy", "0")
+
+
 def build_from_spec(spec, out_path):
     """Render a deck from a JSON spec dict. See deck-spec.md for schema.
 
@@ -1884,6 +1922,7 @@ def build_from_spec(spec, out_path):
         else:
             raise ValueError(f"Unknown slide type: {t!r}")
 
+    _fill_root_group_xfrm(prs)
     prs.save(out_path)
     print(f"Wrote {out_path}")
 
