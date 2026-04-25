@@ -54,6 +54,27 @@ Extract these structures:
 and tell the user the brief is malformed; do NOT attempt to render
 partial decks.
 
+### Fallbacks for missing or older-schema sections
+
+Briefs predating schema v1.1 (and quick-mode briefs) sometimes omit
+sections the deck would normally pull from. Apply these fallbacks rather
+than failing or skipping the slide:
+
+| Missing | Fallback |
+|---|---|
+| `## Sources` | Synthesize `[G#]` tags from the bullets in `## Data Foundation` (or the inline footnote-style "Sources: ..." line some older briefs use). Use sequential numbering. The Sources slide can ship with 7-10 tags — that's enough to anchor the deck. |
+| `### Irrational Actors` (only Worst + Black Swan present) | Replace the third column with **MITIGATIONS** — a synthesized list of how the recommended hypothesis defuses the worst-cases / black-swans. Reads tighter than padding the slide with weak content. |
+| `### Cross-correlations` (a 4th adversarial subsection some briefs add) | Keep the 3-column adversary slide as Worst / Black Swan / Irrational. Roll cross-correlations into the slide's commentary or footnote — don't add a 4th column. |
+| `## Council Dynamics` mentions strongest/weakest but no peer-review.json exists | Score the radar from the narrative. Strongest persona gets 4-5 across the relevant dimensions; weakest gets 1-2 on the dimension Council Dynamics flags (e.g., "narrow ranges" → low Range Width). The narrative IS the canonical source for these examples; JSON is an optional refinement. |
+| `## Hypotheses Explored` table absent (rare; quick-mode) | Skip slide 6 (table) and slide 7 (matrix). Both depend on hypothesis structure. |
+| `## Key Assumptions` table absent | Skip slide 13 (sensitivity tornado). Convergence Log alone isn't enough. |
+| `## Appendix A: Decision Timeline` absent | Skip slide 15 (roadmap). The recommendation slide already names the action — losing the gantt is acceptable. |
+
+When you skip a slide, **renumber `page_num` and TOC ranges** for every
+slide after it. The validator will warn on duplicates, not on gaps, so
+gaps go undetected and slide 9 footer-numbered "9" will sit at deck
+position 8 if you forget.
+
 ---
 
 ## Step 2 — Synthesize action titles
@@ -136,22 +157,30 @@ If the brief's hypothesis count is <4, skip this slide.
 
 ### Slide 11 — Per-persona radar
 
-Score each of the 5 personas 1-5 on five rigor dimensions:
+Score each of the 5 personas 1-5 on five rigor dimensions. **The Council
+Dynamics narrative is the canonical source.** `peer-review.json` and
+`critique.json` are optional refinements when present, but every
+example brief in the repo synthesizes the radar from narrative alone —
+this is the normal path, not a fallback.
 
-| Dimension | Source signal |
-|---|---|
-| Effects identified | Count of effects attributed to that persona in `effects-chains.json` |
-| Range width | Mean disagreement-range width on that persona's effects |
-| Adversarial coverage | Count of adversarial scenarios that persona generated or strongly endorsed |
-| Counter-factual depth | Critique flags ("joint-probability inflation", "blind spot") inverted: more flags → lower score |
-| Quantitative rigor | Specific-number-per-effect ratio in the persona's contributions |
+| Dimension | Narrative signal (primary) | JSON refinement (if present) |
+|---|---|---|
+| Effects identified | "Surfaced X, Y, Z" calls out → 4-5; minor → 2-3 | Count of effects attributed to that persona in `effects-chains.json` |
+| Range width | "Narrow ranges" / "joint-probability inflation" → 1-2 | Mean disagreement-range width on that persona's effects |
+| Adversarial coverage | "Designed the reversibility structure" → 4-5; "underweighted X" → 1-2 | Count of adversarial scenarios that persona generated |
+| Counter-factual depth | Critique flags ("joint-probability inflation", "blind spot caught against") inverted | Same — count flags, invert |
+| Quantitative rigor | Specific numbers in the persona's quoted findings → 4-5; vague → 1-2 | Specific-number-per-effect ratio |
 
-The Council Dynamics section will already name the strongest/weakest
-personas — your scores must reflect that ranking. If Optimist is named
-weakest, its area on the radar must visibly be the smallest.
+**Calibration rule:** the radar must visibly reflect the strongest/weakest
+ranking that Council Dynamics names. If Optimist is "#5 peer rank" or
+"weakest", its area on the radar MUST be visibly the smallest. If
+Pessimist or Regulator is "#1", their area MUST be visibly the largest.
+The radar IS the visual evidence for the verbal ranking — they cannot
+disagree.
 
-If `peer-review.json` is missing, skip this slide (set the radar slide
-type to `null` and remove from spec).
+**When to skip:** only if `## Council Dynamics` itself is missing or
+contains no strongest/weakest signal (rare; most quick-mode briefs still
+include this section).
 
 ---
 
@@ -202,8 +231,24 @@ python3 scripts/render-deck.py \
   --out  ~/.autodecision/runs/{slug}/DECK.pptx
 ```
 
-If the render exits non-zero, surface the error to the user verbatim.
-Do not retry silently.
+The renderer calls `validate_spec()` first. Hard errors (missing
+required fields, unknown slide types, header/col_widths mismatches)
+abort with a clear list. Warnings (duplicate page numbers, unusual
+column counts, recommendation field count) print to stderr but rendering
+continues.
+
+If validation fails, **read the error list and fix the spec** rather
+than removing slides or retrying. Common errors and the fix:
+
+| Error pattern | Cause | Fix |
+|---|---|---|
+| `missing required field 'col_widths'` on a `table` slide | Spec was hand-edited and the field got dropped | Re-add `col_widths` matching `headers` length, OR delete the field entirely (renderer will distribute evenly) |
+| `has N headers but M col_widths` | Header/width arrays drifted | Make them match; for sources tables with long council tags, prefer `[1.7, 1.0, 7.0, 2.6]` |
+| `unknown slide type` | Typo or non-supported type | See `_SLIDE_REQUIRED_FIELDS` in render-deck.py for the canonical list |
+| `item[N] missing 'x'` on `matrix_2x2` | Bubble missing position | Every bubble needs `x`, `y`, `size`, `label` minimum |
+
+If the render exits non-zero for any other reason, surface the error to
+the user verbatim. Do not retry silently.
 
 ---
 

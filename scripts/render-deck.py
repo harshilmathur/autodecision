@@ -62,6 +62,17 @@ TITLE_BOTTOM = Inches(1.65)   # below action title + rule (more breathing room)
 FOOTER_Y = Inches(7.18)
 BULLET = "▪"   # McKinsey-style square bullet
 
+# Persona palette — single source of truth for all council-coloured marks
+# (cover orbital mark, small brand mark in footers, radar slide). Order
+# matches the canonical pentagon: Optimist top, then clockwise.
+PERSONA_PALETTE = [
+    ("#F39C12", "Optimist"),
+    ("#C0392B", "Pessimist"),
+    ("#9B59B6", "Competitor"),
+    ("#054AD8", "Regulator"),
+    ("#1F7A44", "Customer"),
+]
+
 
 # ---------------------------------------------------------------------------
 # Low-level helpers
@@ -575,15 +586,8 @@ def _make_council_mark(*, dpi=220):
     fig = plt.figure(figsize=(6, 6), dpi=dpi)
     ax = fig.add_axes([0, 0, 1, 1])
 
-    # Persona palette — matches the radar chart elsewhere in the deck so
-    # the cover and the council-depth slide read as one system.
-    persona_colors = [
-        ("#F39C12", "Optimist"),
-        ("#C0392B", "Pessimist"),
-        ("#9B59B6", "Competitor"),
-        ("#054AD8", "Regulator"),
-        ("#1F7A44", "Customer"),
-    ]
+    # Persona palette — single source of truth (PERSONA_PALETTE)
+    persona_colors = PERSONA_PALETTE
 
     # Two rings: 1st-order (personas) and 2nd-order (effects cascade)
     n = 5
@@ -675,6 +679,9 @@ def _make_council_mark(*, dpi=220):
     return buf
 
 
+_BRAND_MARK_BYTES = None  # module-level cache for small brand mark
+
+
 def _make_brand_mark_small(*, dpi=220):
     """Compact brand mark — center synthesis + 5 persona dots only.
 
@@ -682,33 +689,39 @@ def _make_brand_mark_small(*, dpi=220):
     mark stays legible at ~0.3 inch. Used for slide headers/footers
     next to the wordmark.
 
-    Returns a transparent PNG buffer.
+    The matplotlib render is cached at module level (~12 calls per deck);
+    each call returns a fresh BytesIO around the cached bytes since
+    python-pptx consumes the stream.
     """
-    import numpy as np
-    fig = plt.figure(figsize=(2, 2), dpi=dpi)
-    ax = fig.add_axes([0, 0, 1, 1])
+    global _BRAND_MARK_BYTES
+    if _BRAND_MARK_BYTES is None:
+        import numpy as np
+        fig = plt.figure(figsize=(2, 2), dpi=dpi)
+        ax = fig.add_axes([0, 0, 1, 1])
 
-    persona_colors = ["#F39C12", "#C0392B", "#9B59B6", "#054AD8", "#1F7A44"]
-    n = 5
-    cx, cy = 0.5, 0.5
-    r = 0.34
-    angles = [np.pi / 2 + 2 * np.pi * i / n for i in range(n)]
+        persona_colors = [c for c, _ in PERSONA_PALETTE]
+        n = 5
+        cx, cy = 0.5, 0.5
+        r = 0.34
+        angles = [np.pi / 2 + 2 * np.pi * i / n for i in range(n)]
 
-    for color, a in zip(persona_colors, angles):
-        x, y = cx + r * np.cos(a), cy + r * np.sin(a)
-        ax.scatter([x], [y], s=140, color=color, edgecolor="none", zorder=2)
+        for color, a in zip(persona_colors, angles):
+            x, y = cx + r * np.cos(a), cy + r * np.sin(a)
+            ax.scatter([x], [y], s=140, color=color,
+                       edgecolor="none", zorder=2)
 
-    ax.scatter([cx], [cy], s=320, color="#051C2C", edgecolor="none", zorder=3)
+        ax.scatter([cx], [cy], s=320, color="#051C2C",
+                   edgecolor="none", zorder=3)
 
-    ax.set_xlim(0.05, 0.95); ax.set_ylim(0.05, 0.95); ax.axis("off")
-    ax.set_aspect("equal")
+        ax.set_xlim(0.05, 0.95); ax.set_ylim(0.05, 0.95); ax.axis("off")
+        ax.set_aspect("equal")
 
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", transparent=True,
-                bbox_inches="tight", pad_inches=0.02)
-    plt.close(fig)
-    buf.seek(0)
-    return buf
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", transparent=True,
+                    bbox_inches="tight", pad_inches=0.02)
+        plt.close(fig)
+        _BRAND_MARK_BYTES = buf.getvalue()
+    return io.BytesIO(_BRAND_MARK_BYTES)
 
 
 def make_effects_bar_chart(effects, *, w=8.5, h=5.0):
@@ -1500,8 +1513,136 @@ def _inches(v):
     return v
 
 
+# Per-slide-type required fields. Missing required fields raise a clear
+# ValueError before rendering rather than crashing mid-render with KeyError.
+# Anything not listed here is treated as optional — the renderer already
+# defaults source="", prefix=None, subtitle=None, commentary_lines=None,
+# etc. Empty bullet lists, two columns instead of three, etc. all render
+# cleanly.
+_SLIDE_REQUIRED_FIELDS = {
+    "title_cover":     ["title"],
+    "toc_dark":        ["page_num", "items"],
+    "section_divider": ["page_num", "section_num", "section_title",
+                        "lead_question"],
+    "action_text":     ["page_num", "title", "bullets"],
+    "two_column":      ["page_num", "title", "left_header", "left_items",
+                        "right_header", "right_items"],
+    "three_column":    ["page_num", "title", "columns"],
+    "table":           ["page_num", "title", "headers", "rows", "col_widths"],
+    "recommendation":  ["page_num", "title", "action", "fields"],
+    "matrix_2x2":      ["page_num", "title", "axes", "items"],
+    "radar":           ["page_num", "title", "axes", "personas"],
+    "chart_bar":       ["page_num", "title", "effects"],
+    "chart_tornado":   ["page_num", "title", "assumptions"],
+}
+
+
+def validate_spec(spec):
+    """Validate a deck spec and return (errors, warnings) lists.
+
+    Errors are fatal — the spec cannot be rendered without fixing them.
+    Warnings are advisory — the renderer will fall back to safe defaults.
+
+    Authoring agents should call this before invoking build_from_spec to
+    surface schema problems with clear, actionable messages instead of a
+    Python KeyError mid-render.
+    """
+    errors, warnings = [], []
+    if not isinstance(spec, dict):
+        return ["spec must be a dict"], []
+    if "slides" not in spec or not isinstance(spec["slides"], list):
+        return ["spec is missing required 'slides' list"], []
+    if not spec["slides"]:
+        warnings.append("spec contains zero slides")
+
+    seen_page_nums = set()
+    for i, slide in enumerate(spec["slides"]):
+        prefix = f"slide[{i}]"
+        if not isinstance(slide, dict):
+            errors.append(f"{prefix} is not a dict")
+            continue
+        t = slide.get("type")
+        if not t:
+            errors.append(f"{prefix} missing 'type'")
+            continue
+        prefix = f"slide[{i}] type={t!r}"
+        required = _SLIDE_REQUIRED_FIELDS.get(t)
+        if required is None:
+            errors.append(f"{prefix} unknown slide type")
+            continue
+        for field in required:
+            if field not in slide:
+                errors.append(f"{prefix} missing required field {field!r}")
+
+        # Page-number sanity checks (advisory — duplicates render fine,
+        # but they almost always indicate a copy-paste bug)
+        pn = slide.get("page_num")
+        if pn is not None:
+            if pn in seen_page_nums:
+                warnings.append(f"{prefix} page_num={pn} duplicates an "
+                                "earlier slide — footer will show same "
+                                "number twice")
+            else:
+                seen_page_nums.add(pn)
+
+        # Type-specific structural checks
+        if t == "three_column":
+            cols = slide.get("columns") or []
+            if not (2 <= len(cols) <= 4):
+                warnings.append(f"{prefix} has {len(cols)} columns; "
+                                "renderer supports 2-4 but layouts are "
+                                "tuned for 3")
+            for j, c in enumerate(cols):
+                if not isinstance(c, dict) or "header" not in c \
+                        or "items" not in c:
+                    errors.append(f"{prefix} column[{j}] missing "
+                                  "'header' or 'items'")
+        if t == "table":
+            headers = slide.get("headers") or []
+            widths = slide.get("col_widths") or []
+            if headers and widths and len(headers) != len(widths):
+                errors.append(f"{prefix} has {len(headers)} headers but "
+                              f"{len(widths)} col_widths — must match")
+            rows = slide.get("rows") or []
+            for j, row in enumerate(rows):
+                if headers and len(row) != len(headers):
+                    warnings.append(f"{prefix} row[{j}] has {len(row)} "
+                                    f"cells; expected {len(headers)}")
+        if t == "recommendation":
+            fields = slide.get("fields") or []
+            if len(fields) != 6:
+                warnings.append(f"{prefix} has {len(fields)} fields; "
+                                "the 7-field grid is tuned for 6 "
+                                "(2x3 layout) — extras will overflow")
+        if t == "matrix_2x2":
+            for j, it in enumerate(slide.get("items") or []):
+                for k in ("x", "y", "size", "label"):
+                    if k not in it:
+                        errors.append(f"{prefix} item[{j}] missing {k!r}")
+        if t == "radar":
+            for j, p in enumerate(slide.get("personas") or []):
+                if "scores" not in p or "name" not in p:
+                    errors.append(f"{prefix} persona[{j}] missing "
+                                  "'name' or 'scores'")
+
+    return errors, warnings
+
+
 def build_from_spec(spec, out_path):
-    """Render a deck from a JSON spec dict. See deck-spec.md for schema."""
+    """Render a deck from a JSON spec dict. See deck-spec.md for schema.
+
+    Calls validate_spec() first; raises ValueError on hard errors and
+    prints warnings to stderr but continues rendering.
+    """
+    import sys
+    errors, warnings = validate_spec(spec)
+    for w in warnings:
+        print(f"warning: {w}", file=sys.stderr)
+    if errors:
+        msg = "deck spec has " + str(len(errors)) + " error(s):\n  - " \
+              + "\n  - ".join(errors)
+        raise ValueError(msg)
+
     prs = Presentation()
     prs.slide_width = SLIDE_W
     prs.slide_height = SLIDE_H
@@ -1571,14 +1712,23 @@ def build_from_spec(spec, out_path):
             )
 
         elif t == "table":
-            col_widths = [_inches(w) for w in slide["col_widths"]]
-            rows = _resolve_table_rows(slide["rows"])
+            headers = slide.get("headers", [])
+            # If col_widths missing, distribute evenly across the body.
+            spec_widths = slide.get("col_widths")
+            if spec_widths:
+                col_widths = [_inches(w) for w in spec_widths]
+            elif headers:
+                avail = (SLIDE_W - MARGIN_L - MARGIN_R).inches
+                col_widths = [Inches(avail / len(headers))] * len(headers)
+            else:
+                col_widths = []
+            rows = _resolve_table_rows(slide.get("rows", []))
             add_table_slide(
                 prs,
                 prefix=slide.get("prefix"),
                 title=slide["title"],
                 subtitle=slide.get("subtitle"),
-                headers=slide["headers"],
+                headers=headers,
                 rows=rows,
                 col_widths=col_widths,
                 source=slide.get("source", ""),
