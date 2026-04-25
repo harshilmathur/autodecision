@@ -287,6 +287,30 @@ the user verbatim. Do not retry silently.
 
 ---
 
+## PowerPoint compatibility (handled by the renderer)
+
+The renderer (`scripts/render-deck.py`) normalises several quirks of
+python-pptx's output that would otherwise trigger PowerPoint's "the
+file has an issue, repair?" prompt on macOS. Authors of this phase do
+NOT need to think about any of this — but the post-save hooks in
+`build_from_spec` exist for a reason; do not remove them.
+
+| Normalisation | What it fixes |
+|---|---|
+| `_strip_printer_settings(prs)` | Removes the default-template Windows DEVMODE binary (`ppt/printerSettings/printerSettings1.bin`) that has no place on macOS. |
+| `_normalize_slide_size(prs)` | Strips the stale `type="screen4x3"` attribute from `<p:sldSz>` (we use 16:9 dimensions; the declared type was inconsistent). Slide dimensions also use exact PowerPoint EMU values (`Emu(12192000) × Emu(6858000)`), not `Inches(13.333)` which drifts by 305 EMU. |
+| `_fill_root_group_xfrm(prs)` | python-pptx writes the slide root group as empty `<p:grpSpPr/>`. PowerPoint expects a populated `<a:xfrm>` block with zero offsets/extents — schema says optional, PowerPoint disagrees. |
+| `_add_missing_end_para_rpr(prs)` | Every `<a:p>` must end with `<a:endParaRPr/>` per PowerPoint. python-pptx omits it; we append it on every paragraph that lacks one. |
+| `Emu(int(...))` wraps on length arithmetic | Python 3 division of Length values returns float; EMU must be integer. Wrap any `length / N` site in `Emu(int(...))`. |
+
+If a future PowerPoint version surfaces a new "repair" prompt, diff the
+output deck against the user's repaired copy (`diff -rq` on unzipped
+zips) — the structural delta tells you exactly what python-pptx is
+still emitting wrong, and a new normalisation hook can be added before
+`prs.save(...)`.
+
+---
+
 ## Authoring guidance (avoid common spec bugs)
 
 - **Cover title** — keep it ≤65 chars total. The renderer auto-shrinks
