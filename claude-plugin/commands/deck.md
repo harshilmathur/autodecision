@@ -22,6 +22,42 @@ up front), then exploration of hypotheses, council findings with
 adversarial pressure, then path forward. Every slide title is a complete
 sentence making a claim — the slide content is the evidence.
 
+## ⚠️ HARD RULE — invoke the renderer, do not write python-pptx inline
+
+**This command is NOT "produce a PPTX from this brief, however you like."**
+**It is "produce `deck-spec.json`, then run `scripts/render-deck.py` to
+render it into `DECK.pptx`."**
+
+Building the PPTX inline with `python-pptx`, `Bash` heredocs, or any
+other "I'll just create a presentation directly" approach is FORBIDDEN.
+The renderer ships specific visual elements that the inline path will
+never reproduce:
+
+- The orbital council mark on the cover (5 persona dots → navy synthesis
+  centre with 2nd-order effect ring)
+- The small brand mark in every body-slide footer
+- Georgia serif action titles + the McKinsey navy/blue palette
+- Status pills in the hypotheses table (coloured discs + adaptive font)
+- The 2×2 strategic positioning matrix (matplotlib bubble chart)
+- The horizontal effects bar chart (council-agreement coloured bars +
+  black uncertainty range brackets)
+- The 5-persona radar chart (polar plot)
+- The sensitivity tornado (HIGH/MEDIUM/LOW colour-tier bars)
+- Five PowerPoint compatibility hooks that strip a printerSettings
+  binary, normalise slide size, populate the root group transform, add
+  trailing endParaRPr, and force int EMU values
+
+Without the renderer you get plain text-on-rectangles slides, no
+charts, no cover graphic, and a PowerPoint repair prompt on open.
+
+If `scripts/render-deck.py` is NOT available in the skill's directory,
+**STOP and tell the user the plugin install is broken** — do not
+improvise. The renderer is the deliverable.
+
+The protocol below names exactly two phases: synthesise a
+`deck-spec.json` from the brief, then invoke the renderer with that
+spec. Read `references/phases/deck.md` and follow it literally.
+
 ## Invocation
 
 ```

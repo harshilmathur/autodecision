@@ -14,6 +14,30 @@ a spec. All synthesis happens here.
 
 ---
 
+## ⛔ FORBIDDEN PATTERNS — read first, before any code
+
+Before you do anything else, internalise: **this phase produces
+`deck-spec.json`, then invokes the renderer.** It does NOT produce a
+PPTX through any other path. The following patterns are HARD_FAIL — if
+you find yourself writing them, STOP and start over.
+
+| Forbidden | Why | Do this instead |
+|---|---|---|
+| `from pptx import Presentation; prs = Presentation()` anywhere in your output | You're rolling your own deck builder. The renderer already does this with all the visual + compatibility hooks. | Build `deck-spec.json` and invoke `scripts/render-deck.py --spec ... --out ...`. |
+| `Bash` heredoc with python-pptx code that adds slides/shapes | Same as above — inline PPTX construction. | Same — emit the spec, run the renderer. |
+| Skipping `deck-spec.json` and going "straight to PPTX" | The spec is the contract — it's also the artifact users edit and re-render. | Always write the spec to disk first; then render. |
+| Writing the deck to a path other than `~/.autodecision/runs/{slug}/DECK.pptx` | Breaks downstream automation that expects this exact path. | Use the canonical path. The spec goes to `deck-spec.json` in the same directory. |
+| Naming the file anything other than `DECK.pptx` (e.g., `microsoft-llms-decision-deck.pptx`) | Same as above — breaks the contract. | `DECK.pptx`, all caps. |
+| "Improvising" a layout because the brief is unusual | The renderer + the fallback table in this doc handle every brief shape we've seen. | Apply the documented fallback for whatever section is missing. |
+| Building the deck inline because the renderer "isn't available" | If `scripts/render-deck.py` is missing, the plugin install is broken. | STOP and report to the user. Do not produce a substitute deck. |
+
+If your output starts with `from pptx import Presentation` or contains
+`add_slide(...)` for any reason, you have made the wrong deck. The
+output of this phase is a `deck-spec.json` and a `DECK.pptx` produced
+by the named renderer, full stop.
+
+---
+
 ## Inputs
 
 - `~/.autodecision/runs/{slug}/DECISION-BRIEF.md` — required, schema v1.1+
