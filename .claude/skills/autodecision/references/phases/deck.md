@@ -233,9 +233,27 @@ Standard 16-slide structure for full-mode briefs:
 | 15 | `table` | `4.1/  ROADMAP` |
 | 16 | `table` | `APPENDIX  SOURCES` |
 
-**Quick mode (8-slide reduction):** drop slides 7, 11, 13, 14 — keep
-recommendation, methodology, hypotheses, effects, council dynamics,
-adversarial, roadmap, sources. Renumber prefixes accordingly.
+**Quick mode (8-slide structure):** quick briefs lack `## Council
+Dynamics`, `## Adversarial Scenarios`, `## Convergence Log`, and
+`## Appendix A: Decision Timeline`. Drop every slide that depends on
+those sections — slides 7 (matrix), 10 (council two-column), 11
+(radar), 12 (adversarial three-column), 13 (sensitivity tornado), 14
+(Part 4 section divider), 15 (roadmap). The remaining 8 slides:
+
+| New page | Old page | Type | Notes |
+|---|---|---|---|
+| 1 | 1 | `title_cover` | Subtitle: "Quick Decision Brief — single-pass analysis, no council" |
+| 2 | 2 | `toc_dark` | 4 items only: Recommendation / How we explored / What the analysis found / Appendix — Sources |
+| 3 | 3 | `recommendation` | The 6-field grid still applies. Use CONFIDENCE / DEPENDS ON / MONITOR / PRE-MORTEM / DOMINANT RISK / BETTER ALTERNATIVE (last two replace DEEPEST DISAGREEMENT and REVIEW TRIGGER which need a council). |
+| 4 | 4 | `section_divider` | Part 2: How we explored. Lead question: "Quick-mode single-pass against grounded data — what did the analysis surface?" |
+| 5 | 5 | `action_text` | "How we analyzed" — call out the single-pass mode, hypothesis count, effect count, and that confidence is bounded LOW-MEDIUM by design. |
+| 6 | 6 | `table` | 4-column hypotheses table. "Status" pill column + "Why" instead of "Key assumptions" (quick briefs don't enumerate per-hypothesis assumptions). |
+| 7 | 9 | `chart_bar` | Top 12 effects from `## Effects` (1st + 2nd order combined). Single-pass: agreement is heuristic; commentary should call this out. |
+| 8 | 16 | `table` | Sources synthesized from `## Data Foundation` (quick briefs predate `## Sources` schema — fallback rule). |
+
+`page_num` and TOC ranges reflect the new 1-8 numbering, not the
+original 16-slide positions. Recommendation uses prefix `1/  RECOMMENDATION`,
+methodology `2.1/`, hypotheses `2.2/`, effects `3.1/`, sources `APPENDIX  SOURCES`.
 
 **Page numbers must match positions.** If you skip slide 7, slides 8+
 shift down. The `page_num` field in each slide must equal its 1-indexed

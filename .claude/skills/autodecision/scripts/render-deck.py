@@ -539,19 +539,44 @@ def add_recommendation_slide(prs, title, action, fields, source, page_num,
 
     # Big call-out for action — no redundant label since the prefix above
     # already says RECOMMENDATION
-    box_h = Inches(1.3)
+    #
+    # Adaptive box height + font size: short single-sentence actions fit
+    # in 1.3" at 17pt; multi-sentence actions (Phase 1 / Gate / Phase 2 /
+    # Phase 3 patterns) can run 4-6 lines and need a taller box and a
+    # smaller font to avoid bottom clipping. Estimate from char count
+    # at typical Georgia-bold width.
+    n = len(action)
+    if n <= 240:                       # 1-2 lines, short claim
+        size = 17
+        box_h = Inches(1.3)
+        text_h = Inches(0.95)
+    elif n <= 380:                     # 3-4 lines, common case
+        size = 16
+        box_h = Inches(1.7)
+        text_h = Inches(1.35)
+    elif n <= 520:                     # 4-5 lines, Phase-list actions
+        size = 15
+        box_h = Inches(2.0)
+        text_h = Inches(1.65)
+    else:                              # 5-6 lines, hard cap
+        size = 14
+        box_h = Inches(2.3)
+        text_h = Inches(1.95)
     _add_filled_rect(s, MARGIN_L, body_y,
                      SLIDE_W - MARGIN_L - MARGIN_R, box_h, color=NAVY)
     # Bright accent stripe on left edge
     _add_filled_rect(s, MARGIN_L, body_y, Inches(0.08), box_h,
                      color=MCK_BLUE_BR)
     _add_textbox(s, MARGIN_L + Inches(0.4), body_y + Inches(0.22),
-                 SLIDE_W - MARGIN_L - MARGIN_R - Inches(0.6), Inches(0.95),
-                 action, font=TITLE_FONT, size=17, bold=True, color=WHITE)
+                 SLIDE_W - MARGIN_L - MARGIN_R - Inches(0.6), text_h,
+                 action, font=TITLE_FONT, size=size, bold=True, color=WHITE)
 
-    grid_top = body_y + box_h + Inches(0.25)
+    grid_top = body_y + box_h + Inches(0.20)
     cell_w = Emu(int((SLIDE_W - MARGIN_L - MARGIN_R - Inches(0.4)) / 3))
-    cell_h = Inches(1.65)
+    # Shrink cell_h when the action box ate into the grid's space, so
+    # the second row of fields still ends above the source/footer line.
+    avail_grid = FOOTER_Y - grid_top - Inches(0.45)  # leave margin for source
+    cell_h = min(Inches(1.65), Emu(int((avail_grid - Inches(0.15)) / 2)))
     for idx, (label, value, color) in enumerate(fields):
         col = idx % 3
         row = idx // 3

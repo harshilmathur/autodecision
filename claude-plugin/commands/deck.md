@@ -83,12 +83,21 @@ Writes two files into the run directory:
 
 ## Constraints
 
-- **Full-mode briefs only.** Quick-mode briefs lack the council disagreement,
-  adversarial scenarios, and sensitivity data the radar / 2×2 / tornado
-  slides depend on. If invoked on a quick run, prompt the user to either
-  run the full loop first or accept a reduced 8-slide version.
-- **Brief schema v1.1+.** The orchestrator fails fast if mandatory headers
-  are missing (per `brief-schema.json`). Fix the brief first, then re-run.
+- **Full-mode and quick-mode briefs.** Full mode produces the standard
+  16-slide deck. Quick mode produces an 8-slide reduction (see
+  `phases/deck.md` "Quick mode (8-slide structure)" for the exact slide
+  list and renumbering).
+- **Brief schema v1.1+ for full mode.** Older-schema briefs (no
+  `## Sources`, no `### Irrational Actors`, etc.) work via the
+  documented fallbacks — do not refuse them; apply the fallback table
+  in `phases/deck.md`.
+- **Comparison reports are out of scope.** `/autodecision:compare`
+  produces reports with a different schema (Risk Profile Comparison,
+  Shared Effects, Unique to X, Assumption Overlap, Key Tradeoffs) that
+  doesn't map to the deck spec. If the user asks for a deck of a
+  comparison report, tell them to deck the two underlying decision
+  runs separately and present them side by side, OR run a fresh
+  decision that synthesizes the comparison.
 - **Never modifies the source brief.** Read-only against
   `DECISION-BRIEF.md`.
 
