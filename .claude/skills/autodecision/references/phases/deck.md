@@ -226,10 +226,15 @@ slide 7, "How we explored this decision" runs `4 – 6` not `4 – 7`.
 ## Step 5 — Render
 
 ```bash
-python3 scripts/render-deck.py \
+python3 "{skill_dir}/scripts/render-deck.py" \
   --spec ~/.autodecision/runs/{slug}/deck-spec.json \
   --out  ~/.autodecision/runs/{slug}/DECK.pptx
 ```
+
+`{skill_dir}` is the absolute path to this skill's directory (e.g.,
+`~/.claude/plugins/marketplaces/autodecision/skills/autodecision/` for
+plugin installs, or the local checkout's `claude-plugin/skills/autodecision/`).
+The renderer ships inside the skill, alongside `validate-brief.py`.
 
 The renderer calls `validate_spec()` first. Hard errors (missing
 required fields, unknown slide types, header/col_widths mismatches)
