@@ -1,0 +1,294 @@
+{
+  "meta": {
+    "title": "Should the university make in-person attendance optional given AI tutoring?",
+    "subtitle": "Decision Brief — possibility map and recommendation",
+    "brand": "Autodecision",
+    "date": "April 2026",
+    "run_slug": "university-optional-inperson-ai-era"
+  },
+  "slides": [
+    {
+      "type": "title_cover",
+      "title": "Should attendance go optional now that AI tutoring beats lecture?",
+      "subtitle": "Decision Brief — possibility map and recommendation",
+      "date": "April 2026",
+      "brand": "Autodecision"
+    },
+    {
+      "type": "toc_dark",
+      "page_num": 2,
+      "items": [
+        {"label": "Recommendation", "pages": "3"},
+        {"label": "How we explored this decision", "pages": "4 – 7"},
+        {"label": "What the council found", "pages": "8 – 13"},
+        {"label": "Path forward", "pages": "14 – 15"},
+        {"label": "Appendix — Sources", "pages": "16"}
+      ]
+    },
+    {
+      "type": "recommendation",
+      "page_num": 3,
+      "prefix": "1/  RECOMMENDATION",
+      "title": "Universal optional attendance is strictly dominated; ship a 3-year department pilot with mandatory first-year and dual-track compliance",
+      "action": "Do NOT make attendance universally optional. Run a 3-year opt-in pilot in 1-2 departments + mandatory first-year residential + dual-track F-1/Title IV compliance with required in-person seminars + faculty senate and union as co-design partners + Harvard RCT-style AI-hybrid teaching model.",
+      "fields": [
+        {"label": "CONFIDENCE",          "value": "HIGH that universal optional is dominated · MEDIUM-HIGH that the phased-structured path is executable · MEDIUM on regulatory structuring viability", "color": "MCK_BLUE"},
+        {"label": "DEPENDS ON",          "value": "Required in-person seminars satisfy F-1 SEVP and Title IV RSI · Faculty union accepts co-design · Pilot data credible after 3 years · Mandatory first-year preserves first-gen retention · Harvard RCT replicates at institution scale", "color": "MCK_BLUE_BR"},
+        {"label": "MONITOR",             "value": "DOE guidance on RSI · SEVP guidance on in-person seminar components · Faculty union calendar · Pilot cohort year-1 outcomes · First-gen retention vs control · Donor sentiment quarterly · ChatGPT-6 capability benchmarks", "color": "ACCENT_CORAL"},
+        {"label": "PRE-MORTEM",          "value": "Faculty strikes mid-semester (P=0.15) · Pilot inconclusive from selection bias (P=0.35) · F-1 structured compliance fails legal review (P=0.30) · First-gen dropout despite first-year (P=0.20) · Mid-tier positioning fails (P=0.30)", "color": "MCK_BLUE_BR"},
+        {"label": "DEEPEST DISAGREEMENT","value": "Optimist: 60% Harvard RCT replicates at institution scale [C1:optimist]. Pessimist: 25% [C1:pessimist]. Range 25-60% on whether AI-hybrid pedagogy holds across 30K students. Disagreement IS the data.", "color": "MCK_BLUE"},
+        {"label": "REVIEW TRIGGER",      "value": "DOE issues negative RSI guidance · SEVP clarifies one-online-course rule strictly · Peer institution announces similar pilot · Pilot year-1 shows negative equity · Faculty union files grievance · ChatGPT-6 obsoletes current AI-hybrid design", "color": "ACCENT_CORAL"}
+      ],
+      "source": "Source: Decision Brief (full mode, 2 iterations, 5/5 council endorsement on h6) · [G1], [C3:regulator], [C4:regulator], [C13:iter2council]"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 4,
+      "section_num": "2",
+      "section_title": "How we explored\nthis decision",
+      "lead_question": "A 5-persona council, 6 competing hypotheses, two iterations to convergence, 12 adversarial stress scenarios — what survived?"
+    },
+    {
+      "type": "action_text",
+      "page_num": 5,
+      "prefix": "2.1/  HOW WE ANALYZED",
+      "title": "The analysis explored 6 hypotheses across 2 iterations of a 5-persona council, stress-tested by 12 adversarial scenarios",
+      "bullets": [
+        "5 personas spawned as separate subagents — Optimist, Pessimist, Competitor, Regulator, Customer — each with independent context",
+        "6 hypotheses generated, ranging from universal optional (h1) to phased-structured pilot (h6 — promoted in iteration 2 as the synthesis winner)",
+        "2 iterations — convergence reached at iteration 2 with 84% [C1:council] assumption stability and 1 productive contradiction remaining",
+        "Adversary phase generated 12 stress scenarios across 4 worst-cases, 4 black swans, and 4 irrational actors",
+        "Sensitivity analysis on 8 key assumptions — 4 high-sensitivity, 4 medium",
+        "Real-world anchor: Harvard 2025 RCT [G1] showed AI-tutoring effect size 0.73-1.3 SD; the recommendation operationalizes a Harvard-style AI-hybrid teaching model inside a structured pilot."
+      ],
+      "source": "Source: Decision Brief Convergence Log; engine-protocol.md"
+    },
+    {
+      "type": "table",
+      "page_num": 6,
+      "prefix": "2.2/  HYPOTHESES",
+      "title": "Six hypotheses surfaced; only h6 (phased + structured) survived 5/5 council endorsement and adversarial stress",
+      "headers": ["#", "Hypothesis", "Status", "Key assumptions"],
+      "col_widths": [0.5, 4.5, 2.7, 4.6],
+      "rows": [
+        ["1", "Optional attendance improves outcomes", ["Conditional", "GREY_FOOT", "pill"], "AI tutoring outperforms · Students self-direct · Faculty adapts"],
+        ["2", "Attendance collapse degrades social product", ["Real for elite tier", "RED", "pill"], "Peer network IS real product · Tuition premium for network"],
+        ["3", "Faculty revolt / union path", ["Risk if unilateral", "RED", "pill"], "Union contracts strict · Faculty identity load-bearing"],
+        ["4", "Enrollment bifurcation (mid-tier vulnerable)", ["Real structure", "GREY_FOOT", "pill"], "Elite resists · Middle squeezed · Online MBA precedent"],
+        ["5", "De facto already optional", ["Lecture-only", "GREY_FOOT", "pill"], "Revealed preference matches policy · 50-70% [G6] skip routinely"],
+        ["6", "NEW: Phased + structured pilot with safeguards", ["Leading · 5/5 council", "GREEN", "pill"], "Pilot bounds risk · Regulatory structuring viable · Faculty partnership"]
+      ],
+      "source": "Source: Decision Brief — Hypotheses Explored"
+    },
+    {
+      "type": "matrix_2x2",
+      "page_num": 7,
+      "prefix": "2.3/  STRATEGIC POSITIONING",
+      "title": "Plotted on reversibility × regulatory exposure, h6 sits in the manageable quadrant; h1 sits where every adversarial scenario amplifies",
+      "axes": {
+        "x_label": "Reversibility of decision",
+        "y_label": "Regulatory + franchise exposure",
+        "x_low": "Low (one-way door)",
+        "x_high": "High (recoverable)",
+        "y_low": "Contained",
+        "y_high": "Catastrophic"
+      },
+      "quadrant_labels": {
+        "tl": "AVOID",
+        "tr": "MANAGE WITH RIGOR",
+        "bl": "MONITOR",
+        "br": "DEFAULT"
+      },
+      "items": [
+        {"label": "h1", "x": 0.10, "y": 0.88, "size": 8,  "color": "#C0392B", "label_pos": "right", "legend": "Universal optional — irreversible policy + Title IV/F-1 catastrophe"},
+        {"label": "h2", "x": 0.22, "y": 0.70, "size": 6,  "color": "#E08673", "label_pos": "right", "legend": "Social product collapse — risk path of h1, same quadrant"},
+        {"label": "h3", "x": 0.35, "y": 0.62, "size": 6,  "color": "#9CA3AF", "label_pos": "right", "legend": "Faculty revolt — triggered by unilateral change"},
+        {"label": "h4", "x": 0.45, "y": 0.55, "size": 7,  "color": "#9CA3AF", "label_pos": "left",  "legend": "Bifurcation — structural, mid-tier vulnerable"},
+        {"label": "h5", "x": 0.72, "y": 0.30, "size": 8,  "color": "#2196F3", "label_pos": "below", "legend": "Already optional — true for lectures, not labs/seminars"},
+        {"label": "h6", "x": 0.92, "y": 0.28, "size": 16, "color": "#054AD8", "label_pos": "left",  "note": "RECOMMENDED", "legend": "Phased + structured pilot — preserves optionality, defuses 8/12 adversarial scenarios"}
+      ],
+      "source": "Source: Synthesis from Decision Brief — bubble size = council_agreement × probability of dominance"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 8,
+      "section_num": "3",
+      "section_title": "What the council\nfound",
+      "lead_question": "Where the personas converged, where they diverged, and what the disagreement itself reveals about the decision."
+    },
+    {
+      "type": "chart_bar",
+      "page_num": 9,
+      "prefix": "3.1/  EFFECTS MAP",
+      "title": "The strongest signals point to regulatory catastrophe under universal-optional and structural antifragility under the phased pilot",
+      "effects": [
+        {"label": "h6 pilot bounds risk to 1-2 departments",                 "p": 0.75, "agree": 5, "range": [0.65, 0.85]},
+        {"label": "h6 mandatory first-year preserves equity",                "p": 0.70, "agree": 5, "range": [0.60, 0.80]},
+        {"label": "Faculty union grievance if unilateral change",            "p": 0.70, "agree": 4, "range": [0.55, 0.85]},
+        {"label": "Peer network thins as in-person erodes",                  "p": 0.65, "agree": 4, "range": [0.55, 0.80]},
+        {"label": "De facto already optional for lectures (not labs)",       "p": 0.65, "agree": 4, "range": [0.50, 0.78]},
+        {"label": "h6 adversary-resistance (defuses 8/12 scenarios)",         "p": 0.75, "agree": 4, "range": [0.65, 0.85]},
+        {"label": "AI tutoring outperforms lecture on knowledge transfer",    "p": 0.60, "agree": 4, "range": [0.25, 0.80]},
+        {"label": "Tuition justification weakens at $80K/yr [G10]",            "p": 0.55, "agree": 4, "range": [0.40, 0.70]},
+        {"label": "Mid-tier enrollment falls 10-25% [C11:council]",           "p": 0.50, "agree": 4, "range": [0.40, 0.65]},
+        {"label": "Self-direction heterogeneity bimodal",                     "p": 0.70, "agree": 3, "range": [0.55, 0.80]},
+        {"label": "Mental health / loneliness counseling surge 40-60%",        "p": 0.60, "agree": 3, "range": [0.45, 0.75]},
+        {"label": "F-1 SEVP violation puts $30-150M international at risk",    "p": 0.85, "agree": 1, "range": [0.75, 0.95]}
+      ],
+      "commentary_lines": [
+        "Top 12 effects ranked by council_agreement × probability",
+        "Bar color = council agreement (navy = 5/5, fading to pale = 1/5)",
+        "Black bracket = persona disagreement range — width is the uncertainty signal",
+        "Two highest-agreement effects (5/5) are h6 structural protections — the pilot bounds risk and mandatory first-year preserves equity",
+        "Regulator's F-1 SEVP finding (1/5, P=0.85) — single-persona but existential; drove h6 dual-track compliance design"
+      ],
+      "source": "Source: Decision Brief — Effects Map (top 12 by council_agreement × probability) · [C3:regulator], [C9:council], [C13:iter2council]"
+    },
+    {
+      "type": "two_column",
+      "page_num": 10,
+      "prefix": "3.2/  COUNCIL DYNAMICS",
+      "title": "The deepest disagreement — Harvard RCT replicability — IS the data",
+      "left_header": "STRONGEST: REGULATOR (#1 PEER RANK)",
+      "left_items": [
+        "Won on specific regulatory mechanisms — F-1 SEVP one-online-course rule (P=0.85 [C3:regulator]); Title IV RSI reclassification ($50-300M/yr [C4:regulator] aid at risk); FERPA AI-vendor DPA; accreditor substantive-change trigger",
+        "Each finding is potentially existential — universal optional is self-enforcing collapse without structured workaround",
+        "Surfaced the dual-track compliance filing + required in-person seminar components that became h6's regulatory engine",
+        "h6 protected by structuring: regulatory exposure shifts from catastrophic to bounded"
+      ],
+      "right_header": "DEEPEST DIVIDE: HARVARD RCT REPLICABILITY",
+      "right_items": [
+        "Optimist: 60% [C1:optimist] AI-hybrid replicates at institution scale (Harvard RCT [G1] effect size 0.7-1.3 SD)",
+        "Pessimist + Customer: 25% [C1:pessimist] — N=194 lab study won't generalize across 30K students; self-direction heterogeneity bimodal",
+        "Range 25-60% on h1 conditional outcome — disagreement IS the data, not noise to average away",
+        "Optimist weakest (#5 peer rank) — overweighted Harvard sample, underweighted self-direction variance flagged by Customer",
+        "BLIND SPOT caught: equity. Optional attendance is REGRESSIVE inside one tuition tier — high-achievers gain, first-gen lose, no price reduction"
+      ],
+      "source": "Source: Decision Brief — Council Dynamics · [C1:optimist], [C1:pessimist], [C2:customer]"
+    },
+    {
+      "type": "radar",
+      "page_num": 11,
+      "prefix": "3.3/  COUNCIL DEPTH",
+      "title": "Regulator scored highest on structural depth and counter-factual rigor; Optimist's narrow ranges drove its #5 peer rank",
+      "axes": ["Effects", "Range width", "Adversarial", "Counter-factual", "Quant. rigor"],
+      "personas": [
+        {"name": "Optimist",   "scores": [3, 2, 2, 2, 3], "color": "#F39C12"},
+        {"name": "Pessimist",  "scores": [4, 4, 5, 4, 4], "color": "#C0392B"},
+        {"name": "Competitor", "scores": [3, 3, 3, 3, 3], "color": "#9B59B6"},
+        {"name": "Regulator",  "scores": [5, 4, 4, 5, 5], "color": "#054AD8"},
+        {"name": "Customer",   "scores": [4, 4, 3, 4, 3], "color": "#1F7A44"}
+      ],
+      "commentary_lines": [
+        "Each persona scored 1-5 across five rigor dimensions, derived from peer-review and critique outputs",
+        "Regulator's structural depth surfaced both regulatory mechanisms that synthesized into h6 — dual-track compliance and required in-person seminars",
+        "Customer caught the equity blind spot — first-gen dropout amplification under universal optional",
+        "Optimist's narrow ranges and weak counter-factual depth flagged by 4/4 reviewers — Harvard-RCT generalization optimism",
+        "Pessimist + Regulator together cover the full adversarial surface; their alignment on regulatory irreversibility drove h6's safeguards"
+      ],
+      "source": "Source: Synthesized from Decision Brief — Council Dynamics + Critique outputs"
+    },
+    {
+      "type": "three_column",
+      "page_num": 12,
+      "prefix": "3.4/  ADVERSARIAL PRESSURE",
+      "title": "Twelve adversarial scenarios — h6's structured design defuses 8 of them; 4 remain (foundation model, Ivy preempt, campus event, ED admin)",
+      "columns": [
+        {"header": "WORST CASES", "color": "MCK_BLUE", "items": [
+          "Title IV RSI reclassifies as correspondence; $50-300M/yr aid lost (P=0.40)",
+          "F-1 SEVP mass violation; 15-25% international revenue drop (P=0.45)",
+          "First-gen cohort 30%+ dropout year 1 — equity disaster + Title VI (P=0.35)",
+          "Accreditor show-cause letter; focused review; reputational damage (P=0.25)"
+        ]},
+        {"header": "BLACK SWANS", "color": "ACCENT_CORAL", "items": [
+          "ChatGPT-6 dramatically better — lecture obsolete, accelerates transition (P=0.30)",
+          "Ivy goes optional first; mid-tier first-mover narrative destroyed (P=0.08)",
+          "Campus shooting / major event requires in-person community (P=0.10)",
+          "ED admin change loosens Title IV; regulatory pressure removed (P=0.35)"
+        ]},
+        {"header": "IRRATIONAL ACTORS", "color": "MCK_BLUE_BR", "items": [
+          "Student influencer (5M followers) attacks policy; applications drop (P=0.25)",
+          "Sports alum boosters cut $10M [C34:council] donations (P=0.20)",
+          "Faculty union strikes mid-semester; operations chaos (P=0.15)",
+          "State legislature passes 'must require in-person' law (P=0.15)"
+        ]}
+      ],
+      "source": "Source: Decision Brief — Adversarial Scenarios · [C29:council] through [C36:council]"
+    },
+    {
+      "type": "chart_tornado",
+      "page_num": 13,
+      "prefix": "3.5/  SENSITIVITY",
+      "title": "Four high-sensitivity assumptions are load-bearing — if any fails, the universal-optional path becomes indefensible",
+      "assumptions": [
+        {"label": "F-1 SEVP one-online-course rule enforced against new model",  "sensitivity": "HIGH",   "effects": 3},
+        {"label": "Title IV RSI reclassifies optional+AI as correspondence",      "sensitivity": "HIGH",   "effects": 3},
+        {"label": "Required in-person seminars satisfy SEVP and RSI",             "sensitivity": "HIGH",   "effects": 3},
+        {"label": "Peer network IS the real product of the university",           "sensitivity": "HIGH",   "effects": 2},
+        {"label": "Self-direction is bimodal — top thrives, bottom fails",        "sensitivity": "MEDIUM", "effects": 3},
+        {"label": "Union contracts prohibit unilateral attendance change",        "sensitivity": "MEDIUM", "effects": 2},
+        {"label": "First-year cohort formation is disproportionately important",  "sensitivity": "MEDIUM", "effects": 2},
+        {"label": "AI-hybrid replicates Harvard RCT at institution scale",        "sensitivity": "MEDIUM", "effects": 2}
+      ],
+      "commentary_lines": [
+        "Bar length = sensitivity weight × number of effects impacted",
+        "Dark-blue bar = HIGH sensitivity, lighter = MEDIUM",
+        "Three of four HIGH-sensitivity assumptions are external regulatory interpretations — the university controls none directly",
+        "h6's dual-track filing converts 'F-1 SEVP enforced' from catastrophic to bounded: the structure pre-files in-person components that satisfy the rule",
+        "If 'required in-person seminars satisfy SEVP+RSI' interpretation fails on legal review (P=0.30), h6's structural workaround fails — pilot must be paused, not the policy reversed"
+      ],
+      "source": "Source: Decision Brief — Key Assumptions · sensitivity per effects-impacted × HIGH/MEDIUM/LOW weight"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 14,
+      "section_num": "4",
+      "section_title": "Path forward",
+      "lead_question": "Seven gates with kill criteria — every commitment is bounded by faculty, regulator, and pilot data."
+    },
+    {
+      "type": "table",
+      "page_num": 15,
+      "prefix": "4.1/  ROADMAP",
+      "title": "The recommendation maps to a seven-gate roadmap with explicit kill criteria at every stage",
+      "subtitle": "Every gate has a binding kill criterion; failure at any gate triggers either pause, redesign, or full rollback",
+      "headers": ["When", "Action", "Decision point", "Kill criteria"],
+      "col_widths": [0.9, 3.5, 3.6, 4.3],
+      "rows": [
+        ["Q1 2026", "Faculty senate briefing + union engagement",              "Senate accepts pilot design",          ["Senate rejects → pause", "RED"]],
+        ["Q2 2026", "Substantive change filing + dual-track compliance design", "Accreditor approves path",             ["Accreditor blocks → redesign", "RED"]],
+        ["Q3 2026", "SEVP pre-filing + DOE consultation on RSI",                "Structure clears regulatory review",   ["Regulators block → abandon pilot", "RED"]],
+        ["Q4 2026", "Pilot launch in 1-2 departments; mandatory first-year intact","Opt-in pilot enrolls 300-500 students",["Enrollment <150 → insufficient power", "GREY_FOOT"]],
+        ["2027-28", "Annual outcome reporting: outcomes, retention, equity",    "Year-2 data shows positive indicators",["Major negative trend → halt", "RED"]],
+        ["Q4 2028", "3-year pilot review with external advisory board",         "Outcomes support institution rollout",  ["Pilot fails → end pilot, maintain current", "GREY_FOOT"]],
+        ["2029+",   "Phased institution-wide rollout if pilot succeeds",         "Board + senate + union approval",       ["First-gen retention drops >5% → rollback", "GREEN"]]
+      ],
+      "source": "Source: Decision Brief — Appendix A: Decision Timeline · phased gates per [C13:iter2council], [C14:iter2council]"
+    },
+    {
+      "type": "table",
+      "page_num": 16,
+      "prefix": "APPENDIX  SOURCES",
+      "title": "Selected sources",
+      "subtitle": "Tags appear inline throughout the deck — [G#] = ground data, [C#:persona] = council finding, [C#:adversary] = adversarial scenario",
+      "headers": ["Tag", "Type", "Claim", "Source"],
+      "col_widths": [1.7, 1.0, 7.0, 2.6],
+      "rows": [
+        ["G1",  "Ground",   "Harvard 2025 RCT: AI tutoring effect size 0.73-1.3 SD vs active learning",     "nature.com"],
+        ["G3",  "Ground",   "Human-AI hybrid > AI-only > classroom-only",                                   "phys.org"],
+        ["G6",  "Ground",   "Post-COVID absence rates 73-83% in some courses",                              "timeshighereducation.com"],
+        ["G10", "Ground",   "Tuition: public $10K/$26K, private $37K, elite $80K total cost",                "research.com"],
+        ["G15", "Ground",   "43% students used ChatGPT; 89% for homework; 8/10 used GenAI 2025",              "nerdynav.com"],
+        ["G21", "Ground",   "Minerva: 100% online + active learning + rotating cohort; elite alt",            "general"],
+        ["C1:optimist",  "Council",  "AI-hybrid replicates at scale P=0.60 (vs Pessimist 0.25)",              "iter-1 optimist"],
+        ["C2:customer",  "Council",  "Self-direction heterogeneity bimodal P=0.70 — bimodal failure mode",     "iter-1 customer"],
+        ["C3:regulator", "Council",  "F-1 SEVP one-online-course violation P=0.85; $30-150M international",    "iter-1 regulator"],
+        ["C4:regulator", "Council",  "Title IV RSI reclassification; $50-300M/yr federal aid at risk",         "iter-1 regulator"],
+        ["C13:iter2council","Council","H6 pilot bounds risk P=0.75 (5/5 council)",                              "iter-2 council"],
+        ["C14:iter2council","Council","H6 mandatory first-year preserves equity P=0.70 (5/5 council)",          "iter-2 council"],
+        ["C15:iter2council","Council","H6 adversary-resistance — defuses 8/12 adversarial scenarios",          "iter-2 council"]
+      ],
+      "source": "Source: Decision Brief — Sources (full list in companion brief markdown)"
+    }
+  ]
+}
