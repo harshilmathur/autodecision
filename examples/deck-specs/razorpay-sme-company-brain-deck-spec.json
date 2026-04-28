@@ -1,0 +1,289 @@
+{
+  "meta": {
+    "title": "Should Razorpay build a company brain for SMEs?",
+    "subtitle": "Decision Brief — possibility map and recommendation",
+    "brand": "Autodecision",
+    "date": "April 2026",
+    "run_slug": "razorpay-sme-company-brain"
+  },
+  "slides": [
+    {
+      "type": "title_cover",
+      "title": "Should Razorpay build a\ncompany brain for SMEs?",
+      "subtitle": "Decision Brief — possibility map and recommendation",
+      "date": "April 2026",
+      "brand": "Autodecision"
+    },
+    {
+      "type": "toc_dark",
+      "page_num": 2,
+      "items": [
+        {"label": "Recommendation", "pages": "3"},
+        {"label": "How we explored this decision", "pages": "4 – 7"},
+        {"label": "What the council found", "pages": "8 – 13"},
+        {"label": "Path forward", "pages": "14 – 15"},
+        {"label": "Appendix — Sources", "pages": "16"}
+      ]
+    },
+    {
+      "type": "recommendation",
+      "page_num": 3,
+      "prefix": "1/  RECOMMENDATION",
+      "title": "Don't build the maximalist company brain — ship a focused agent-native financial layer with three pillars",
+      "action": "Ship Books + Compliance + Ops + payments-adjacent agents directly. Acquire a books player (ProfitBooks/Vyapar at ₹400-700 cr) for GL depth. Build a Razorpay-CA platform that turns Tally's deepest moat into Razorpay's distribution lever. Defer CRM and growth/marketing to post-IPO Phase 2. Public framing: \"agent-native financial layer\" — not \"company brain.\"",
+      "fields": [
+        {"label": "CONFIDENCE",          "value": "MEDIUM-HIGH — cross-persona breakthrough convergence on H6 · sensitivity-robust where H1 broad-build is fragile · ICAI CA-Act ceiling validates CA-augmenter framing", "color": "MCK_BLUE"},
+        {"label": "DEPENDS ON",          "value": "Scope discipline holds publicly through IPO window · CAs adopt Razorpay-CA portal at scale · Books-player acquisition target available · ICAI CA-Act monopoly persists · AA-FIU eligibility creates structural moat", "color": "MCK_BLUE_BR"},
+        {"label": "MONITOR",             "value": "Zoho Pay attach rate inside Zoho Books base · Pilot/Digits India localization moves · CA-portal pilot conversion (target 50+ SMEs/CA) · IPO sentiment on Indian fintech · Agent error rate on production GST filings", "color": "ACCENT_CORAL"},
+        {"label": "PRE-MORTEM",          "value": "Scope creep back to broad H1 (P=0.40) · CA-channel pilot fails to deliver 50+ SMEs/CA · Books acquisition target unavailable or overpriced · Agent error in public-name SME triggers ICAI hard guidance · Vembu ideological underpricing collapses payments take-rate", "color": "MCK_BLUE_BR"},
+        {"label": "DEEPEST DISAGREEMENT","value": "Knowledge-graph moat: data (Optimist) or workflow + AA-FIU regulatory rail (Pessimist)? Iter-2 resolved toward Pessimist using AA framework + DPDP portability evidence — moat is workflow plus regulatory eligibility, not data exclusivity.", "color": "MCK_BLUE"},
+        {"label": "REVIEW TRIGGER",      "value": "Full review at 6 months post-launch (Oct 2026, pre-IPO). Early triggers: Zoho ships agentic Books v1 · Pilot localizes for India · IPO pricing slips below $4.5B · Visible agent error reaches mainstream press · Tally launches CA-loyalty program", "color": "ACCENT_CORAL"}
+      ],
+      "source": "Source: Decision Brief (full mode, 2 iterations, H6 4-5/5 council convergence, 16 adversarial scenarios) · [G3], [G6], [G13], [C1:regulator], [C6:synthesis]"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 4,
+      "section_num": "2",
+      "section_title": "How we explored\nthis decision",
+      "lead_question": "A 5-persona council, 6 competing hypotheses, two iterations to convergence, and 16 adversarial stress scenarios — what survived?"
+    },
+    {
+      "type": "action_text",
+      "page_num": 5,
+      "prefix": "2.1/  HOW WE ANALYZED",
+      "title": "The analysis explored 6 hypotheses across 2 iterations of a 5-persona council, stress-tested by 16 adversarial scenarios",
+      "bullets": [
+        "5 personas spawned as separate subagents — Optimist, Pessimist, Competitor (anchored on Zoho), Regulator, Customer — each with independent context",
+        "Iteration 1 surfaced 5 hypotheses spanning success (H1), execution failure (H2), competitive response (H3), technology paradigm break (H4), and platform-not-apps alternative (H5)",
+        "Iteration 2 ran in light mode, resolved 3 contradictions identified by the Convergence Judge using empirical Zoho 2025 evidence, and added H6 (hybrid focused path) synthesized from 4 cross-persona breakthroughs",
+        "Convergence reached at iteration 2: primary signals pass; assumption stability 100%; effective delta of 4 well below the 50 hard cap; 1 residual contradiction (scope-discipline fragility) at threshold",
+        "Adversary phase generated 16 stress scenarios — 5 worst cases, 6 black swans, 5 irrational actors — plus a 12-assumption sensitivity tornado",
+        "Real-time anchor: Razorpay has already shipped the agentic AI layer (RAY Agentic-AI Toolkit at FTX'25 [G6]) — the live question was depth, not whether to start"
+      ],
+      "source": "Source: Decision Brief — Convergence Log + Adversarial Scenarios"
+    },
+    {
+      "type": "table",
+      "page_num": 6,
+      "prefix": "2.2/  HYPOTHESES",
+      "title": "Six hypotheses surfaced; only H6 (focused hybrid) survived adversarial pressure and sensitivity analysis",
+      "headers": ["#", "Hypothesis", "Status", "Key assumptions"],
+      "col_widths": [0.5, 4.5, 2.7, 4.6],
+      "rows": [
+        ["1", "Razorpay ships full company brain; durable lock-in via payments first-touch + India localization + agent-native depth", ["Fragile · ~0.30 weighted", "RED", "pill"], "Razorpay can execute full stack · agent-native premium real · india-localization holds"],
+        ["2", "Broad build fragments execution; gross margins compress; IPO multiple re-rates downward", ["~55% if H1 attempted", "RED", "pill"], "Engineering capacity constrained · accounting depth underestimated · capex dilutes margin"],
+        ["3", "Zoho's payments cross-sell outpaces Razorpay's accounting extension; first-touch erodes; take-rate compresses", ["Partially confirmed [G13]", "AMBER", "pill"], "Zoho payments attach aggressive · first-touch erodes · CA recommends Zoho"],
+        ["4", "Agent-native is paradigm break; Razorpay captures post-2026 SME cohort by default", ["Bounded · 9-12mo window", "AMBER", "pill"], "Agent-native truly different · legacy SaaS cannot retrofit · ICAI monopoly holds"],
+        ["5", "Build platform + partner with Zoho/Tally/ClearTax for apps", ["Structurally unavailable · 5/5", "RED", "pill"], "Partners willing to integrate (5/5 council disagrees) · knowledge graph is real moat"],
+        ["6", "Focused agent-native financial layer + acquire books + CA-channel platform + AA-FIU rail", ["Leading · 4-5/5 convergence", "GREEN", "pill"], "Scope can be disciplined · CAs will switch · acquisition available · ICAI monopoly holds"]
+      ],
+      "source": "Source: Decision Brief — Hypotheses Explored"
+    },
+    {
+      "type": "matrix_2x2",
+      "page_num": 7,
+      "prefix": "2.3/  STRATEGIC POSITIONING",
+      "title": "Plotted on reversibility × franchise risk, H6 sits in the recoverable / contained quadrant; H1 sits where most plausible scenarios kill it",
+      "axes": {
+        "x_label": "Reversibility of decision",
+        "y_label": "Franchise risk if wrong",
+        "x_low": "Low (one-way door)",
+        "x_high": "High (recoverable)",
+        "y_low": "Contained",
+        "y_high": "Catastrophic"
+      },
+      "quadrant_labels": {
+        "tl": "AVOID",
+        "tr": "MANAGE WITH RIGOR",
+        "bl": "MONITOR",
+        "br": "DEFAULT"
+      },
+      "items": [
+        {"label": "H1 broad", "x": 0.18, "y": 0.78, "size": 0.40, "color": "#C0392B", "label_position": "right"},
+        {"label": "H2 spread thin", "x": 0.22, "y": 0.88, "size": 0.55, "color": "#C0392B", "label_position": "below"},
+        {"label": "H3 Zoho pincer", "x": 0.30, "y": 0.65, "size": 0.40, "color": "#E67E22", "label_position": "right"},
+        {"label": "H4 leapfrog", "x": 0.42, "y": 0.55, "size": 0.45, "color": "#3498DB", "label_position": "left"},
+        {"label": "H5 platform", "x": 0.58, "y": 0.40, "size": 0.30, "color": "#7FB3D5", "label_position": "right"},
+        {"label": "H6 hybrid", "x": 0.82, "y": 0.30, "size": 0.65, "color": "#1F3A5F", "label_position": "left", "note": "RECOMMENDED"}
+      ],
+      "source": "Source: Decision Brief — Hypotheses + Adversarial Scenarios"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 8,
+      "section_num": "3",
+      "section_title": "What the council\nfound",
+      "lead_question": "Five independent persona analyses, anonymized peer review, adversarial pressure, sensitivity sweep — where did insights stabilize, and where did they fracture?"
+    },
+    {
+      "type": "chart_bar",
+      "page_num": 9,
+      "prefix": "3.1/  EFFECTS MAP",
+      "title": "The strongest signals: pure platform play is structurally unavailable; CA network gates established-SME migrations",
+      "effects": [
+        {"label": "Partnership complexity caps platform play",       "p": 0.75, "agree": 5, "range": [0.55, 0.85]},
+        {"label": "Tally CA network gates established SMEs",         "p": 0.72, "agree": 4, "range": [0.70, 0.75]},
+        {"label": "Zoho counter-attack on payments core",            "p": 0.70, "agree": 4, "range": [0.50, 0.75]},
+        {"label": "India localization is real but bounded moat",     "p": 0.65, "agree": 5, "range": [0.50, 0.80]},
+        {"label": "Take-rate compression is structural",             "p": 0.65, "agree": 4, "range": [0.55, 0.65]},
+        {"label": "Engineering hiring strain compounds",             "p": 0.65, "agree": 3, "range": [0.55, 0.70]},
+        {"label": "H6 focused scope ships in 18 months",             "p": 0.65, "agree": 4, "range": [0.55, 0.70]},
+        {"label": "IPO narrative weakens under broad-build",         "p": 0.55, "agree": 4, "range": [0.40, 0.60]},
+        {"label": "Agent quality ceilings below specialists",        "p": 0.55, "agree": 4, "range": [0.50, 0.65]},
+        {"label": "CA-channel turns Tally moat into lever",          "p": 0.55, "agree": 4, "range": [0.45, 0.65]},
+        {"label": "Switching cost via trained agent context",        "p": 0.50, "agree": 2, "range": [0.45, 0.55]},
+        {"label": "Knowledge-graph moat (workflow not data)",        "p": 0.40, "agree": 3, "range": [0.40, 0.55]}
+      ],
+      "source": "Source: Decision Brief — Effects Map (High-Confidence Effects)"
+    },
+    {
+      "type": "two_column",
+      "page_num": 10,
+      "prefix": "3.2/  COUNCIL DYNAMICS",
+      "title": "The deepest disagreement — is the moat data or workflow? — was the iteration 2 productive contradiction resolved",
+      "left_header": "STRONGEST: Regulator",
+      "left_items": [
+        "Best groundedness with [G#] tags throughout · explicit contrarian \"what if regulation never materializes\" branches per hypothesis",
+        "Three genuinely novel specialist insights other personas could not produce: AA framework as UX wedge · ICAI CA-Act monopoly as both ceiling AND distribution insight · Zoho's FIU blind-spot",
+        "Single most decision-relevant analysis in the council — the ICAI insight is load-bearing for the recommendation in two distinct ways"
+      ],
+      "right_header": "WEAKEST: Optimist",
+      "right_items": [
+        "Clean numerical scaffolding (NRR, ARPU, IPO-multiple math) but anchored on US analogues (Toast/Veeva) without testing Indian SME WTP",
+        "Lowest \"when I am wrong\" rigor across contrarian questions · probability calibration weakest in the council",
+        "Highest contribution was creative alternatives (CA-as-partner, open-source agent layer, hybrid platform-plus-thin-apps) — not probability accuracy"
+      ],
+      "source": "Source: Decision Brief — Council Dynamics + Minority-View Winners. Cross-persona breakthrough convergence on H6: 4 alt-prefixed insights from 4 different personas converged on the same path — narrow scope (Pessimist), acquire books (Optimist+Pessimist+Competitor), CA-as-distribution (Customer+Optimist+Pessimist), AA-FIU rail (Regulator)."
+    },
+    {
+      "type": "radar",
+      "page_num": 11,
+      "prefix": "3.3/  COUNCIL DEPTH",
+      "title": "Regulator scored highest on adversarial coverage and counter-factual depth; Optimist's narrow ranges drove its #5 peer rank",
+      "axes": ["Effects identified", "Range width", "Adversarial coverage", "Counter-factual depth", "Quantitative rigor"],
+      "personas": [
+        {"name": "Optimist",   "scores": [4, 2, 3, 2, 3], "color": "#E67E22"},
+        {"name": "Pessimist",  "scores": [4, 4, 4, 4, 5], "color": "#C0392B"},
+        {"name": "Competitor", "scores": [4, 4, 5, 4, 4], "color": "#1F3A5F"},
+        {"name": "Regulator",  "scores": [5, 4, 5, 5, 4], "color": "#16A085"},
+        {"name": "Customer",   "scores": [5, 4, 4, 4, 4], "color": "#8E44AD"}
+      ],
+      "source": "Source: Decision Brief — Council Dynamics narrative (canonical for radar synthesis per phase protocol)"
+    },
+    {
+      "type": "three_column",
+      "page_num": 12,
+      "prefix": "3.4/  ADVERSARIAL PRESSURE",
+      "title": "16 adversarial scenarios — most push toward broad-build failure; H6 focused path neutralizes 4 of 5 worst cases",
+      "columns": [
+        {
+          "header": "WORST CASES",
+          "color": "MCK_BLUE",
+          "items": [
+            "Compound Zoho pincer (P=0.25): take-rate compresses 25 bps + accounting GL ships 9mo late at 70% Tally parity → IPO clears at $3.5-4.5B vs $5-6B target [G3]",
+            "Agent trust break in public-name SME (P=0.20): viral founder thread + ICAI position paper → 15-25% pilot SMEs revert; CA channel slams shut",
+            "IPO window slams shut (P=0.20): macro/election shock forces scope cut mid-build; brain devolves to accounting + cashflow only",
+            "Anthropic disintermediates agent layer (P=0.15): Claude for Business with native MCP connectors makes RAY a thin wrapper [G6]",
+            "H5 partnership collapse if pivoted there (P=0.30 conditional): Zoho refuses, Tally extracts 60%+ economics, partner reach 10-15%"
+          ]
+        },
+        {
+          "header": "BLACK SWANS",
+          "color": "ACCENT_CORAL",
+          "items": [
+            "Indian IPO market freeze 9-15mo (P=0.10): macro/SEBI cooling-off; emergency private round at down-valuation",
+            "Foundation-model capability shift (P=0.10): GPT-5/Claude Opus 5 absorb GST/ITR knowledge → Pilot/Digits India in 6-9mo",
+            "Key-person event during IPO (P=0.05): Mathur or Kumar departure; multiple compresses 20-30%",
+            "Zoho breaks 25-yr acquisition celibacy (P=0.10): buys Khatabook/ClearTax for ₹2,000-4,000 cr — closes Razorpay greenfield",
+            "Major SME data breach (P=0.08): multi-domain DPDP incident, IPO delay 6-12mo [G19]",
+            "Microsoft India SMB priority (P=0.07): Copilot + Dynamics 365 + Azure GST localization commoditizes agent layer"
+          ]
+        },
+        {
+          "header": "IRRATIONAL ACTORS",
+          "color": "RED",
+          "items": [
+            "Vembu/Zoho ideological war (P=0.30): zero-MDR Zoho Pay for 24mo at ₹400-600 cr loss to deny IPO momentum [G13]",
+            "ICAI tightens AI-attest (P=0.25): mandates CA pre-approval per agent journal entry — lands on competitors more if H6 chosen",
+            "Top 5-10 RazorpayX logos publicly defect (P=0.20): founder-Twitter contagion poisons design-partner cohort [G4]",
+            "RBI/CCI scrutinize super-app concentration (P=0.20): data-portability remedies, partner-neutrality slow graph moat",
+            "Anthropic prioritizes US enterprise (P=0.15): SDK rate-limits or 3-5x price hike with 90-day notice during IPO window"
+          ]
+        }
+      ],
+      "source": "Source: Decision Brief — Adversarial Scenarios"
+    },
+    {
+      "type": "chart_tornado",
+      "page_num": 13,
+      "prefix": "3.5/  SENSITIVITY",
+      "title": "Five FRAGILE assumptions are load-bearing — if any one fails, broad H1 becomes indefensible",
+      "assumptions": [
+        {"label": "Razorpay can execute full stack",          "sensitivity": "HIGH",   "effects": 5},
+        {"label": "Scope discipline can be held publicly",    "sensitivity": "HIGH",   "effects": 4},
+        {"label": "Partners willing to integrate (H5)",       "sensitivity": "HIGH",   "effects": 4},
+        {"label": "Legacy SaaS cannot retrofit",              "sensitivity": "HIGH",   "effects": 4},
+        {"label": "Agent-native premium real (30-50% lift)",  "sensitivity": "HIGH",   "effects": 3},
+        {"label": "India localization moat holds 18-24mo",    "sensitivity": "HIGH",   "effects": 4},
+        {"label": "Knowledge graph compounds",                "sensitivity": "HIGH",   "effects": 3},
+        {"label": "CA decision authority high",               "sensitivity": "HIGH",   "effects": 5},
+        {"label": "Accounting depth solvable with capital",   "sensitivity": "MEDIUM", "effects": 3},
+        {"label": "Zoho payments attach aggressive",          "sensitivity": "MEDIUM", "effects": 4},
+        {"label": "IPO window holds 24-36mo",                 "sensitivity": "LOW",    "effects": 2},
+        {"label": "ICAI attest monopoly holds (since 1949)",  "sensitivity": "LOW",    "effects": 3}
+      ],
+      "source": "Source: Decision Brief — Key Assumptions + sensitivity analysis"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 14,
+      "section_num": "4",
+      "section_title": "Path forward",
+      "lead_question": "If H6 hybrid is the right path, what does the 30-month execution sequence look like — and where are the kill criteria?"
+    },
+    {
+      "type": "table",
+      "page_num": 15,
+      "prefix": "4.1/  ROADMAP",
+      "title": "The recommendation maps to a six-checkpoint roadmap with explicit kill criteria at each stage",
+      "headers": ["When", "Action", "Depends on", "Decision point", "Kill criteria"],
+      "col_widths": [1.0, 3.4, 2.5, 2.2, 2.2],
+      "rows": [
+        ["0-1 mo",  "Lock public framing as \"agent-native financial layer.\" Brief PR/IR/board on scope discipline narrative",                             "Internal alignment on narrowed scope",         "Decide whether to proceed at all",            "Board insists on \"company brain\" framing → abandon H6"],
+        ["0-3 mo",  "M&A diligence on ProfitBooks/Vyapar. CA-portal product spec; recruit 3-5 design-partner CAs. Lock top-5K merchants to 3-yr contracts", "Acquisition targets available; CAs willing",    "LOI within 3 months OR pivot to organic",     "No LOI by month 3 + no design CAs → narrow to compliance + cashflow"],
+        ["3-6 mo",  "Close acquisition. Integrate onto RAY agent layer. Launch CA-portal closed beta with 50-100 CAs. Public-beta announcement",          "Acquisition closes; CA pilot 30+ SMEs/CA",     "Beta SLO + ≥50% CA retention at 90 days",     "Retention <30%, error rate >2%, slip >2mo → pause launch"],
+        ["6-12 mo", "Scale CA portal to 1-3K CAs. Financial-layer GA. Begin AA-FIU monetization conversations with frenemy partners",                    "Beta validated; IPO process on track",         "IPO RHP filing milestone (month 9-10)",       "IPO sentiment turns to Zoho-comp multiple → defer GA, hold burn"],
+        ["12-18 mo","IPO listing (target month 12-15). Phase 2 go/no-go on CRM/growth using IPO proceeds based on Phase 1 attach + competitive position",  "IPO completes; Phase 1 NRR ≥120% bundled",     "IPO listing + Phase 2 go/no-go",              "Phase 1 NRR <100% or IPO multiple <6x → hold Phase 2"],
+        ["18-30 mo","Selective Phase 2 expansion if validated. Continue CA growth to 10K+. Defend payments core via long-term contracts + embedded fintech","Phase 1 metrics held; capital deployed",       "24-month strategic review",                   "Phase 2 underperforms specialists at month 24 → do not invest further"]
+      ],
+      "source": "Source: Decision Brief — Appendix A: Decision Timeline"
+    },
+    {
+      "type": "table",
+      "page_num": 16,
+      "prefix": "APPENDIX  SOURCES",
+      "title": "Every numeric claim in this deck traces to a tagged ground source, document extraction, or council estimate",
+      "headers": ["Tag", "Type", "Claim", "Source"],
+      "col_widths": [1.0, 1.2, 6.9, 2.2],
+      "rows": [
+        ["[G1]",  "Ground",   "Razorpay FY25 revenue ₹3,783 cr (~$455M), up 65% YoY — gateway, POS, RazorpayX, loyalty, intl",       "medianama Oct 2025"],
+        ["[G2]",  "Ground",   "Razorpay's stated strategy is already \"financial OS for businesses\"",                                "medianama"],
+        ["[G3]",  "Ground",   "IPO confidentially filed at ~$5-6B (down from $7.5B 2021); ~₹4,500 cr target raise late 2026",         "Paypers, BusinessToday Apr 2026"],
+        ["[G4]",  "Ground",   "RazorpayX 50K+ customers, 70% of Indian unicorns, $30B annualized TPV, 85% YoY",                       "Business Standard"],
+        ["[G6]",  "Ground",   "RAY Agentic-AI Toolkit launched Feb 2025 on Anthropic Claude Agent SDK",                               "yourstory, The Paypers"],
+        ["[G11]", "Ground",   "Tally dominates Indian SME accounting via 25-yr CA-network entrenchment; ~380K CAs",                   "onlinenifm"],
+        ["[G12]", "Ground",   "Zoho finance suite grew 50% YoY in India; India is Zoho Books #1 geo (40.5%)",                         "Outlook Business, 6sense"],
+        ["[G13]", "Ground",   "Zoho launched Zoho Payments + Zoho Pay UPI in 2025 — direct cross-sell threat to Razorpay payments",   "Outlook Business"],
+        ["[G15]", "Ground",   "Pilot announced first fully autonomous AI Accountant in Feb 2026",                                     "aimultiple"],
+        ["[G18]", "Ground",   "AA framework: 126 FIs live, 2.61B accounts, consent-based per-fetch",                                  "financialservices.gov.in"],
+        ["[G19]", "Ground",   "DPDP Act in force 2025; consent withdrawal, 30-day DSAR, breach notification",                          "DPDP rules 2025"],
+        ["[G21]", "Ground",   "Horizontal SaaS rarely exceeds 20% share; vertical leaders 40%+ — winner-takes-most",                   "Tidemark VSKP"],
+        ["[D2]",  "Document", "Customer churn: Razorpay → Zoho Books → Zoho CRM → Zoho Payments (n=1 founder)",                       "razorpay-super-app-context.md"],
+        ["[C1:regulator]",  "Council", "ICAI CA-Act monopoly limits agent autonomy AND creates CA-channel-as-distribution opportunity", "iter-1 Regulator"],
+        ["[C6:synthesis]",  "Council", "H6 hybrid path emerges from cross-persona breakthrough convergence in iteration 2",            "iter-2 synthesis"]
+      ],
+      "source": "Source: Decision Brief — Sources table"
+    }
+  ]
+}

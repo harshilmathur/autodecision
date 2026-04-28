@@ -133,6 +133,26 @@ What the council surfaced:
 
 ---
 
+### Razorpay SME company brain
+
+> "Should Razorpay build a company brain for SMEs that powers AI agents across finance, compliance, CRM, growth, and operations?"
+
+**[Full brief →](examples/razorpay-sme-company-brain.md)** · **[Deck (PDF) →](examples/decks/08-razorpay-sme-company-brain.pdf)** · [PPTX](examples/decks/08-razorpay-sme-company-brain.pptx) · [Context file](examples/razorpay-sme-company-brain-context.md)
+
+**How this run came to be:** External strategic analysis run by a small D2C founder reflecting on their own Razorpay → Zoho Books → Zoho CRM churn pattern. The 90-line [context file](examples/razorpay-sme-company-brain-context.md) is what was passed to `--context`; the brief is what the engine returned. Useful as both a strategic exemplar and a worked example of the `--context` flow on N=1 lived experience.
+
+What the council surfaced:
+
+- **The council collectively pointed at a 6th hypothesis (H6) that no single persona generated** — synthesized from 4 cross-persona breakthroughs in iteration 1: narrow scope (Pessimist) + acquire books player (Optimist + Pessimist + Competitor) + CA-channel-as-distribution (Customer + Optimist + Pessimist) + AA-FIU regulatory rail (Regulator). H6 dominated H1 (the user's broad framing) on capital efficiency and IPO narrative.
+- **Regulator's specialist insight on ICAI's Chartered Accountants Act monopoly is load-bearing in two directions** — it is a hard ceiling on autonomous-agent positioning (Pilot's "fully autonomous accountant" framing cannot legally ship in India) AND the structural reason CA-channel-as-distribution is the right play. Same insight, two angles. Without an independent Regulator subagent, this insight does not surface.
+- **Pure platform-not-apps (H5) was eliminated by 5/5 council consensus** — Zoho refuses to integrate (already shipped Zoho Pay 2025), Tally extracts gatekeeper rents, ClearTax has its own AI ambitions. The user did not propose H5; Optimist surfaced it as a creative alternative; the council collectively concluded it is structurally unavailable.
+- **Iteration 2 resolved 3 contradictions identified by the Convergence Judge using empirical evidence** — Zoho's actual 2025 moves (Zoho Pay launch + agentic Books beta) tightened "Zoho retrofit speed" and "knowledge-graph moat depth" toward the Pessimist's view, and CCI/merchant resistance tightened "payments-bundle defense." Productive refinement, primary signals pass.
+- **Source perspective:** External strategic analysis grounded in public reporting + an N=1 founder lived experience (D2C founder, [D5]). Not Razorpay-internal data — flagged honestly throughout the brief.
+
+**Final recommendation:** Don't build the maximalist company brain. Ship a focused agent-native financial layer in three pillars — direct build of Books + Compliance + Ops + payments-adjacent agents, acquire a books player (ProfitBooks/Vyapar at ₹400-700 cr) for GL depth, and build a Razorpay-CA platform that turns Tally's CA-network moat into Razorpay's distribution lever. Defer CRM and growth/marketing to post-IPO Phase 2. Public framing must be "agent-native financial layer" — not "company brain" — to preserve scope discipline through the IPO window.
+
+---
+
 ## Comparison mode
 
 ### 10% vs 30% price cut
