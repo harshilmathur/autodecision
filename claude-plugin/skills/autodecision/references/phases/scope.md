@@ -10,6 +10,8 @@ reads:
   - user decision statement (from /autodecision invocation)
   - optional: --template flag (pricing | expansion | build-vs-buy | hiring)
   - optional: --context flag (one or more file paths, resolved relative to cwd)
+  - optional: --skip-clarify flag (boolean — skips Phase 2.5 CLARIFY)
+  - optional: --skip-elicit flag (boolean — skips Phase 1.5 ELICIT)
   - if template: references/templates/{template}.md
 writes:
   - ~/.autodecision/runs/{slug}/config.json
@@ -207,13 +209,22 @@ Cap total score at 4.
 ## Process
 
 1. Parse the decision statement.
-2. Decompose into 2-5 sub-questions. Each sub-question should be independently answerable.
+2. Parse flags:
+   - `--template {name}` — set `template_used` in config.json.
+   - `--context {paths}` — note paths for Step B extraction.
+   - `--skip-elicit` — set `skip_elicit: true` in config.json.
+   - `--skip-clarify` — set `skip_clarify: true` in config.json (Phase 2.5 CLARIFY will
+     write `clarify-answers.json` with `status: "skipped", reason: "user_flag"` and
+     return immediately).
+   - `--iterations {N}` — set `iterations_max` in config.json.
+   Default all unset flags to `false`/`null`.
+3. Decompose into 2-5 sub-questions. Each sub-question should be independently answerable.
    - If decomposition yields > 5 sub-questions, the decision is too broad. Ask the user to
      narrow it before proceeding.
    - If decomposition yields < 2, the decision may be too simple for the full loop.
      Suggest `/autodecision:quick` instead.
-3. Identify explicit constraints (budget limits, timelines, non-negotiables).
-4. Create the run directory and write `config.json`.
+4. Identify explicit constraints (budget limits, timelines, non-negotiables).
+5. Create the run directory and write `config.json`.
 
 ## Sub-Question Design
 
@@ -253,6 +264,9 @@ If no template is specified, decompose from scratch.
   ],
   "grounding": "PENDING",
   "template_used": null,
+  "skip_elicit": false,
+  "skip_clarify": false,
+  "iterations_max": 2,
   "created_at": "2026-04-14T12:00:00Z"
 }
 ```
