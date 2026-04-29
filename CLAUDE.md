@@ -51,6 +51,18 @@ Adding the marketplace alone does not install the plugin — step 2 is required.
 
 Download `autodecision-<version>.zip` from the [latest release](https://github.com/harshilmathur/autodecision/releases/latest), then in Cowork: **Customize → Create plugin → Upload plugin** and select the zip.
 
+### OpenCode
+
+Autodecision also runs on [OpenCode](https://opencode.ai). The skill content is shared — only commands and pre-declared persona agents differ. Install:
+
+```bash
+git clone https://github.com/harshilmathur/autodecision.git
+cp -r autodecision/.opencode      /path/to/your/project/.opencode
+cp -r autodecision/.claude/skills /path/to/your/project/.claude/skills
+```
+
+Commands use hyphens instead of colons (`/autodecision-quick` not `/autodecision:quick`). The 5-persona council spawns via `.opencode/agents/ad-{persona}.md` files instead of inline Agent prompts. Full details: [OPENCODE.md](OPENCODE.md).
+
 ---
 
 ## Commands
@@ -415,9 +427,14 @@ claude-plugin/                        # CANONICAL — edit here
 └── skills/autodecision/              # Identical to claude-plugin/skills/
 
 .claude-plugin/marketplace.json       # Repo-level marketplace manifest
+
+.opencode/                            # CANONICAL — OpenCode-specific glue (not synced)
+├── commands/                         # Flat: autodecision.md, autodecision-quick.md, ...
+├── agents/                           # 9 pre-declared persona agents: ad-optimist.md, ad-pessimist.md, ...
+└── host-adapter.md                   # OpenCode-specific overrides read by every command
 ```
 
-**Sync rule:** edit `claude-plugin/`, run `./scripts/sync.sh`, commit both trees. `.github/workflows/sync-check.yml` fails PRs where the trees drift.
+**Sync rule:** edit `claude-plugin/`, run `./scripts/sync.sh`, commit both trees. `.github/workflows/sync-check.yml` fails PRs where the trees drift. The `.opencode/` tree has no upstream — it IS the source of truth for OpenCode-specific files. Validate it with `./scripts/sync-check-opencode.sh`.
 
 ---
 
