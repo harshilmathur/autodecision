@@ -1,0 +1,293 @@
+{
+  "meta": {
+    "title": "Should Adobe deprecate Photoshop's UI within 3 years?",
+    "subtitle": "Decision Brief — possibility map and recommendation",
+    "brand": "Autodecision",
+    "date": "April 2026",
+    "run_slug": "adobe-deprecate-photoshop-ui"
+  },
+  "slides": [
+    {
+      "type": "title_cover",
+      "title": "Should Adobe deprecate\nPhotoshop's UI within 3 years?",
+      "subtitle": "Decision Brief — possibility map and recommendation",
+      "date": "April 2026",
+      "brand": "Autodecision"
+    },
+    {
+      "type": "toc_dark",
+      "page_num": 2,
+      "items": [
+        {"label": "Recommendation", "pages": "3"},
+        {"label": "How we explored this decision", "pages": "4 – 7"},
+        {"label": "What the council found", "pages": "8 – 13"},
+        {"label": "Path forward", "pages": "14 – 15"},
+        {"label": "Appendix — Sources", "pages": "16"}
+      ]
+    },
+    {
+      "type": "recommendation",
+      "page_num": 3,
+      "prefix": "1/  RECOMMENDATION",
+      "title": "The aggressive deprecation path survives <15% of plausible scenarios; ship a segmented dual-SKU instead",
+      "action": "Do NOT deprecate the Photoshop UI. Ship Photoshop Pro (UI + 10-year LTS) alongside Photoshop Agentic (Firefly AI Assistant native), with binding public reversal triggers.",
+      "fields": [
+        {"label": "CONFIDENCE",          "value": "HIGH on do-not-deprecate · MEDIUM-HIGH on segmented+LTS structure · MEDIUM on board willingness to publish reversal triggers", "color": "MCK_BLUE"},
+        {"label": "DEPENDS ON",          "value": "Board willing to publish binding reversal triggers · LTS commitment credible to pros · Segments are separable · Adobe execution amortizes dual-SKU R&D", "color": "MCK_BLUE_BR"},
+        {"label": "MONITOR",             "value": "Firefly AI Assistant beta NPS · Acrobat UI backlash trajectory · OpenAI/Anthropic creative product launches · Figma post-IPO M&A · Enterprise ELA renewal cohort", "color": "ACCENT_CORAL"},
+        {"label": "PRE-MORTEM",          "value": "h6 without binding triggers (P=0.30) · Foundation model plateau (P=0.25) · Pro community rejects LTS as marketing-only (P=0.20) · Internal resourcing split degrades both SKUs (P=0.55)", "color": "MCK_BLUE_BR"},
+        {"label": "DEEPEST DISAGREEMENT","value": "Optimist: 55% first-mover platform lock compounds. Pessimist: 75% reversal-impossible franchise damage. Disagreement IS the data.", "color": "MCK_BLUE"},
+        {"label": "REVIEW TRIGGER",      "value": "Firefly AI Assistant beta NPS <40 · OpenAI/Anthropic ships native creative · Adobe board refuses public reversal triggers · Q2 FY26 Digital Media growth <10%", "color": "ACCENT_CORAL"}
+      ],
+      "source": "Source: Decision Brief (full mode, 2 iterations, council 5/5 endorsement on h6) · [G15], [C3:council], [C4:pessimist], [C17:council]"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 4,
+      "section_num": "2",
+      "section_title": "How we explored\nthis decision",
+      "lead_question": "A 5-persona council, 6 competing hypotheses, two iterations to convergence, and 12 adversarial stress scenarios — what survived?"
+    },
+    {
+      "type": "action_text",
+      "page_num": 5,
+      "prefix": "2.1/  HOW WE ANALYZED",
+      "title": "The analysis explored 6 hypotheses across 2 iterations of a 5-persona council, stress-tested by 12 adversarial scenarios",
+      "bullets": [
+        "5 personas spawned as separate subagents — Optimist, Pessimist, Competitor, Regulator, Customer — each with independent context",
+        "6 hypotheses generated, ranging from aggressive deprecation (h1) to additive Adobe-actual strategy (h3) to the synthesis winner (h6 segmented dual-SKU + LTS + binding reversal triggers)",
+        "2 iterations — convergence reached at iteration 2 with 78% assumption stability, 1 productive contradiction remaining",
+        "Adversary phase generated 12 stress scenarios across worst-cases, black swans, and irrational actors",
+        "Sensitivity analysis on 10 key assumptions — 3 high-sensitivity, 5 medium, 2 low",
+        "Real-time anchor: Adobe announced Firefly AI Assistant as additive on April 15, 2026 [G15] — three days before this analysis. The announced strategy is h3, the recommendation upgrades to h6."
+      ],
+      "source": "Source: Decision Brief Convergence Log; engine-protocol.md"
+    },
+    {
+      "type": "table",
+      "page_num": 6,
+      "prefix": "2.2/  HYPOTHESES",
+      "title": "Six hypotheses surfaced; only h6 survived 5/5 council endorsement and adversarial stress",
+      "headers": ["#", "Hypothesis", "Status", "Key assumptions"],
+      "col_widths": [0.5, 4.5, 2.7, 4.6],
+      "rows": [
+        ["1", "Aggressive deprecation wins (3-year UI sunset)", ["Conditional · joint P 12-20%", "RED", "pill"], "Agentic is terminal paradigm · 36-month parity · Foundation labs enter creative"],
+        ["2", "User revolt destroys franchise", ["Risk path of h1", "RED", "pill"], "Muscle-memory switching cost real · Narrative damage sticky · Enterprise procurement revolts"],
+        ["3", "Hybrid additive dominates (Adobe's actual April 2026 strategy [G15])", ["Strongly supported", "MCK_BLUE", "pill"], "Both modes coexist · Market rewards additive · AI Assistant quality holds"],
+        ["4", "Competitive window closes by 2028", ["Conditional on foundation lab entry", "GREY_FOOT", "pill"], "Foundation labs enter creative · Category narrative matters · Translates to valuation"],
+        ["5", "Segmentation is the right structure", ["Conditional on segment separability", "GREY_FOOT", "pill"], "Segments separable · Dual tier doesn't confuse · Pricing power preserved"],
+        ["6", "Segmented + 10yr LTS + binding reversal triggers", ["Leading · 5/5 council", "GREEN", "pill"], "Dual SKU separable · LTS credible · Reversal triggers enforceable"]
+      ],
+      "source": "Source: Decision Brief — Hypotheses Explored"
+    },
+    {
+      "type": "matrix_2x2",
+      "page_num": 7,
+      "prefix": "2.3/  STRATEGIC POSITIONING",
+      "title": "Plotted on reversibility × franchise risk, h6 sits in the manageable quadrant; h1 sits where every adversarial scenario amplifies",
+      "axes": {
+        "x_label": "Reversibility of decision",
+        "y_label": "Franchise risk if wrong",
+        "x_low": "Low (one-way door)",
+        "x_high": "High (recoverable)",
+        "y_low": "Contained",
+        "y_high": "Catastrophic"
+      },
+      "quadrant_labels": {
+        "tl": "AVOID",
+        "tr": "MANAGE WITH RIGOR",
+        "bl": "MONITOR",
+        "br": "DEFAULT"
+      },
+      "items": [
+        {"label": "h1", "x": 0.10, "y": 0.85, "size": 8,  "color": "#C0392B", "label_pos": "right", "legend": "Aggressive deprecation — irreversible, catastrophic if wrong (joint P 12-20%)"},
+        {"label": "h2", "x": 0.20, "y": 0.72, "size": 6,  "color": "#E08673", "label_pos": "right", "legend": "User revolt — risk path of h1, same quadrant"},
+        {"label": "h4", "x": 0.40, "y": 0.55, "size": 7,  "color": "#9CA3AF", "label_pos": "right", "legend": "Window-closes — conditional, indeterminate position"},
+        {"label": "h5", "x": 0.62, "y": 0.45, "size": 9,  "color": "#2196F3", "label_pos": "left",  "legend": "Segmentation — direction right, structure incomplete"},
+        {"label": "h3", "x": 0.83, "y": 0.20, "size": 12, "color": "#1F7A44", "label_pos": "below", "legend": "Hybrid additive — Adobe's actual April 2026 strategy [G15]"},
+        {"label": "h6", "x": 0.93, "y": 0.35, "size": 16, "color": "#054AD8", "label_pos": "left", "note": "RECOMMENDED", "legend": "Segmented + LTS + binding reversal triggers — captures growth while preserving optionality"}
+      ],
+      "source": "Source: Synthesis from Decision Brief — bubble size = council_agreement × probability of dominance"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 8,
+      "section_num": "3",
+      "section_title": "What the council\nfound",
+      "lead_question": "Where the personas converged, where they diverged, and what the disagreement itself reveals about the decision."
+    },
+    {
+      "type": "chart_bar",
+      "page_num": 9,
+      "prefix": "3.1/  EFFECTS MAP",
+      "title": "The strongest signals point to franchise risk under aggressive paths and quiet compounding under additive",
+      "effects": [
+        {"label": "Pro segment churn 18-28% IF aggressive deprecation",      "p": 0.70, "agree": 5, "range": [0.55, 0.85]},
+        {"label": "Installed base retained under additive (h3)",              "p": 0.80, "agree": 5, "range": [0.70, 0.90]},
+        {"label": "Short-term revenue trough (12% → 4-7% YoY)",               "p": 0.70, "agree": 4, "range": [0.55, 0.80]},
+        {"label": "Reversal impossible after announcement",                   "p": 0.75, "agree": 3, "range": [0.65, 0.85]},
+        {"label": "Stock compression 25-45% on aggressive announcement",      "p": 0.65, "agree": 4, "range": [0.50, 0.78]},
+        {"label": "AI Assistant captures 80M+ freemium MAUs at 2-3x",          "p": 0.65, "agree": 4, "range": [0.50, 0.75]},
+        {"label": "Execution risk: 30-yr feature surface in 36 months",        "p": 0.65, "agree": 4, "range": [0.55, 0.78]},
+        {"label": "h6 binding reversal triggers eliminate one-way-door risk",  "p": 0.65, "agree": 4, "range": [0.55, 0.75]},
+        {"label": "Acrobat UI precedent escalates to Photoshop",               "p": 0.65, "agree": 3, "range": [0.50, 0.78]},
+        {"label": "Firefly flywheel compounds via session data",               "p": 0.60, "agree": 3, "range": [0.45, 0.75]},
+        {"label": "Platform moat deepens under additive",                      "p": 0.60, "agree": 4, "range": [0.50, 0.70]},
+        {"label": "h6 dual SKU separates cleanly (5/5 council)",               "p": 0.55, "agree": 5, "range": [0.45, 0.65]}
+      ],
+      "commentary_lines": [
+        "Top 12 effects ranked by council_agreement × probability",
+        "Bar color = council agreement (navy = 5/5, fading to pale = 1/5)",
+        "Black bracket = persona disagreement range — width is the uncertainty signal",
+        "Two of the three highest-agreement effects (5/5) are downside under aggressive paths",
+        "h6 effects (last row) emerge in iteration 2 with full council endorsement"
+      ],
+      "source": "Source: Decision Brief — Effects Map (top 15 by council_agreement × probability) · [C7:council], [C10:council], [C16:council]"
+    },
+    {
+      "type": "two_column",
+      "page_num": 10,
+      "prefix": "3.2/  COUNCIL DYNAMICS",
+      "title": "The deepest disagreement — competitive urgency vs franchise preservation — IS the data",
+      "left_header": "STRONGEST: REGULATOR (#1 PEER RANK)",
+      "left_items": [
+        "Won on structural depth — EU AI Act obligations, Firefly training-data suit risk, fiduciary / Delaware business judgment rule, ADA Section 508 implications of chat-only UI",
+        "Surfaced TWO of the alternatives that synthesized into h6: dual-SKU LTS + binding reversal triggers",
+        "Identified h6 as protected under business judgment rule — reversibility insulates the board even if strategy fails",
+        "Compliance moat (AI Act + copyright + enterprise DPA) buys 18-24 months regardless of UI strategy"
+      ],
+      "right_header": "DEEPEST DIVIDE: URGENCY VS PRESERVATION",
+      "right_items": [
+        "Optimist + Competitor: narrow window, first-mover lock compounds (P=0.55 [C2:optimist])",
+        "Pessimist + Regulator + Customer: catastrophic franchise downside under forced transition (P=0.75 [C4:pessimist] reversal impossible)",
+        "Disagreement range on foundation_labs_enter_creative: 0.30-0.70 [C3:council] — the disagreement IS the data",
+        "Optimist was weakest (#5 peer rank) — joint-probability inflation flagged by 4/4 reviewers",
+        "BLIND SPOT caught: 4/5 personas missed agentic inference COGS — ~10-50× per session, material at 41M subs"
+      ],
+      "source": "Source: Decision Brief — Council Dynamics · [C2:optimist], [C2:pessimist], [C3:council]"
+    },
+    {
+      "type": "radar",
+      "page_num": 11,
+      "prefix": "3.3/  COUNCIL DEPTH",
+      "title": "Regulator scored highest on structural depth and counter-factual rigor; Optimist's narrow ranges drove its #5 peer rank",
+      "axes": ["Effects", "Range width", "Adversarial", "Counter-factual", "Quant. rigor"],
+      "personas": [
+        {"name": "Optimist",   "scores": [3, 2, 2, 1, 3], "color": "#F39C12"},
+        {"name": "Pessimist",  "scores": [4, 4, 5, 4, 4], "color": "#C0392B"},
+        {"name": "Competitor", "scores": [3, 3, 4, 3, 3], "color": "#9B59B6"},
+        {"name": "Regulator",  "scores": [4, 4, 4, 5, 5], "color": "#054AD8"},
+        {"name": "Customer",   "scores": [3, 3, 2, 3, 3], "color": "#1F7A44"}
+      ],
+      "commentary_lines": [
+        "Each persona scored 1-5 across five rigor dimensions, derived from peer-review and critique outputs",
+        "Regulator's structural depth surfaced both alternatives that synthesized into h6 — dual-SKU LTS and binding reversal triggers",
+        "Optimist's narrow range and weak counter-factual depth flagged in 4/4 reviews — joint-probability inflation pattern",
+        "Pessimist + Regulator together cover the full adversarial surface; their alignment on irreversibility risk drove the h6 design",
+        "Customer's lower adversarial coverage is structural — the role focuses on adoption value, not threats"
+      ],
+      "source": "Source: Synthesized from Decision Brief — Council Dynamics + Critique outputs"
+    },
+    {
+      "type": "three_column",
+      "page_num": 12,
+      "prefix": "3.4/  ADVERSARIAL PRESSURE",
+      "title": "Twelve adversarial scenarios — eight push toward kill-aggressive or segmented; only h6's reversal triggers neutralize all of them",
+      "columns": [
+        {"header": "WORST CASES", "color": "MCK_BLUE", "items": [
+          "Foundation model capabilities plateau by 2027 (P=0.25)",
+          "Pro community organizes mass migration via plugin APIs (P=0.20)",
+          "EU AI Act enforcement hits Firefly mid-transition (P=0.20)",
+          "Senior ML talent departs during stock-compression trough (P=0.30)"
+        ]},
+        {"header": "BLACK SWANS", "color": "ACCENT_CORAL", "items": [
+          "Apple ships Vision Pro agentic Final Cut + Photos Dec 2027 (P=0.15)",
+          "Figma acquires Runway or Midjourney with post-IPO war chest (P=0.15)",
+          "CEO Narayen retires mid-transition; successor reverses (P=0.10)",
+          "China bans Creative Cloud during trade escalation; $2-3B revenue (P=0.10)"
+        ]},
+        {"header": "IRRATIONAL ACTORS", "color": "MCK_BLUE_BR", "items": [
+          "F500 flagship client publicly abandons Adobe; narrative contagion (P=0.15)",
+          "Viral 'Adobe killed Photoshop' video from top creator (P=0.20)",
+          "Activist investor takes 5% stake demanding reversal during trough (P=0.15)",
+          "Board member leaks internal concerns; stock further compresses (P=0.08)"
+        ]}
+      ],
+      "source": "Source: Decision Brief — Adversarial Scenarios · [C23:adversary] through [C35:adversary]"
+    },
+    {
+      "type": "chart_tornado",
+      "page_num": 13,
+      "prefix": "3.5/  SENSITIVITY",
+      "title": "Three high-sensitivity assumptions are load-bearing — if any one fails, aggressive deprecation becomes indefensible",
+      "assumptions": [
+        {"label": "Adobe ships agentic parity in 36 months",                   "sensitivity": "HIGH",   "effects": 3},
+        {"label": "Agentic is terminal UI paradigm for creative",              "sensitivity": "HIGH",   "effects": 3},
+        {"label": "Foundation labs enter creative by 2028",                    "sensitivity": "HIGH",   "effects": 2},
+        {"label": "Adobe board willing to publish binding reversal triggers",  "sensitivity": "HIGH",   "effects": 2},
+        {"label": "Market rewards additive strategy for cash-cow incumbents",  "sensitivity": "MEDIUM", "effects": 3},
+        {"label": "Segments are separable (pros vs prosumers)",                "sensitivity": "MEDIUM", "effects": 3},
+        {"label": "Enterprise procurement revolts against forced UI transition","sensitivity":"MEDIUM", "effects": 2},
+        {"label": "Muscle-memory switching cost real for 20+ year pros",       "sensitivity": "MEDIUM", "effects": 2},
+        {"label": "Narrative damage from deprecation announcement is sticky",  "sensitivity": "MEDIUM", "effects": 2},
+        {"label": "LTS commitment on Pro SKU is credible (not marketing-only)","sensitivity": "MEDIUM", "effects": 1}
+      ],
+      "commentary_lines": [
+        "Bar length = sensitivity weight × number of effects impacted",
+        "Dark-blue bar = HIGH sensitivity, lighter = MEDIUM",
+        "All four HIGH-sensitivity assumptions are external — Adobe controls none directly",
+        "h6's binding reversal triggers convert assumption-failure from catastrophic to recoverable",
+        "If 36-month parity slips (>60% probability per [C1:council]), aggressive deprecation guarantees the partial-agentic awkward state — exactly what h6 is structured to prevent"
+      ],
+      "source": "Source: Decision Brief — Key Assumptions · sensitivity per effects-impacted × HIGH/MEDIUM/LOW weight"
+    },
+    {
+      "type": "section_divider",
+      "page_num": 14,
+      "section_num": "4",
+      "section_title": "Path forward",
+      "lead_question": "Six checkpoints with binding reversal triggers — every gate has a kill criterion before the next commitment."
+    },
+    {
+      "type": "table",
+      "page_num": 15,
+      "prefix": "4.1/  ROADMAP",
+      "title": "The recommendation maps to a six-checkpoint roadmap with clear kill criteria at each stage",
+      "subtitle": "Every checkpoint has a binding reversal trigger; failure at any gate triggers either reversal or extension of LTS",
+      "headers": ["When", "Action", "Decision point", "Kill criteria"],
+      "col_widths": [0.9, 3.5, 3.6, 4.3],
+      "rows": [
+        ["Q2 FY26", "Firefly AI Assistant beta launches",                 "Beta NPS ≥ 50 from pros",                              ["Beta NPS < 30 → reassess", "RED"]],
+        ["Q3 FY26", "Publish Pro LTS commitment + Agentic SKU roadmap",    "Public commitment with binding reversal triggers",     ["Board refuses to publish → fall back to pure h3", "RED"]],
+        ["Q4 FY26", "Firefly AI Assistant GA across CC apps",              "GA launches on schedule",                              ["Ship slip > 2 quarters → narrative damage risk", "RED"]],
+        ["FY27",    "Agentic SKU builds; Pro SKU continues UI investment", "Agentic ARPU $15-20/mo; Pro maintained",               ["Pro churn > 5% OR Agentic ARPU < $10 → reversal", "RED"]],
+        ["FY28",    "Foundation lab entry decision point",                 "OpenAI/Anthropic creative products shipped or not",     ["Foundation lab dominant category → accelerate", "GREY_FOOT"]],
+        ["FY29",    "3-year review point (original deprecation date)",     "Reaffirm LTS; evaluate market shift",                   ["Pro churn > 8% → reversal; <3% + strong agentic → continue", "GREEN"]]
+      ],
+      "source": "Source: Decision Brief — Appendix A: Decision Timeline · binding reversal triggers per [C17:council]"
+    },
+    {
+      "type": "table",
+      "page_num": 16,
+      "prefix": "APPENDIX  SOURCES",
+      "title": "Selected sources",
+      "subtitle": "Tags appear inline throughout the deck — [G#] = ground data, [C#:persona] = council finding, [C#:adversary] = adversarial scenario",
+      "headers": ["Tag", "Type", "Claim", "Source"],
+      "col_widths": [0.7, 1.2, 7.5, 2.9],
+      "rows": [
+        ["G2",  "Ground",   "Creative Cloud: 41M paid subs YE 2025; 80M+ freemium MAUs",                "prodesigntools.com, qz.com"],
+        ["G3",  "Ground",   "Adobe Acrobat UI redesign backlash sustained and unresolved",              "acrobat.uservoice.com"],
+        ["G15", "Ground",   "Firefly AI Assistant announced April 15 2026 (additive, not replacement)", "blog.adobe.com, news.adobe.com"],
+        ["G17", "Ground",   "Firefly AI Assistant supports third-party models (Anthropic Claude)",      "appleinsider.com"],
+        ["C3",  "Council",  "Foundation labs enter creative by 2028 P=0.5 joint",                       "iter-1 council"],
+        ["C4",  "Council",  "Reversal impossible P=0.75 after announcement",                            "iter-1 pessimist"],
+        ["C7",  "Council",  "Pro churn spike P=0.70 with 18-28% magnitude",                             "iter-1 council"],
+        ["C10", "Council",  "Installed base retained under additive P=0.80",                            "iter-1 council"],
+        ["C17", "Council",  "Binding reversal triggers at 8% pro churn",                                "iter-2 council"],
+        ["C23", "Adversary","Foundation model plateau P=0.25 (worst case)",                             "iter-1 adversary"],
+        ["C32", "Adversary","F500 flagship client abandons Adobe P=0.15 (irrational actor)",            "iter-1 adversary"]
+      ],
+      "source": "Source: Decision Brief — Sources (full list in companion brief markdown)"
+    }
+  ]
+}

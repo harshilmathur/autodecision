@@ -67,7 +67,7 @@ The 5 personas run as parallel subagents, each with its own context window, genu
 | Regulator | Legal, compliance, constraints | Overweights unlikely regulation |
 | Customer Advocate | User value, adoption, retention | Ignores unit economics |
 
-The output is a 16-section Decision Brief. Every probability comes with a [min, max] range reflecting council disagreement. Every fragile insight comes with the exact threshold where it flips. Every dollar figure carries a source tag. See a full brief: [Law Firm AI Replacement](examples/law-firm-ai-replacement.md).
+The output is a 16-section Decision Brief, optionally renderable as a McKinsey-styled 16-slide PPTX deck via `/autodecision:deck`. Every probability comes with a [min, max] range reflecting council disagreement. Every fragile insight comes with the exact threshold where it flips. Every dollar figure carries a source tag. See a full brief and its deck: [Law Firm AI Replacement (brief)](examples/law-firm-ai-replacement.md) · [Deck (PDF)](examples/decks/04-law-firm-1Y-replacement.pdf).
 
 If iterations hit the cap without converging, the orchestrator pauses, shows the Judge scores, and asks if you want another pass (one-at-a-time, cap 5 total). Never silently exits with "NOT REACHED."
 
@@ -153,21 +153,21 @@ The system scopes, grounds, simulates, critiques, stress-tests, and produces a D
 
 ### Full loop (5 personas, 2 iterations, adversarial stress-testing)
 
-**[Law Firm AI Replacement](examples/law-firm-ai-replacement.md)**: Should a mid-sized law firm replace all first-year associates with Claude + senior review?
+**[Law Firm AI Replacement](examples/law-firm-ai-replacement.md)** · [Deck](examples/decks/04-law-firm-1Y-replacement.pdf): Should a mid-sized law firm replace all first-year associates with Claude + senior review?
 
 - Full replacement was **unanimously ranked last**: pipeline rupture in year 3, malpractice risk, and ranking damage all compound
 - The winning recommendation **didn't exist in any single persona's output**. It was synthesized from three independent alternatives (pessimist + customer advocate + regulator)
 - **Regulator surfaced Utah vs Arizona sandbox distinction**, WARN Act compliance, and MRPC 5.3 supervision analysis
 - Final: a **wrapped 18-month pilot** cutting the 1Y class 50-60% with binding kill criteria, anchor-client co-design, and regulatory sandbox cover
 
-**[Buy vs Rent vs Relocate](examples/buy-vs-rent-vs-relocate.md)**: A dual-tech-income couple evaluates buying a house in Bangalore (10 Cr), renting + investing the delta, or relocating to San Francisco.
+**[Buy vs Rent vs Relocate](examples/buy-vs-rent-vs-relocate.md)** · [Deck](examples/decks/05-buy-vs-rent-vs-sf.pdf): A dual-tech-income couple evaluates buying a house in Bangalore (10 Cr), renting + investing the delta, or relocating to San Francisco.
 
 - Council surfaced a **creative alternative** (buy small + invest the rest) that outperformed all three original options on stress resilience
 - **SF savings corrected** from $150-250K to $80-120K after modeling actual CA taxes, childcare, and living costs
 - **Adversarial red team** exposed a correlated risk: the scenario where you lose H1B sponsorship IS the scenario where your Indian portfolio is also down 30%
 - Final: a **staged real-options approach** with buy-small as the default endpoint
 
-**[10% vs 30% Price Cut Comparison](examples/comparison-10pct-vs-30pct.md)** (compare mode): Both reach "don't cut" but for **fundamentally different reasons**: 10% fails by being too small, 30% by being too large. Both converge on the same alternative.
+**[10% vs 30% Price Cut Comparison](examples/comparison-10pct-vs-30pct.md)** (compare mode) · Decks: [10%](examples/decks/06-b2b-saas-pricing-cut-10pct-quick.pdf) · [30%](examples/decks/07-b2b-saas-pricing-cut-30pct-quick.pdf): Both reach "don't cut" but for **fundamentally different reasons**: 10% fails by being too small, 30% by being too large. Both converge on the same alternative.
 
 ### → See the full gallery: [EXAMPLES.md](EXAMPLES.md)
 
@@ -195,6 +195,7 @@ Prompt patterns, decision types, and additional briefs across pricing, hiring, f
 | `/autodecision:compare` | Side-by-side comparison of two decisions | ~5 min |
 | `/autodecision:revise` | What-if on an existing run (changed assumptions/data) | ~8 min |
 | `/autodecision:publish` | Ship a brief as PDF → Notion, email, gist, Slack, Drive | ~1 min |
+| `/autodecision:deck` | Render a brief as a McKinsey-styled 16-slide PPTX | ~1 min |
 
 Pre-built templates: `--template pricing | expansion | build-vs-buy | hiring`.
 

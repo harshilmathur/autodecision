@@ -52,7 +52,7 @@ Autodecision is built for a specific shape of question. Match the shape and it e
 
 > "Should a mid-sized law firm replace all first-year associates with Claude + senior review?"
 
-**[Full brief →](examples/law-firm-ai-replacement.md)**
+**[Full brief →](examples/law-firm-ai-replacement.md)** · **[Deck (PDF) →](examples/decks/04-law-firm-1Y-replacement.pdf)** · [PPTX](examples/decks/04-law-firm-1Y-replacement.pptx)
 
 What the council surfaced:
 
@@ -69,7 +69,7 @@ What the council surfaced:
 
 > "Dual-tech-income couple evaluates buying a house in Bangalore (10 Cr), renting + investing the delta, or relocating to San Francisco."
 
-**[Full brief →](examples/buy-vs-rent-vs-relocate.md)**
+**[Full brief →](examples/buy-vs-rent-vs-relocate.md)** · **[Deck (PDF) →](examples/decks/05-buy-vs-rent-vs-sf.pdf)** · [PPTX](examples/decks/05-buy-vs-rent-vs-sf.pptx)
 
 What the council surfaced:
 
@@ -86,7 +86,7 @@ What the council surfaced:
 
 > "Should Adobe go all-in on agentic Creative Cloud and deprecate Photoshop's UI-first model within 3 years?"
 
-**[Full brief →](examples/adobe-deprecate-photoshop-ui.md)**
+**[Full brief →](examples/adobe-deprecate-photoshop-ui.md)** · **[Deck (PDF) →](examples/decks/01-adobe-photoshop-ui-deprecation.pdf)** · [PPTX](examples/decks/01-adobe-photoshop-ui-deprecation.pptx)
 
 What the council surfaced:
 
@@ -103,7 +103,7 @@ What the council surfaced:
 
 > "Should a $1T-cap big tech company spend $50B on share buybacks vs build a frontier AI moonshot?"
 
-**[Full brief →](examples/bigtech-buyback-vs-ai-moonshot.md)**
+**[Full brief →](examples/bigtech-buyback-vs-ai-moonshot.md)** · **[Deck (PDF) →](examples/decks/02-bigtech-buyback-vs-ai-moonshot.pdf)** · [PPTX](examples/decks/02-bigtech-buyback-vs-ai-moonshot.pptx)
 
 What the council surfaced:
 
@@ -120,7 +120,7 @@ What the council surfaced:
 
 > "Should a research university make in-person attendance optional across all undergraduate programs in the AI tutoring era?"
 
-**[Full brief →](examples/university-optional-inperson-ai-era.md)**
+**[Full brief →](examples/university-optional-inperson-ai-era.md)** · **[Deck (PDF) →](examples/decks/03-university-attendance-ai-tutoring.pdf)** · [PPTX](examples/decks/03-university-attendance-ai-tutoring.pptx)
 
 What the council surfaced:
 
@@ -140,6 +140,8 @@ What the council surfaced:
 > "Should a B2B SaaS drop pricing by 10%? By 30%? Which is worse?"
 
 **[Full comparison →](examples/comparison-10pct-vs-30pct.md)** · [10% brief](examples/b2b-saas-pricing-cut-10pct-quick.md) · [30% brief](examples/b2b-saas-pricing-cut-30pct-quick.md)
+
+Decks (8-slide quick mode): **[10% deck (PDF) →](examples/decks/06-b2b-saas-pricing-cut-10pct-quick.pdf)** ([PPTX](examples/decks/06-b2b-saas-pricing-cut-10pct-quick.pptx)) · **[30% deck (PDF) →](examples/decks/07-b2b-saas-pricing-cut-30pct-quick.pdf)** ([PPTX](examples/decks/07-b2b-saas-pricing-cut-30pct-quick.pptx))
 
 What the comparison surfaced:
 
